@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sales Sheet Builder · v1.12</title>
+<title>Sales Sheet Builder · v2.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -106,6 +106,13 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .chip { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; background: transparent; border: 0.5px solid var(--rule); border-radius: 999px; padding: 7px 13px; cursor: pointer; color: var(--mute); transition: all 0.15s; }
 .chip:hover { border-color: var(--rule-strong); color: var(--ink); }
 .chip.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
+.season-picker-wrap { display: flex; align-items: center; gap: 10px; padding: 4px 14px 4px 16px; background: var(--ink); color: var(--paper); border-radius: 999px; }
+.season-picker-wrap[hidden] { display: none; }
+.season-picker-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--quiet); }
+.season-picker { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; background: transparent; color: var(--paper); border: none; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none; padding: 6px 22px 6px 0; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M0 0l5 6 5-6' fill='%23F4F0E8'/></svg>"); background-repeat: no-repeat; background-position: right center; }
+.season-picker:focus { outline: none; }
+.season-picker option { background: var(--ink); color: var(--paper); }
 
 .catalog { display: flex; flex-direction: column; gap: 12px; }
 .style-card { background: var(--cream); border: 0.5px solid var(--rule); border-radius: 8px; overflow: hidden; transition: border-color 0.15s; }
@@ -265,7 +272,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title">Sales Sheet</div>
-  <div class="masthead-sub">Builder · v1.12</div>
+  <div class="masthead-sub">Builder · v2.0</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -354,6 +361,10 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
   <div>
     <div class="catalog-tools">
       <input type="text" class="search" id="search" placeholder="Search by code, name, or fabric&hellip;" />
+      <div class="season-picker-wrap" id="seasonPickerWrap" hidden>
+        <span class="season-picker-label">Season</span>
+        <select class="season-picker" id="seasonPicker"></select>
+      </div>
       <div class="chips" id="chips"></div>
     </div>
     <div class="catalog" id="catalog"></div>
@@ -374,7 +385,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sales Sheet Builder &middot; v1.12</span>
+  <span class="version-pill" id="versionPill">Sales Sheet Builder &middot; v2.0</span>
 </footer>
 
 <div class="preview-shell" id="previewShell">
@@ -434,6 +445,8 @@ let BRANDS = SEED_BRANDS.map(b => ({ ...b }));
 let imageMap = {};
 let logoMap = {};
 let sourcesLoaded = { brands: false, images: false };
+let seasonGroups = {};       // { 'SP26': { imageMap, styles, fileCount }, ... }
+let availableSeasons = [];   // sorted season keys, newest first
 
 const state = {
   customerName: '',
@@ -449,6 +462,7 @@ const state = {
   view: 'build',
   curPage: 0,
   sourcesOpen: false,
+  activeSeason: null,
 };
 
 const STORAGE_KEY = 'salesSheetBuilder.draft.v3';
@@ -635,6 +649,25 @@ function loadBrandLogos(files) {
   renderHeaderPickers();
 }
 
+// Extract season name from path like /Sources/StyleImages/SP26/foo.png -> "SP26".
+// Returns null if file is not inside a season subfolder under StyleImages.
+function extractSeasonFromPath(path) {
+  const m = path.match(/\/(?:style[-_ ]?images?|styles|images)\/([^\/]+)\//i);
+  return m ? m[1] : null;
+}
+
+// Sort key for season names like SP26, F26, SP27. Higher = newer.
+// Falls back to lexicographic for unrecognised names.
+function seasonSortKey(s) {
+  const m = s.match(/^(SP|SS|F|FW|H|R|PF|PS|CR)(\d+)/i);
+  if (m) {
+    const year = parseInt(m[2], 10);
+    const order = { 'R': 0, 'CR': 0, 'PS': 1, 'SP': 2, 'SS': 2, 'PF': 3, 'F': 4, 'FW': 4, 'H': 5 };
+    return year * 100 + (order[m[1].toUpperCase()] || 0);
+  }
+  return -1;
+}
+
 function loadStyleImages(files) {
   const imageFiles = Array.from(files).filter(f => /\.(png|jpg|jpeg|webp|gif|svg)$/i.test(f.name));
   if (imageFiles.length === 0) {
@@ -642,9 +675,15 @@ function loadStyleImages(files) {
     return;
   }
 
+  // Revoke any previously-issued blob URLs (both flat and per-season)
   Object.values(imageMap).forEach(url => URL.revokeObjectURL(url));
   imageMap = {};
+  Object.values(seasonGroups).forEach(g => {
+    Object.values(g.imageMap || {}).forEach(url => URL.revokeObjectURL(url));
+  });
+  seasonGroups = {};
 
+  // Group files by season subfolder
   const grouped = {};
   let skipped = 0;
   imageFiles.forEach(f => {
@@ -654,30 +693,106 @@ function loadStyleImages(files) {
     const styleCode = base.slice(0, idx).trim();
     const colorCode = base.slice(idx + 1).trim();
     if (!styleCode || !colorCode) { skipped++; return; }
-    imageMap[styleCode + '_' + colorCode] = URL.createObjectURL(f);
-    if (!grouped[styleCode]) grouped[styleCode] = { code: styleCode, colors: [] };
-    if (!grouped[styleCode].colors.find(c => c.code === colorCode)) {
-      grouped[styleCode].colors.push({ code: colorCode, name: colorCode, hex: '#CCCCCC' });
+
+    const path = '/' + (f.webkitRelativePath || f.name);
+    const seasonKey = extractSeasonFromPath(path) || '__flat__';
+
+    if (!grouped[seasonKey]) grouped[seasonKey] = { imageMap: {}, styleMap: {} };
+    const g = grouped[seasonKey];
+
+    g.imageMap[styleCode + '_' + colorCode] = URL.createObjectURL(f);
+    if (!g.styleMap[styleCode]) g.styleMap[styleCode] = { code: styleCode, name: styleCode, cat: 'Top', spec: '', colors: [] };
+    if (!g.styleMap[styleCode].colors.find(c => c.code === colorCode)) {
+      g.styleMap[styleCode].colors.push({ code: colorCode, name: colorCode, hex: '#CCCCCC' });
     }
   });
 
-  const newStyles = Object.values(grouped).map(g => ({
-    code: g.code, name: g.code, cat: 'Top', spec: '', colors: g.colors,
-  }));
-
-  if (newStyles.length === 0) {
+  if (Object.keys(grouped).length === 0) {
     setLoadedNote('imgLoaded', '<div class="source-error">\u26A0 No images matched the STYLE_COLOR pattern</div>');
     return;
   }
 
-  STYLES = newStyles;
-  setStatus('images', newStyles.length + ' styles \u00B7 ' + (imageFiles.length - skipped) + ' images', true);
+  // Build seasonGroups
+  Object.entries(grouped).forEach(([key, g]) => {
+    seasonGroups[key] = {
+      imageMap: g.imageMap,
+      styles: Object.values(g.styleMap),
+      fileCount: Object.keys(g.imageMap).length,
+    };
+  });
+
+  // Order: real seasons newest-first; flat fallback last
+  const realSeasons = Object.keys(seasonGroups).filter(k => k !== '__flat__');
+  realSeasons.sort((a, b) => seasonSortKey(b) - seasonSortKey(a) || a.localeCompare(b));
+  availableSeasons = realSeasons.length > 0 ? realSeasons.slice() : [];
+  if (seasonGroups['__flat__']) availableSeasons.push('__flat__');
+
+  // Activate the first season WITHOUT forcing the meta-bar Season field
+  // (respects any draft-restored season text the user already had)
+  setActiveSeason(availableSeasons[0]);
+
+  // Status reporting
+  const totalImages = Object.values(seasonGroups).reduce((s, g) => s + g.fileCount, 0);
+  const allCodes = new Set();
+  Object.values(seasonGroups).forEach(g => g.styles.forEach(s => allCodes.add(s.code)));
+  const totalStyles = allCodes.size;
+
+  const realSeasonCount = realSeasons.length;
+  const summary = realSeasonCount > 1
+    ? realSeasonCount + ' seasons \u00B7 ' + totalImages + ' images'
+    : totalStyles + ' styles \u00B7 ' + totalImages + ' images';
+  setStatus('images', summary, true);
+
   const skippedNote = skipped ? ' \u00B7 ' + skipped + ' skipped (bad filename)' : '';
-  setLoadedNote('imgLoaded',
-    '<div class="source-loaded">\u2713 ' + newStyles.length + ' styles, ' + (imageFiles.length - skipped) + ' images' + skippedNote + '</div>' +
-    '<button class="source-clear" data-clear="images">reset to seed images</button>');
+  let loadedHtml;
+  if (realSeasonCount > 0) {
+    const breakdown = availableSeasons.map(k => {
+      const label = k === '__flat__' ? '(no folder)' : k;
+      return escapeHtml(label) + ' (' + seasonGroups[k].styles.length + ')';
+    }).join(' \u00B7 ');
+    loadedHtml = '<div class="source-loaded">\u2713 ' + realSeasonCount + ' season' + (realSeasonCount === 1 ? '' : 's') + ' \u2014 ' + breakdown + skippedNote + '</div>';
+  } else {
+    loadedHtml = '<div class="source-loaded">\u2713 ' + totalStyles + ' styles, ' + totalImages + ' images' + skippedNote + '</div>';
+  }
+  setLoadedNote('imgLoaded', loadedHtml + '<button class="source-clear" data-clear="images">reset to seed images</button>');
+}
+
+function setActiveSeason(seasonKey, opts) {
+  opts = opts || {};
+  if (!seasonKey || !seasonGroups[seasonKey]) return;
+  state.activeSeason = seasonKey;
+
+  const g = seasonGroups[seasonKey];
+  imageMap = g.imageMap;
+  STYLES = g.styles.map(s => ({ ...s, colors: s.colors.map(c => ({ ...c })) }));
+
+  // Auto-fill the meta-bar Season field. Force on user-initiated picker change;
+  // on the initial load auto-pick, only fill if the field is currently empty.
+  if (seasonKey !== '__flat__' && (opts.force || !state.season)) {
+    state.season = seasonKey;
+    const el = $('seasonInput');
+    if (el) el.value = seasonKey;
+    persistCurrentDraft();
+  }
+
+  state.expandedStyle = null;
   renderCatalog();
   renderSidebar();
+  renderSeasonPicker();
+}
+
+function renderSeasonPicker() {
+  const wrap = $('seasonPickerWrap');
+  const picker = $('seasonPicker');
+  if (!wrap || !picker) return;
+  // Hide picker when there's nothing to pick (no sources loaded, or only a flat folder)
+  const hasRealSeasons = availableSeasons.some(k => k !== '__flat__');
+  if (!hasRealSeasons) { wrap.hidden = true; return; }
+  wrap.hidden = false;
+  picker.innerHTML = availableSeasons.map(k => {
+    const label = k === '__flat__' ? '(no folder)' : k;
+    return '<option value="' + escapeHtml(k) + '"' + (k === state.activeSeason ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
+  }).join('');
 }
 
 async function loadAllFromFolder(files) {
@@ -766,10 +881,17 @@ function resetSource(which) {
   } else if (which === 'images') {
     Object.values(imageMap).forEach(url => URL.revokeObjectURL(url));
     imageMap = {};
+    Object.values(seasonGroups).forEach(g => {
+      Object.values(g.imageMap || {}).forEach(url => URL.revokeObjectURL(url));
+    });
+    seasonGroups = {};
+    availableSeasons = [];
+    state.activeSeason = null;
     STYLES = SEED_STYLES.map(s => ({ ...s, colors: s.colors.map(c => ({ ...c })) }));
     setStatus('images', 'No images', false);
     setLoadedNote('imgLoaded', '');
     $('imgFiles').value = '';
+    renderSeasonPicker();
     renderCatalog();
     renderSidebar();
   }
@@ -1493,6 +1615,7 @@ $('brandPick').addEventListener('change', e => {
   persistCurrentDraft();
 });
 $('search').addEventListener('input', e => { state.search = e.target.value; renderCatalog(); });
+$('seasonPicker').addEventListener('change', e => setActiveSeason(e.target.value, { force: true }));
 $('goPreview').addEventListener('click', showPreview);
 $('back').addEventListener('click', showBuild);
 $('reset').addEventListener('click', () => {
