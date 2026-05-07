@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v2.1</title>
+<title>Sheet Builder · v2.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -119,11 +119,15 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .cheat-mode-note a { color: var(--accent); text-decoration: none; cursor: pointer; }
 .cheat-mode-note a:hover { text-decoration: underline; }
 
-.cheat-chip { background: white; border: 0.5px solid var(--rule); border-radius: 7px; padding: 10px 12px; user-select: none; display: flex; align-items: center; gap: 10px; cursor: grab; transition: border-color 0.15s; }
-.cheat-chip:active { cursor: grabbing; }
-.cheat-chip:hover { border-color: var(--rule-strong); }
+.cheat-chip { background: white; border: 0.5px solid var(--rule); border-radius: 7px; user-select: none; transition: border-color 0.15s; overflow: hidden; }
+.cheat-chip.expanded { border-color: var(--ink); }
 .cheat-chip.dragging { opacity: 0.4; }
 .cheat-chip.drag-over { border-color: var(--ink); border-style: dashed; }
+.cheat-chip-summary { padding: 10px 12px; display: flex; align-items: center; gap: 10px; cursor: grab; }
+.cheat-chip.expanded .cheat-chip-summary { cursor: default; }
+.cheat-chip-summary:active { cursor: grabbing; }
+.cheat-chip:hover { border-color: var(--rule-strong); }
+.cheat-chip.expanded:hover { border-color: var(--ink); }
 .cheat-chip-grip { font-family: var(--mono); color: var(--quiet); font-size: 14px; line-height: 1; flex-shrink: 0; }
 .cheat-chip-thumb { width: 40px; height: 40px; border-radius: 4px; background: var(--paper); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.08); }
 .cheat-chip-thumb img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
@@ -133,6 +137,9 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .cheat-chip-style { font-family: var(--mono); font-weight: 500; font-size: 12px; color: var(--ink); }
 .cheat-chip-color { font-family: var(--mono); font-size: 11px; color: var(--mute); }
 .cheat-chip-name { font-size: 11px; color: var(--mute); margin-top: 2px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cheat-chip-edit { font-size: 11px; color: var(--mute); background: none; border: 0.5px solid transparent; cursor: pointer; padding: 3px 8px; border-radius: 4px; flex-shrink: 0; }
+.cheat-chip-edit:hover { color: var(--ink); border-color: var(--rule); }
+.cheat-chip-edit.on { color: var(--ink); border-color: var(--rule-strong); background: var(--cream); }
 .cheat-chip-rm { font-size: 14px; color: var(--mute); background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 3px; line-height: 1; flex-shrink: 0; }
 .cheat-chip-rm:hover { color: var(--accent); background: var(--accent-soft); }
 
@@ -310,7 +317,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v2.1</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v2.2</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -430,7 +437,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v2.1</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v2.2</span>
 </footer>
 
 <div class="preview-shell" id="previewShell">
@@ -585,6 +592,11 @@ function getEffectiveStyleNumber(sc) {
   const o = state.overrides[sc];
   if (o && o.styleNumber != null) return o.styleNumber;
   const s = getStyle(sc); return s ? s.code : sc;
+}
+function getEffectiveStyleName(sc) {
+  const o = state.overrides[sc];
+  if (o && o.styleName != null) return o.styleName;
+  const s = getStyle(sc); return s ? (s.name || '') : '';
 }
 function getEffectiveFabric(sc) {
   const o = state.overrides[sc];
@@ -1024,7 +1036,7 @@ function renderCatalog() {
         '<div class="style-meta">' +
           '<div class="style-row1">' +
             '<span class="style-code">' + escapeHtml(s.code) + '</span>' +
-            '<span class="style-name">' + escapeHtml(s.name) + '</span>' +
+            '<span class="style-name">' + escapeHtml(getEffectiveStyleName(s.code) || s.name) + '</span>' +
             '<span class="style-cat">' + escapeHtml(s.cat || '') + '</span>' +
           '</div>' +
           (s.spec ? '<div class="style-spec">' + escapeHtml(s.spec) + '</div>' : '') +
@@ -1116,6 +1128,95 @@ function removeCheatItem(sc, cc) {
   persistCurrentDraft();
 }
 
+// Shared editor used by both Sales and Cheat sidebars.
+// `colorFilter` (optional): if set, only render the row for that single color.
+//   - Sales sheet passes nothing -> shows all selected colors
+//   - Cheat sheet passes the chip's color code -> shows only that one
+function renderStyleEditor(sc, colorFilter) {
+  const s = getStyle(sc);
+  if (!s) return '';
+  const styleNum = getEffectiveStyleNumber(sc);
+  const styleName = getEffectiveStyleName(sc);
+  const fabric = getEffectiveFabric(sc);
+  const contents = getEffectiveContents(sc);
+  const stylePrice = getEffectiveStylePrice(sc);
+  const showInv = getShowInventory(sc);
+  const selectedColors = (state.selections[sc] || []).map(cc => getColor(s, cc)).filter(Boolean);
+  const cols = colorFilter
+    ? selectedColors.filter(c => c.code === colorFilter)
+    : selectedColors;
+
+  return '<div class="page-editor">' +
+    '<div class="editor-row">' +
+      '<label class="editor-label">Style number</label>' +
+      '<input class="editor-input mono" data-field="styleNumber" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(styleNum) + '">' +
+    '</div>' +
+    '<div class="editor-row">' +
+      '<label class="editor-label">Style name</label>' +
+      '<input class="editor-input" data-field="styleName" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(styleName) + '" placeholder="e.g. Tee, Hoodie">' +
+    '</div>' +
+    '<div class="editor-row">' +
+      '<label class="editor-label">Fabric Content</label>' +
+      '<input class="editor-input mono" data-field="contents" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(contents) + '" placeholder="e.g. 100% COTTON">' +
+    '</div>' +
+    '<div class="editor-row">' +
+      '<label class="editor-label">Fabric description</label>' +
+      '<textarea class="editor-textarea" data-field="fabric" data-style="' + escapeHtml(sc) + '">' + escapeHtml(fabric) + '</textarea>' +
+    '</div>' +
+    '<div class="editor-row">' +
+      '<label class="editor-label">Price</label>' +
+      '<div class="editor-price-wrap">' +
+        '<span class="editor-price-prefix">$</span>' +
+        '<input class="editor-input mono editor-price-input" data-field="price" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(stylePrice) + '" placeholder="42.00" inputmode="decimal">' +
+      '</div>' +
+    '</div>' +
+    '<label class="editor-toggle">' +
+      '<input type="checkbox" data-toggle="showInventory" data-style="' + escapeHtml(sc) + '"' + (showInv ? ' checked' : '') + '>' +
+      '<span>Show inventory quantities on sheet</span>' +
+    '</label>' +
+    '<div class="editor-section-h">' + (colorFilter ? 'This color' : 'Colors') + ' \u00B7 ' + (showInv ? 'names & quantity' : 'names') + '</div>' +
+    cols.map(c => {
+      const url = getImageUrl(sc, c.code);
+      const thumb = url
+        ? '<img src="' + url + '" alt="">'
+        : '<div style="width:100%;height:100%;background:' + (c.hex || '#CCC') + '"></div>';
+      const qtyCell = showInv
+        ? '<input class="editor-color-qty" type="text" inputmode="numeric" placeholder="Qty" data-color-field="qty" data-style="' + escapeHtml(sc) + '" data-color="' + escapeHtml(c.code) + '" value="' + escapeHtml(getEffectiveQty(sc, c.code)) + '">'
+        : '';
+      return '<div class="editor-color' + (showInv ? ' with-qty' : '') + '">' +
+        '<div class="editor-color-thumb">' + thumb + '</div>' +
+        '<div class="editor-color-code">' + escapeHtml(c.code) + '</div>' +
+        '<input class="editor-color-name" placeholder="Name" data-color-field="name" data-style="' + escapeHtml(sc) + '" data-color="' + escapeHtml(c.code) + '" value="' + escapeHtml(getEffectiveColorName(sc, c.code)) + '">' +
+        qtyCell +
+      '</div>';
+    }).join('') +
+  '</div>';
+}
+
+// Wires up listeners inside any rendered editor (price prefix, color fields, inventory toggle).
+function wireEditorListeners(scope) {
+  const root = scope || document;
+  root.querySelectorAll('[data-field]').forEach(el => {
+    el.addEventListener('input', () => {
+      let v = el.value;
+      if (el.dataset.field === 'price') {
+        const stripped = v.replace(/^\s*\$\s*/, '');
+        if (stripped !== v) { el.value = stripped; v = stripped; }
+      }
+      setOverride(el.dataset.style, el.dataset.field, v);
+    });
+  });
+  root.querySelectorAll('[data-color-field]').forEach(el => {
+    el.addEventListener('input', () => setColorOverride(el.dataset.style, el.dataset.color, el.dataset.colorField, el.value));
+  });
+  root.querySelectorAll('[data-toggle="showInventory"]').forEach(el => {
+    el.addEventListener('change', () => {
+      setOverride(el.dataset.style, 'showInventory', el.checked);
+      renderSidebar();
+    });
+  });
+}
+
 function renderSidebar() {
   if (state.mode === 'cheat') return renderCheatSidebar();
   return renderSalesSidebar();
@@ -1139,32 +1240,44 @@ function renderCheatSidebar() {
   const pages = Math.ceil(items.length / MAX_TILES_PER_CHEAT);
   tally.textContent = pages + ' ' + (pages === 1 ? 'page' : 'pages') + ' \u00B7 ' + items.length + ' tiles';
 
-  const note = '<div class="cheat-mode-note">Tiles flow left-to-right, top-to-bottom &mdash; max <strong>8 per page</strong>. Drag to reorder. Edit names, prices &amp; inventory in <a data-go-sales="1">Sales sheet mode</a>.</div>';
+  const note = '<div class="cheat-mode-note">Tiles flow left-to-right, top-to-bottom &mdash; max <strong>8 per page</strong>. Drag to reorder, or click Edit to set price, names, and quantities.</div>';
 
   const chips = items.map(it => {
     const s = getStyle(it.sc);
     if (!s) return '';
     const c = getColor(s, it.cc);
     if (!c) return '';
+    const key = it.sc + '|' + it.cc;
+    const isEditing = state.expandedEditor === key;
     const styleNum = getEffectiveStyleNumber(it.sc);
+    const styleName = getEffectiveStyleName(it.sc);
     const colorName = getEffectiveColorName(it.sc, it.cc);
     const showName = colorName && colorName !== it.cc;
     const url = getImageUrl(it.sc, it.cc);
     const thumb = url
       ? '<img src="' + url + '" alt="">'
       : shape(s.cat || 'Top', c.hex || '#CCC');
-    const key = it.sc + '|' + it.cc;
-    return '<div class="cheat-chip" draggable="true" data-cheat-key="' + escapeHtml(key) + '" data-sc="' + escapeHtml(it.sc) + '" data-cc="' + escapeHtml(it.cc) + '">' +
-      '<span class="cheat-chip-grip">\u22EE\u22EE</span>' +
-      '<div class="cheat-chip-thumb">' + thumb + '</div>' +
-      '<div class="cheat-chip-info">' +
-        '<div class="cheat-chip-codes">' +
-          '<span class="cheat-chip-style">' + escapeHtml(styleNum) + '</span>' +
-          '<span class="cheat-chip-color">' + escapeHtml(it.cc) + '</span>' +
+
+    const editor = isEditing ? renderStyleEditor(it.sc, it.cc) : '';
+
+    return '<div class="cheat-chip ' + (isEditing ? 'expanded' : '') + '" draggable="' + (isEditing ? 'false' : 'true') + '" data-cheat-key="' + escapeHtml(key) + '" data-sc="' + escapeHtml(it.sc) + '" data-cc="' + escapeHtml(it.cc) + '">' +
+      '<div class="cheat-chip-summary">' +
+        '<span class="cheat-chip-grip">\u22EE\u22EE</span>' +
+        '<div class="cheat-chip-thumb">' + thumb + '</div>' +
+        '<div class="cheat-chip-info">' +
+          '<div class="cheat-chip-codes">' +
+            '<span class="cheat-chip-style">' + escapeHtml(styleNum) + '</span>' +
+            '<span class="cheat-chip-color">' + escapeHtml(it.cc) + '</span>' +
+          '</div>' +
+          (() => {
+            const meta = [styleName, showName ? colorName : ''].filter(Boolean).join(' \u00B7 ');
+            return meta ? '<div class="cheat-chip-name">' + escapeHtml(meta) + '</div>' : '';
+          })() +
         '</div>' +
-        (showName ? '<div class="cheat-chip-name">' + escapeHtml(colorName) + '</div>' : '') +
+        '<button class="cheat-chip-edit ' + (isEditing ? 'on' : '') + '" data-cheat-edit="' + escapeHtml(key) + '">' + (isEditing ? 'Done' : 'Edit') + '</button>' +
+        '<button class="cheat-chip-rm" data-cheat-rm="' + escapeHtml(key) + '">\u00D7</button>' +
       '</div>' +
-      '<button class="cheat-chip-rm" data-cheat-rm="' + escapeHtml(key) + '">\u00D7</button>' +
+      editor +
     '</div>';
   }).join('');
 
@@ -1178,8 +1291,15 @@ function renderCheatSidebar() {
       removeCheatItem(sc, cc);
     });
   });
-  const goSales = list.querySelector('[data-go-sales]');
-  if (goSales) goSales.addEventListener('click', e => { e.preventDefault(); setMode('sales'); });
+  list.querySelectorAll('.cheat-chip-edit').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const key = el.dataset.cheatEdit;
+      state.expandedEditor = state.expandedEditor === key ? null : key;
+      renderSidebar();
+    });
+  });
+  wireEditorListeners(list);
 
   wireCheatDrag();
   $('goPreview').disabled = false;
@@ -1189,6 +1309,7 @@ function wireCheatDrag() {
   let dragKey = null;
   document.querySelectorAll('.cheat-chip').forEach(el => {
     el.addEventListener('dragstart', e => {
+      if (el.getAttribute('draggable') !== 'true') { e.preventDefault(); return; }
       dragKey = el.dataset.cheatKey;
       el.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
@@ -1246,55 +1367,9 @@ function renderSalesSidebar() {
     const cols = state.selections[sc].map(cc => getColor(s, cc)).filter(Boolean);
     const isEditing = state.expandedEditor === sc;
     const styleNum = getEffectiveStyleNumber(sc);
-    const fabric = getEffectiveFabric(sc);
-    const contents = getEffectiveContents(sc);
-    const stylePrice = getEffectiveStylePrice(sc);
-    const showInv = getShowInventory(sc);
+    const styleName = getEffectiveStyleName(sc);
 
-    let editor = '';
-    if (isEditing) {
-      editor = '<div class="page-editor">' +
-        '<div class="editor-row">' +
-          '<label class="editor-label">Style number</label>' +
-          '<input class="editor-input mono" data-field="styleNumber" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(styleNum) + '">' +
-        '</div>' +
-        '<div class="editor-row">' +
-          '<label class="editor-label">Fabric Content</label>' +
-          '<input class="editor-input mono" data-field="contents" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(contents) + '" placeholder="e.g. 100% COTTON">' +
-        '</div>' +
-        '<div class="editor-row">' +
-          '<label class="editor-label">Fabric description</label>' +
-          '<textarea class="editor-textarea" data-field="fabric" data-style="' + escapeHtml(sc) + '">' + escapeHtml(fabric) + '</textarea>' +
-        '</div>' +
-        '<div class="editor-row">' +
-          '<label class="editor-label">Price</label>' +
-          '<div class="editor-price-wrap">' +
-            '<span class="editor-price-prefix">$</span>' +
-            '<input class="editor-input mono editor-price-input" data-field="price" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(stylePrice) + '" placeholder="42.00" inputmode="decimal">' +
-          '</div>' +
-        '</div>' +
-        '<label class="editor-toggle">' +
-          '<input type="checkbox" data-toggle="showInventory" data-style="' + escapeHtml(sc) + '"' + (showInv ? ' checked' : '') + '>' +
-          '<span>Show inventory quantities on sheet</span>' +
-        '</label>' +
-        '<div class="editor-section-h">Colors \u00B7 ' + (showInv ? 'names & quantity' : 'names') + '</div>' +
-        cols.map(c => {
-          const url = getImageUrl(sc, c.code);
-          const thumb = url
-            ? '<img src="' + url + '" alt="">'
-            : '<div style="width:100%;height:100%;background:' + (c.hex || '#CCC') + '"></div>';
-          const qtyCell = showInv
-            ? '<input class="editor-color-qty" type="text" inputmode="numeric" placeholder="Qty" data-color-field="qty" data-style="' + escapeHtml(sc) + '" data-color="' + escapeHtml(c.code) + '" value="' + escapeHtml(getEffectiveQty(sc, c.code)) + '">'
-            : '';
-          return '<div class="editor-color' + (showInv ? ' with-qty' : '') + '">' +
-            '<div class="editor-color-thumb">' + thumb + '</div>' +
-            '<div class="editor-color-code">' + escapeHtml(c.code) + '</div>' +
-            '<input class="editor-color-name" placeholder="Name" data-color-field="name" data-style="' + escapeHtml(sc) + '" data-color="' + escapeHtml(c.code) + '" value="' + escapeHtml(getEffectiveColorName(sc, c.code)) + '">' +
-            qtyCell +
-          '</div>';
-        }).join('') +
-      '</div>';
-    }
+    const editor = isEditing ? renderStyleEditor(sc) : '';
 
     return '<div class="page-chip ' + (isEditing ? 'expanded' : '') + '" draggable="' + (isEditing ? 'false' : 'true') + '" data-style="' + escapeHtml(sc) + '">' +
       '<div class="page-chip-summary">' +
@@ -1312,7 +1387,7 @@ function renderSalesSidebar() {
               : '<div class="color-swatch-mini" style="background:' + (c.hex || '#CCC') + '" title="' + escapeHtml(c.code) + '"></div>';
           }).join('') +
         '</div>' +
-        '<div class="page-chip-meta">' + escapeHtml(s.name || sc) + ' \u00B7 ' + cols.length + ' ' + (cols.length === 1 ? 'color' : 'colors') + (cols.length > MAX_COLORS_PER_PAGE ? ' \u00B7 ' + Math.ceil(cols.length / MAX_COLORS_PER_PAGE) + ' pages' : '') + '</div>' +
+        '<div class="page-chip-meta">' + escapeHtml(styleName || sc) + ' \u00B7 ' + cols.length + ' ' + (cols.length === 1 ? 'color' : 'colors') + (cols.length > MAX_COLORS_PER_PAGE ? ' \u00B7 ' + Math.ceil(cols.length / MAX_COLORS_PER_PAGE) + ' pages' : '') + '</div>' +
       '</div>' +
       editor +
     '</div>';
@@ -1329,26 +1404,7 @@ function renderSalesSidebar() {
       renderSidebar();
     });
   });
-  list.querySelectorAll('[data-field]').forEach(el => {
-    el.addEventListener('input', () => {
-      let v = el.value;
-      if (el.dataset.field === 'price') {
-        // Strip any leading $ the user might paste; the prefix is shown by the wrapper
-        const stripped = v.replace(/^\s*\$\s*/, '');
-        if (stripped !== v) { el.value = stripped; v = stripped; }
-      }
-      setOverride(el.dataset.style, el.dataset.field, v);
-    });
-  });
-  list.querySelectorAll('[data-color-field]').forEach(el => {
-    el.addEventListener('input', () => setColorOverride(el.dataset.style, el.dataset.color, el.dataset.colorField, el.value));
-  });
-  list.querySelectorAll('[data-toggle="showInventory"]').forEach(el => {
-    el.addEventListener('change', () => {
-      setOverride(el.dataset.style, 'showInventory', el.checked);
-      renderSidebar();
-    });
-  });
+  wireEditorListeners(list);
 
   wireDrag();
   $('goPreview').disabled = false;
