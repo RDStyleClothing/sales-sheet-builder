@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sales Sheet Builder · v2.0</title>
+<title>Sheet Builder · v2.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -106,6 +106,44 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .chip { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; background: transparent; border: 0.5px solid var(--rule); border-radius: 999px; padding: 7px 13px; cursor: pointer; color: var(--mute); transition: all 0.15s; }
 .chip:hover { border-color: var(--rule-strong); color: var(--ink); }
 .chip.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
+.mode-tabs-wrap { border-bottom: 0.5px solid var(--rule); padding: 14px 24px 16px; display: flex; justify-content: center; }
+.mode-tabs-wrap.hidden { display: none; }
+.mode-tabs { display: inline-flex; background: var(--cream); border: 0.5px solid var(--rule); border-radius: 999px; padding: 4px; gap: 2px; }
+.mode-tab { font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; background: transparent; border: none; color: var(--mute); padding: 9px 22px; border-radius: 999px; cursor: pointer; transition: all 0.15s; }
+.mode-tab:hover { color: var(--ink); }
+.mode-tab.on { background: var(--ink); color: var(--paper); }
+
+.cheat-mode-note { background: var(--cream); border-left: 2px solid var(--rule-strong); padding: 10px 12px; margin-bottom: 14px; font-size: 11px; color: var(--mute); line-height: 1.5; border-radius: 0 4px 4px 0; }
+.cheat-mode-note strong { color: var(--ink); font-weight: 500; }
+.cheat-mode-note a { color: var(--accent); text-decoration: none; cursor: pointer; }
+.cheat-mode-note a:hover { text-decoration: underline; }
+
+.cheat-chip { background: white; border: 0.5px solid var(--rule); border-radius: 7px; padding: 10px 12px; user-select: none; display: flex; align-items: center; gap: 10px; cursor: grab; transition: border-color 0.15s; }
+.cheat-chip:active { cursor: grabbing; }
+.cheat-chip:hover { border-color: var(--rule-strong); }
+.cheat-chip.dragging { opacity: 0.4; }
+.cheat-chip.drag-over { border-color: var(--ink); border-style: dashed; }
+.cheat-chip-grip { font-family: var(--mono); color: var(--quiet); font-size: 14px; line-height: 1; flex-shrink: 0; }
+.cheat-chip-thumb { width: 40px; height: 40px; border-radius: 4px; background: var(--paper); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.08); }
+.cheat-chip-thumb img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
+.cheat-chip-thumb svg { width: 28px; height: 28px; }
+.cheat-chip-info { flex: 1; min-width: 0; }
+.cheat-chip-codes { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.cheat-chip-style { font-family: var(--mono); font-weight: 500; font-size: 12px; color: var(--ink); }
+.cheat-chip-color { font-family: var(--mono); font-size: 11px; color: var(--mute); }
+.cheat-chip-name { font-size: 11px; color: var(--mute); margin-top: 2px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cheat-chip-rm { font-size: 14px; color: var(--mute); background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 3px; line-height: 1; flex-shrink: 0; }
+.cheat-chip-rm:hover { color: var(--accent); background: var(--accent-soft); }
+
+.sheet-page.cheat .sheet-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 1fr); gap: 0; padding: 14px 18px; align-items: stretch; justify-items: stretch; }
+.sheet-page.cheat .sheet-tile { width: auto; max-width: none; padding: 6px 8px; min-height: 0; min-width: 0; justify-content: flex-start; }
+.sheet-page.cheat .sheet-shirt { flex: 1 1 auto; aspect-ratio: auto; min-height: 0; width: 100%; }
+.sheet-page.cheat .sheet-tile-style { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1814; margin-top: 6px; font-weight: 500; }
+.sheet-page.cheat .sheet-tile-code { font-size: 9px; letter-spacing: 0.12em; margin-top: 2px; color: #777; }
+.sheet-page.cheat .sheet-tile-name { font-size: 8px; letter-spacing: 0.08em; margin-top: 1px; }
+.sheet-page.cheat .sheet-tile-price { font-size: 12px; margin-top: 3px; }
+.sheet-page.cheat .sheet-tile-qty { font-size: 8px; margin-top: 2px; }
 
 .season-picker-wrap { display: flex; align-items: center; gap: 10px; padding: 4px 14px 4px 16px; background: var(--ink); color: var(--paper); border-radius: 999px; }
 .season-picker-wrap[hidden] { display: none; }
@@ -271,13 +309,20 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 <body>
 
 <header class="masthead" id="masthead">
-  <div class="masthead-title">Sales Sheet</div>
-  <div class="masthead-sub">Builder · v2.0</div>
+  <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v2.1</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
   </button>
 </header>
+
+<div class="mode-tabs-wrap" id="modeTabsWrap">
+  <div class="mode-tabs" role="tablist">
+    <button class="mode-tab on" id="modeSales" data-mode="sales" role="tab" aria-selected="true">Sales sheet</button>
+    <button class="mode-tab" id="modeCheat" data-mode="cheat" role="tab" aria-selected="false">Cheat sheet</button>
+  </div>
+</div>
 
 <section class="sources-panel" id="sourcesPanel">
   <div class="quick-setup-wrap">
@@ -385,7 +430,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sales Sheet Builder &middot; v2.0</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v2.1</span>
 </footer>
 
 <div class="preview-shell" id="previewShell">
@@ -458,8 +503,10 @@ const state = {
   category: 'All',
   selections: {},
   pageOrder: [],
+  cheatOrder: [],   // [{sc, cc}, ...] for cheat-sheet tile ordering
   overrides: {},
   view: 'build',
+  mode: 'sales',    // 'sales' or 'cheat'
   curPage: 0,
   sourcesOpen: false,
   activeSeason: null,
@@ -485,6 +532,8 @@ function persistCurrentDraft() {
       customerName: state.customerName,
       season: state.season,
       pageOrder: state.pageOrder,
+      cheatOrder: state.cheatOrder,
+      mode: state.mode,
       selections: state.selections,
       overrides: state.overrides,
       savedAt: Date.now(),
@@ -500,12 +549,16 @@ function loadCurrentDraft() {
     state.customerName = d.customerName || '';
     state.season = d.season || '';
     state.pageOrder = d.pageOrder || [];
+    state.cheatOrder = Array.isArray(d.cheatOrder) ? d.cheatOrder : [];
+    state.mode = (d.mode === 'cheat') ? 'cheat' : 'sales';
     state.selections = d.selections || {};
     state.overrides = d.overrides || {};
   } else {
     state.customerName = '';
     state.season = '';
     state.pageOrder = [];
+    state.cheatOrder = [];
+    state.mode = 'sales';
     state.selections = {};
     state.overrides = {};
   }
@@ -991,6 +1044,27 @@ function renderCatalog() {
   });
 }
 
+function syncCheatOrder() {
+  // Drop entries no longer in selections
+  state.cheatOrder = state.cheatOrder.filter(it =>
+    it && it.sc && it.cc &&
+    state.selections[it.sc] &&
+    state.selections[it.sc].includes(it.cc)
+  );
+  // Append any new (style, color) pairs not yet ordered
+  const existing = new Set(state.cheatOrder.map(it => it.sc + '\u0000' + it.cc));
+  state.pageOrder.forEach(sc => {
+    const colors = state.selections[sc] || [];
+    colors.forEach(cc => {
+      const key = sc + '\u0000' + cc;
+      if (!existing.has(key)) {
+        state.cheatOrder.push({ sc, cc });
+        existing.add(key);
+      }
+    });
+  });
+}
+
 function toggleColor(styleCode, colorCode) {
   const wasNew = !state.selections[styleCode];
   if (!state.selections[styleCode]) {
@@ -1005,9 +1079,10 @@ function toggleColor(styleCode, colorCode) {
     state.pageOrder = state.pageOrder.filter(c => c !== styleCode);
     delete state.overrides[styleCode];
     if (state.expandedEditor === styleCode) state.expandedEditor = null;
-  } else if (wasNew) {
+  } else if (wasNew && state.mode === 'sales') {
     state.expandedEditor = styleCode;
   }
+  syncCheatOrder();
   renderCatalog();
   renderSidebar();
   persistCurrentDraft();
@@ -1018,12 +1093,138 @@ function removePage(styleCode) {
   delete state.overrides[styleCode];
   state.pageOrder = state.pageOrder.filter(c => c !== styleCode);
   if (state.expandedEditor === styleCode) state.expandedEditor = null;
+  syncCheatOrder();
+  renderCatalog();
+  renderSidebar();
+  persistCurrentDraft();
+}
+
+function removeCheatItem(sc, cc) {
+  const arr = state.selections[sc];
+  if (!arr) return;
+  const i = arr.indexOf(cc);
+  if (i >= 0) arr.splice(i, 1);
+  if (arr.length === 0) {
+    delete state.selections[sc];
+    delete state.overrides[sc];
+    state.pageOrder = state.pageOrder.filter(c => c !== sc);
+    if (state.expandedEditor === sc) state.expandedEditor = null;
+  }
+  syncCheatOrder();
   renderCatalog();
   renderSidebar();
   persistCurrentDraft();
 }
 
 function renderSidebar() {
+  if (state.mode === 'cheat') return renderCheatSidebar();
+  return renderSalesSidebar();
+}
+
+function renderCheatSidebar() {
+  const list = $('pagesList');
+  const tally = $('tally');
+
+  // Make sure cheat order reflects current selections
+  syncCheatOrder();
+  const items = state.cheatOrder.slice();
+
+  if (items.length === 0) {
+    list.innerHTML = '<div class="empty-state" style="padding: 24px 8px; font-size: 14px;">Click a style and tap colors to add tiles.</div>';
+    tally.textContent = '';
+    $('goPreview').disabled = true;
+    return;
+  }
+
+  const pages = Math.ceil(items.length / MAX_TILES_PER_CHEAT);
+  tally.textContent = pages + ' ' + (pages === 1 ? 'page' : 'pages') + ' \u00B7 ' + items.length + ' tiles';
+
+  const note = '<div class="cheat-mode-note">Tiles flow left-to-right, top-to-bottom &mdash; max <strong>8 per page</strong>. Drag to reorder. Edit names, prices &amp; inventory in <a data-go-sales="1">Sales sheet mode</a>.</div>';
+
+  const chips = items.map(it => {
+    const s = getStyle(it.sc);
+    if (!s) return '';
+    const c = getColor(s, it.cc);
+    if (!c) return '';
+    const styleNum = getEffectiveStyleNumber(it.sc);
+    const colorName = getEffectiveColorName(it.sc, it.cc);
+    const showName = colorName && colorName !== it.cc;
+    const url = getImageUrl(it.sc, it.cc);
+    const thumb = url
+      ? '<img src="' + url + '" alt="">'
+      : shape(s.cat || 'Top', c.hex || '#CCC');
+    const key = it.sc + '|' + it.cc;
+    return '<div class="cheat-chip" draggable="true" data-cheat-key="' + escapeHtml(key) + '" data-sc="' + escapeHtml(it.sc) + '" data-cc="' + escapeHtml(it.cc) + '">' +
+      '<span class="cheat-chip-grip">\u22EE\u22EE</span>' +
+      '<div class="cheat-chip-thumb">' + thumb + '</div>' +
+      '<div class="cheat-chip-info">' +
+        '<div class="cheat-chip-codes">' +
+          '<span class="cheat-chip-style">' + escapeHtml(styleNum) + '</span>' +
+          '<span class="cheat-chip-color">' + escapeHtml(it.cc) + '</span>' +
+        '</div>' +
+        (showName ? '<div class="cheat-chip-name">' + escapeHtml(colorName) + '</div>' : '') +
+      '</div>' +
+      '<button class="cheat-chip-rm" data-cheat-rm="' + escapeHtml(key) + '">\u00D7</button>' +
+    '</div>';
+  }).join('');
+
+  list.innerHTML = note + chips;
+
+  list.querySelectorAll('.cheat-chip-rm').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const key = el.dataset.cheatRm;
+      const [sc, cc] = key.split('|');
+      removeCheatItem(sc, cc);
+    });
+  });
+  const goSales = list.querySelector('[data-go-sales]');
+  if (goSales) goSales.addEventListener('click', e => { e.preventDefault(); setMode('sales'); });
+
+  wireCheatDrag();
+  $('goPreview').disabled = false;
+}
+
+function wireCheatDrag() {
+  let dragKey = null;
+  document.querySelectorAll('.cheat-chip').forEach(el => {
+    el.addEventListener('dragstart', e => {
+      dragKey = el.dataset.cheatKey;
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      document.querySelectorAll('.drag-over').forEach(x => x.classList.remove('drag-over'));
+    });
+    el.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (dragKey && dragKey !== el.dataset.cheatKey) {
+        document.querySelectorAll('.drag-over').forEach(x => x.classList.remove('drag-over'));
+        el.classList.add('drag-over');
+      }
+    });
+    el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      const targetKey = el.dataset.cheatKey;
+      if (dragKey && targetKey && dragKey !== targetKey) {
+        const order = state.cheatOrder.slice();
+        const fromIdx = order.findIndex(it => it.sc + '|' + it.cc === dragKey);
+        const toIdx = order.findIndex(it => it.sc + '|' + it.cc === targetKey);
+        if (fromIdx >= 0 && toIdx >= 0) {
+          const [moved] = order.splice(fromIdx, 1);
+          order.splice(toIdx, 0, moved);
+          state.cheatOrder = order;
+          renderSidebar();
+          persistCurrentDraft();
+        }
+      }
+    });
+  });
+}
+
+function renderSalesSidebar() {
   const list = $('pagesList');
   const tally = $('tally');
   const codes = state.pageOrder.filter(c => state.selections[c]);
@@ -1196,6 +1397,7 @@ function wireDrag() {
 // =========================================================
 
 const MAX_COLORS_PER_PAGE = 4;
+const MAX_TILES_PER_CHEAT = 8;
 
 function buildPagePlan() {
   const codes = state.pageOrder.filter(c => state.selections[c]);
@@ -1216,7 +1418,22 @@ function buildPagePlan() {
   return pages;
 }
 
+function buildCheatPagePlan() {
+  syncCheatOrder();
+  const items = state.cheatOrder.slice();
+  const pages = [];
+  for (let i = 0; i < items.length; i += MAX_TILES_PER_CHEAT) {
+    pages.push({ items: items.slice(i, i + MAX_TILES_PER_CHEAT) });
+  }
+  return pages;
+}
+
 function renderPreview() {
+  if (state.mode === 'cheat') return renderCheatPreview();
+  return renderSalesPreview();
+}
+
+function renderSalesPreview() {
   const codes = state.pageOrder.filter(c => state.selections[c]);
   const brand = getBrand();
   const titleParts = [];
@@ -1302,6 +1519,86 @@ function renderPreview() {
   if (prev) prev.addEventListener('click', () => { if (state.curPage > 0) { state.curPage--; renderPreview(); } });
   if (next) next.addEventListener('click', () => {
     const len = buildPagePlan().length;
+    if (state.curPage < len - 1) { state.curPage++; renderPreview(); }
+  });
+}
+
+function renderCheatPreview() {
+  const brand = getBrand();
+  const titleParts = ['Cheat sheet'];
+  if (state.customerName) titleParts.push(state.customerName);
+  if (state.season) titleParts.push(state.season);
+  titleParts.push((brand && (brand.display || brand.name)) || '');
+  $('previewTitle').textContent = titleParts.filter(Boolean).join(' \u00B7 ');
+
+  const stage = $('previewStage');
+  const pages = buildCheatPagePlan();
+  if (pages.length === 0) {
+    stage.innerHTML = '<div class="empty-state">No tiles to preview.</div>';
+    $('previewNav').innerHTML = '';
+    return;
+  }
+
+  if (state.curPage >= pages.length) state.curPage = 0;
+
+  const brandHtml = brand && brand.logoUrl
+    ? '<img src="' + brand.logoUrl + '" alt="' + escapeHtml(brand.name) + '">'
+    : '<span class="' + (brand && brand.cls || '') + '">' + escapeHtml(brand && (brand.display || brand.name) || '') + '</span>';
+
+  stage.innerHTML = pages.map((pg, i) => {
+    const headerParts = [];
+    if (state.season) headerParts.push(escapeHtml(state.season).toUpperCase());
+    headerParts.push('CHEAT SHEET');
+    if (state.customerName) headerParts.push(escapeHtml(state.customerName).toUpperCase());
+    if (pages.length > 1) headerParts.push((i + 1) + ' / ' + pages.length);
+    const headerLeft = headerParts.join(' \u00B7 ');
+
+    const footParts = [];
+    if (state.customerName) footParts.push('Cheat sheet for ' + escapeHtml(state.customerName));
+    footParts.push('Page ' + (i + 1) + ' of ' + pages.length);
+    footParts.push('\u00A9 2026 R.D. International Style Collections Ltd. All rights reserved.');
+
+    const tiles = pg.items.map(it => {
+      const s = getStyle(it.sc);
+      if (!s) return '';
+      const c = getColor(s, it.cc);
+      if (!c) return '';
+      const styleNum = getEffectiveStyleNumber(it.sc);
+      const colorName = getEffectiveColorName(it.sc, it.cc);
+      const showName = colorName && colorName !== it.cc;
+      const stylePrice = getDisplayStylePrice(it.sc);
+      const showInv = getShowInventory(it.sc);
+      const qty = showInv ? getEffectiveQty(it.sc, it.cc) : '';
+      return '<div class="sheet-tile">' +
+        '<div class="sheet-shirt">' + garmentVisual(it.sc, it.cc, s, c) + '</div>' +
+        '<div class="sheet-tile-style">' + escapeHtml(styleNum) + '</div>' +
+        '<div class="sheet-tile-code">' + escapeHtml(it.cc) + '</div>' +
+        (showName ? '<div class="sheet-tile-name">' + escapeHtml(colorName) + '</div>' : '') +
+        (stylePrice ? '<div class="sheet-tile-price">' + escapeHtml(stylePrice) + '</div>' : '') +
+        (qty !== '' ? '<div class="sheet-tile-qty">Qty <strong>' + escapeHtml(qty) + '</strong></div>' : '') +
+      '</div>';
+    }).join('');
+
+    return '<div class="sheet-page cheat" data-i="' + i + '"' + (i !== state.curPage ? ' hidden' : '') + '>' +
+      '<div class="sheet-bar">' +
+        '<div class="sheet-bar-spec">' + headerLeft + '</div>' +
+        '<div class="sheet-bar-right">' +
+          '<div class="sheet-bar-brand">' + brandHtml + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="sheet-grid">' + tiles + '</div>' +
+      '<div class="sheet-foot">' + footParts.join(' \u00B7 ') + '</div>' +
+    '</div>';
+  }).join('');
+
+  $('previewNav').innerHTML =
+    '<button id="prevP"' + (state.curPage === 0 ? ' disabled' : '') + '>\u2039 Prev</button>' +
+    '<span>Page ' + (state.curPage + 1) + ' / ' + pages.length + '</span>' +
+    '<button id="nextP"' + (state.curPage === pages.length - 1 ? ' disabled' : '') + '>Next \u203A</button>';
+  const prev = $('prevP'); const next = $('nextP');
+  if (prev) prev.addEventListener('click', () => { if (state.curPage > 0) { state.curPage--; renderPreview(); } });
+  if (next) next.addEventListener('click', () => {
+    const len = buildCheatPagePlan().length;
     if (state.curPage < len - 1) { state.curPage++; renderPreview(); }
   });
 }
@@ -1393,6 +1690,161 @@ async function exportPptx() {
           } catch {}
         }
       }
+    }
+
+    if (state.mode === 'cheat') {
+      const pages = buildCheatPagePlan();
+      for (let i = 0; i < pages.length; i++) {
+        const pg = pages[i];
+        const slide = pptx.addSlide();
+        slide.background = { color: 'FFFFFF' };
+
+        // Header bar
+        slide.addShape('rect', {
+          x: 0, y: 0, w: SLIDE_W, h: HEADER_H,
+          fill: { color: '1A1814' }, line: { color: '1A1814' },
+        });
+        const hParts = [];
+        if (state.season) hParts.push(state.season.toUpperCase());
+        hParts.push('CHEAT SHEET');
+        if (state.customerName) hParts.push(state.customerName.toUpperCase());
+        if (pages.length > 1) hParts.push((i + 1) + ' / ' + pages.length);
+        slide.addText(hParts.join('  \u00B7  '), {
+          x: 0.4, y: 0, w: SLIDE_W - 2.6, h: HEADER_H,
+          fontFace: 'Consolas', fontSize: 10, color: 'BDB6A6',
+          valign: 'middle', align: 'left', charSpacing: 1,
+        });
+        if (brandLogoData) {
+          const logoBoxW = 1.6;
+          const logoBoxH = HEADER_H - 0.16;
+          const logoBoxAspect = logoBoxW / logoBoxH;
+          let logoW, logoH;
+          if (brandLogoAspect > logoBoxAspect) {
+            logoW = logoBoxW;
+            logoH = logoBoxW / brandLogoAspect;
+          } else {
+            logoH = logoBoxH;
+            logoW = logoBoxH * brandLogoAspect;
+          }
+          const logoX = SLIDE_W - 0.4 - logoW;
+          const logoY = 0.08 + (logoBoxH - logoH) / 2;
+          slide.addImage({ data: brandLogoData, x: logoX, y: logoY, w: logoW, h: logoH });
+        } else {
+          slide.addText((brand && (brand.display || brand.name)) || '', {
+            x: SLIDE_W - 2.1, y: 0, w: 1.8, h: HEADER_H,
+            fontFace: 'Calibri', fontSize: 14, bold: true, color: 'D8D2C2',
+            valign: 'middle', align: 'right', charSpacing: 4,
+          });
+        }
+
+        // 4-col x 2-row grid for up to 8 tiles
+        const COLS = 4;
+        const ROWS = 2;
+        const bodyTop = HEADER_H + 0.15;
+        const bodyH = SLIDE_H - HEADER_H - FOOT_H - 0.30;
+        const cellW = SLIDE_W / COLS;
+        const cellH = bodyH / ROWS;
+        const labelGap = 0.08;
+        const labelH = 0.22;
+
+        pg.items.forEach((it, idx) => {
+          const s = getStyle(it.sc);
+          if (!s) return;
+          const c = getColor(s, it.cc);
+          if (!c) return;
+          const col = idx % COLS;
+          const row = Math.floor(idx / COLS);
+          const cellX = col * cellW;
+          const cellY = bodyTop + row * cellH;
+          const data = imgData[it.sc + '_' + it.cc];
+          const styleNum = getEffectiveStyleNumber(it.sc);
+          const colorName = getEffectiveColorName(it.sc, it.cc);
+          const showName = colorName && colorName !== it.cc;
+          const stylePrice = getDisplayStylePrice(it.sc);
+          const showInv = getShowInventory(it.sc);
+          const qty = showInv ? getEffectiveQty(it.sc, it.cc) : '';
+
+          // Inset within cell
+          const padX = 0.20;
+          const padY = 0.10;
+          const tileW = cellW - padX * 2;
+          const labelLines = 1 + (showName ? 1 : 0) + (stylePrice ? 1 : 0) + (qty !== '' ? 1 : 0);
+          const labelsBlockH = labelGap + labelLines * labelH;
+          const imgH = Math.max(0.9, cellH - padY * 2 - labelsBlockH);
+          const tileX = cellX + padX;
+          const tileY = cellY + padY;
+
+          if (data) {
+            const aspect = imgAspect[it.sc + '_' + it.cc] || 0.8;
+            const containerAspect = tileW / imgH;
+            let renderW, renderH;
+            if (aspect > containerAspect) { renderW = tileW; renderH = tileW / aspect; }
+            else { renderH = imgH; renderW = imgH * aspect; }
+            const offsetX = (tileW - renderW) / 2;
+            const offsetY = (imgH - renderH) / 2;
+            slide.addImage({ data, x: tileX + offsetX, y: tileY + offsetY, w: renderW, h: renderH });
+          } else {
+            slide.addShape('rect', {
+              x: tileX + 0.2, y: tileY + 0.2, w: tileW - 0.4, h: imgH - 0.4,
+              fill: { color: (c.hex || '#CCCCCC').replace('#', '') },
+              line: { color: 'EEEEEE', width: 0.5 },
+            });
+          }
+
+          let labelY = tileY + imgH + labelGap;
+          slide.addText(styleNum, {
+            x: tileX, y: labelY, w: tileW, h: labelH,
+            fontFace: 'Consolas', fontSize: 9, color: '1A1814', bold: true,
+            align: 'center', charSpacing: 2,
+          });
+          labelY += labelH;
+          slide.addText(it.cc, {
+            x: tileX, y: labelY, w: tileW, h: labelH,
+            fontFace: 'Consolas', fontSize: 8, color: '777777',
+            align: 'center', charSpacing: 1.5,
+          });
+          labelY += labelH;
+          if (showName) {
+            slide.addText((colorName || '').toUpperCase(), {
+              x: tileX, y: labelY, w: tileW, h: labelH,
+              fontFace: 'Calibri', fontSize: 8, color: '555555',
+              align: 'center', charSpacing: 1.2,
+            });
+            labelY += labelH;
+          }
+          if (stylePrice) {
+            slide.addText(stylePrice, {
+              x: tileX, y: labelY, w: tileW, h: labelH,
+              fontFace: 'Cambria', fontSize: 11, italic: true, color: '1A1814',
+              align: 'center',
+            });
+            labelY += labelH;
+          }
+          if (qty !== '') {
+            slide.addText([
+              { text: 'QTY ', options: { color: '888888' } },
+              { text: String(qty), options: { color: '333333', bold: true } },
+            ], {
+              x: tileX, y: labelY, w: tileW, h: labelH,
+              fontFace: 'Consolas', fontSize: 8,
+              align: 'center', charSpacing: 1.2,
+            });
+          }
+        });
+
+        const footParts = [];
+        if (state.customerName) footParts.push('Cheat sheet for ' + state.customerName);
+        footParts.push('Page ' + (i + 1) + ' of ' + pages.length);
+        footParts.push('\u00A9 2026 R.D. International Style Collections Ltd.');
+        slide.addText(footParts.join(' \u00B7 '), {
+          x: 0.5, y: SLIDE_H - FOOT_H, w: SLIDE_W - 1, h: FOOT_H,
+          fontFace: 'Calibri', fontSize: 7, color: '999999',
+          align: 'center', valign: 'middle',
+        });
+      }
+
+      await pptx.writeFile({ fileName: buildExportFilename() + '.pptx' });
+      return;
     }
 
     const pages = buildPagePlan();
@@ -1566,6 +2018,29 @@ async function exportPptx() {
   }
 }
 
+function setMode(newMode) {
+  if (newMode !== 'sales' && newMode !== 'cheat') return;
+  if (state.mode === newMode) return;
+  state.mode = newMode;
+  state.curPage = 0;
+  state.expandedEditor = null;
+  document.querySelectorAll('.mode-tab').forEach(el => {
+    const on = el.dataset.mode === newMode;
+    el.classList.toggle('on', on);
+    el.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  $('mastheadTitle').textContent = newMode === 'cheat' ? 'Cheat Sheet' : 'Sales Sheet';
+  const hint = document.querySelector('.sheet-side-hint');
+  if (hint) {
+    hint.textContent = newMode === 'cheat'
+      ? 'Drag to reorder \u00B7 max 8 tiles per page'
+      : 'Drag to reorder \u00B7 click Edit for Fabric Content & price';
+  }
+  $('goPreview').textContent = newMode === 'cheat' ? 'Preview cheat sheet \u2192' : 'Preview sheet \u2192';
+  renderSidebar();
+  persistCurrentDraft();
+}
+
 function showPreview() {
   if ($('goPreview').disabled) return;
   state.view = 'preview';
@@ -1575,6 +2050,7 @@ function showPreview() {
   $('metaBar').classList.add('hidden');
   $('sourcesPanel').classList.add('hidden');
   $('appFooter').classList.add('hidden');
+  $('modeTabsWrap').classList.add('hidden');
   $('previewShell').classList.add('on');
   renderPreview();
   window.scrollTo(0, 0);
@@ -1586,9 +2062,14 @@ function showBuild() {
   $('metaBar').classList.remove('hidden');
   $('sourcesPanel').classList.remove('hidden');
   $('appFooter').classList.remove('hidden');
+  $('modeTabsWrap').classList.remove('hidden');
   $('previewShell').classList.remove('on');
   window.scrollTo(0, 0);
 }
+
+document.querySelectorAll('.mode-tab').forEach(el => {
+  el.addEventListener('click', () => setMode(el.dataset.mode));
+});
 
 $('sourcesBtn').addEventListener('click', () => {
   state.sourcesOpen = !state.sourcesOpen;
@@ -1621,8 +2102,9 @@ $('back').addEventListener('click', showBuild);
 $('reset').addEventListener('click', () => {
   if (Object.keys(state.selections).length === 0) return;
   const who = state.customerName ? ' for ' + state.customerName : '';
-  if (!confirm('Clear all pages from this sheet' + who + '?')) return;
-  state.selections = {}; state.overrides = {}; state.pageOrder = [];
+  const what = state.mode === 'cheat' ? 'tiles from this cheat sheet' : 'pages from this sheet';
+  if (!confirm('Clear all ' + what + who + '?')) return;
+  state.selections = {}; state.overrides = {}; state.pageOrder = []; state.cheatOrder = [];
   state.expandedStyle = null; state.expandedEditor = null;
   renderCatalog(); renderSidebar(); persistCurrentDraft();
 });
@@ -1655,7 +2137,7 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') showBuild();
     if (e.key === 'ArrowLeft' && state.curPage > 0) { state.curPage--; renderPreview(); }
     if (e.key === 'ArrowRight') {
-      const len = buildPagePlan().length;
+      const len = (state.mode === 'cheat' ? buildCheatPagePlan() : buildPagePlan()).length;
       if (state.curPage < len - 1) { state.curPage++; renderPreview(); }
     }
   }
@@ -1664,10 +2146,24 @@ document.addEventListener('keydown', e => {
 setInterval(refreshDraftStatus, 15000);
 
 loadCurrentDraft();
+syncCheatOrder();
+// Apply persisted mode UI without firing setMode (which short-circuits if same)
+document.querySelectorAll('.mode-tab').forEach(el => {
+  const on = el.dataset.mode === state.mode;
+  el.classList.toggle('on', on);
+  el.setAttribute('aria-selected', on ? 'true' : 'false');
+});
+$('mastheadTitle').textContent = state.mode === 'cheat' ? 'Cheat Sheet' : 'Sales Sheet';
 renderHeaderPickers();
 renderChips();
 renderCatalog();
 renderSidebar();
+// Apply mode-dependent labels after sidebar exists
+const _hint = document.querySelector('.sheet-side-hint');
+if (_hint) _hint.textContent = state.mode === 'cheat'
+  ? 'Drag to reorder \u00B7 max 8 tiles per page'
+  : 'Drag to reorder \u00B7 click Edit for Fabric Content & price';
+$('goPreview').textContent = state.mode === 'cheat' ? 'Preview cheat sheet \u2192' : 'Preview sheet \u2192';
 refreshSourcesBtn();
 
 // On first load, if no sources are loaded, expand the sources panel and show what was loaded last time
