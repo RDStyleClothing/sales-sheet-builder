@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v2.2</title>
+<title>Sheet Builder · v2.3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -317,7 +317,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v2.2</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v2.3</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -370,7 +370,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
         <div class="source-card-title">Style images</div>
         <div class="source-status"><span class="source-status-dot" id="imgDot"></span><span id="imgStatus">No images</span></div>
       </div>
-      <div class="source-card-desc">Folder of garment images. Filenames must follow <code>STYLE_COLOR.ext</code> &mdash; e.g. <code>58MT400_B-2178.png</code>.</div>
+      <div class="source-card-desc">Folder of garment images. Filenames using <code>STYLE_COLOR.ext</code> auto-fill style and color codes &mdash; e.g. <code>58MT400_B-2178.png</code>. Anything else still uploads; you fill in the details via Edit.</div>
       <div class="source-input-wrap">
         <label class="source-pick-btn" for="imgFiles">Choose folder</label>
         <input type="file" class="source-input-hidden" id="imgFiles" webkitdirectory directory multiple>
@@ -437,7 +437,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v2.2</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v2.3</span>
 </footer>
 
 <div class="preview-shell" id="previewShell">
@@ -750,14 +750,27 @@ function loadStyleImages(files) {
 
   // Group files by season subfolder
   const grouped = {};
-  let skipped = 0;
+  let unstructured = 0;
   imageFiles.forEach(f => {
     const base = f.name.replace(/\.[^.]+$/, '');
+    let styleCode = '', colorCode = '';
     const idx = base.indexOf('_');
-    if (idx <= 0 || idx >= base.length - 1) { skipped++; return; }
-    const styleCode = base.slice(0, idx).trim();
-    const colorCode = base.slice(idx + 1).trim();
-    if (!styleCode || !colorCode) { skipped++; return; }
+    if (idx > 0 && idx < base.length - 1) {
+      const l = base.slice(0, idx).trim();
+      const r = base.slice(idx + 1).trim();
+      if (l && r) { styleCode = l; colorCode = r; }
+    }
+    let synthetic = false;
+    if (!styleCode || !colorCode) {
+      // Unstructured filename — accept it anyway, leave codes blank-ish.
+      // Use the basename as both keys (so the image is locatable) and the
+      // displays will hide the redundant color code where it equals the style code.
+      const safe = (base.trim()) || ('image-' + (unstructured + 1));
+      styleCode = safe;
+      colorCode = safe;
+      synthetic = true;
+      unstructured++;
+    }
 
     const path = '/' + (f.webkitRelativePath || f.name);
     const seasonKey = extractSeasonFromPath(path) || '__flat__';
@@ -766,14 +779,15 @@ function loadStyleImages(files) {
     const g = grouped[seasonKey];
 
     g.imageMap[styleCode + '_' + colorCode] = URL.createObjectURL(f);
-    if (!g.styleMap[styleCode]) g.styleMap[styleCode] = { code: styleCode, name: styleCode, cat: 'Top', spec: '', colors: [] };
+    if (!g.styleMap[styleCode]) g.styleMap[styleCode] = { code: styleCode, name: synthetic ? '' : styleCode, cat: 'Top', spec: '', colors: [] };
     if (!g.styleMap[styleCode].colors.find(c => c.code === colorCode)) {
-      g.styleMap[styleCode].colors.push({ code: colorCode, name: colorCode, hex: '#CCCCCC' });
+      // Empty name for synthetic so showName=false until user fills it in
+      g.styleMap[styleCode].colors.push({ code: colorCode, name: synthetic ? '' : colorCode, hex: '#CCCCCC' });
     }
   });
 
   if (Object.keys(grouped).length === 0) {
-    setLoadedNote('imgLoaded', '<div class="source-error">\u26A0 No images matched the STYLE_COLOR pattern</div>');
+    setLoadedNote('imgLoaded', '<div class="source-error">\u26A0 No images could be loaded</div>');
     return;
   }
 
@@ -808,16 +822,16 @@ function loadStyleImages(files) {
     : totalStyles + ' styles \u00B7 ' + totalImages + ' images';
   setStatus('images', summary, true);
 
-  const skippedNote = skipped ? ' \u00B7 ' + skipped + ' skipped (bad filename)' : '';
+  const unstructuredNote = unstructured ? ' \u00B7 ' + unstructured + ' need style info' : '';
   let loadedHtml;
   if (realSeasonCount > 0) {
     const breakdown = availableSeasons.map(k => {
       const label = k === '__flat__' ? '(no folder)' : k;
       return escapeHtml(label) + ' (' + seasonGroups[k].styles.length + ')';
     }).join(' \u00B7 ');
-    loadedHtml = '<div class="source-loaded">\u2713 ' + realSeasonCount + ' season' + (realSeasonCount === 1 ? '' : 's') + ' \u2014 ' + breakdown + skippedNote + '</div>';
+    loadedHtml = '<div class="source-loaded">\u2713 ' + realSeasonCount + ' season' + (realSeasonCount === 1 ? '' : 's') + ' \u2014 ' + breakdown + unstructuredNote + '</div>';
   } else {
-    loadedHtml = '<div class="source-loaded">\u2713 ' + totalStyles + ' styles, ' + totalImages + ' images' + skippedNote + '</div>';
+    loadedHtml = '<div class="source-loaded">\u2713 ' + totalStyles + ' styles, ' + totalImages + ' images' + unstructuredNote + '</div>';
   }
   setLoadedNote('imgLoaded', loadedHtml + '<button class="source-clear" data-clear="images">reset to seed images</button>');
 }
@@ -1023,10 +1037,13 @@ function renderCatalog() {
         const dot = url
           ? '<div class="swatch-dot" style="background:white;"><img src="' + url + '" alt=""></div>'
           : '<div class="swatch-dot" style="background:' + (col.hex || '#CCC') + '"></div>';
+        const isSynthetic = col.code === s.code;
+        const colName = getEffectiveColorName(s.code, col.code);
+        const showColName = colName && colName !== col.code;
         return '<div class="swatch ' + (sel.includes(col.code) ? 'on' : '') + '" data-style="' + escapeHtml(s.code) + '" data-color="' + escapeHtml(col.code) + '">' +
           dot +
-          '<div class="swatch-code">' + escapeHtml(col.code) + '</div>' +
-          '<div class="swatch-name">' + escapeHtml(col.name) + '</div>' +
+          (isSynthetic ? '' : '<div class="swatch-code">' + escapeHtml(col.code) + '</div>') +
+          (showColName ? '<div class="swatch-name">' + escapeHtml(colName) + '</div>' : '') +
         '</div>';
       }).join('') + '</div>';
     }
@@ -1267,7 +1284,7 @@ function renderCheatSidebar() {
         '<div class="cheat-chip-info">' +
           '<div class="cheat-chip-codes">' +
             '<span class="cheat-chip-style">' + escapeHtml(styleNum) + '</span>' +
-            '<span class="cheat-chip-color">' + escapeHtml(it.cc) + '</span>' +
+            (it.cc !== it.sc ? '<span class="cheat-chip-color">' + escapeHtml(it.cc) + '</span>' : '') +
           '</div>' +
           (() => {
             const meta = [styleName, showName ? colorName : ''].filter(Boolean).join(' \u00B7 ');
@@ -1557,7 +1574,7 @@ function renderSalesPreview() {
           const qty = showInv ? getEffectiveQty(sc, c.code) : '';
           return '<div class="sheet-tile">' +
             '<div class="sheet-shirt">' + garmentVisual(sc, c.code, s, c) + '</div>' +
-            '<div class="sheet-tile-code">' + escapeHtml(c.code) + '</div>' +
+            (c.code !== sc ? '<div class="sheet-tile-code">' + escapeHtml(c.code) + '</div>' : '') +
             (showName ? '<div class="sheet-tile-name">' + escapeHtml(colorName) + '</div>' : '') +
             (qty !== '' ? '<div class="sheet-tile-qty">Qty <strong>' + escapeHtml(qty) + '</strong></div>' : '') +
           '</div>';
@@ -1628,7 +1645,7 @@ function renderCheatPreview() {
       return '<div class="sheet-tile">' +
         '<div class="sheet-shirt">' + garmentVisual(it.sc, it.cc, s, c) + '</div>' +
         '<div class="sheet-tile-style">' + escapeHtml(styleNum) + '</div>' +
-        '<div class="sheet-tile-code">' + escapeHtml(it.cc) + '</div>' +
+        (it.cc !== it.sc ? '<div class="sheet-tile-code">' + escapeHtml(it.cc) + '</div>' : '') +
         (showName ? '<div class="sheet-tile-name">' + escapeHtml(colorName) + '</div>' : '') +
         (stylePrice ? '<div class="sheet-tile-price">' + escapeHtml(stylePrice) + '</div>' : '') +
         (qty !== '' ? '<div class="sheet-tile-qty">Qty <strong>' + escapeHtml(qty) + '</strong></div>' : '') +
@@ -1824,7 +1841,8 @@ async function exportPptx() {
           const padX = 0.20;
           const padY = 0.10;
           const tileW = cellW - padX * 2;
-          const labelLines = 1 + (showName ? 1 : 0) + (stylePrice ? 1 : 0) + (qty !== '' ? 1 : 0);
+          const showCode = it.cc !== it.sc;
+          const labelLines = 1 + (showCode ? 1 : 0) + (showName ? 1 : 0) + (stylePrice ? 1 : 0) + (qty !== '' ? 1 : 0);
           const labelsBlockH = labelGap + labelLines * labelH;
           const imgH = Math.max(0.9, cellH - padY * 2 - labelsBlockH);
           const tileX = cellX + padX;
@@ -1854,12 +1872,14 @@ async function exportPptx() {
             align: 'center', charSpacing: 2,
           });
           labelY += labelH;
-          slide.addText(it.cc, {
-            x: tileX, y: labelY, w: tileW, h: labelH,
-            fontFace: 'Consolas', fontSize: 8, color: '777777',
-            align: 'center', charSpacing: 1.5,
-          });
-          labelY += labelH;
+          if (showCode) {
+            slide.addText(it.cc, {
+              x: tileX, y: labelY, w: tileW, h: labelH,
+              fontFace: 'Consolas', fontSize: 8, color: '777777',
+              align: 'center', charSpacing: 1.5,
+            });
+            labelY += labelH;
+          }
           if (showName) {
             slide.addText((colorName || '').toUpperCase(), {
               x: tileX, y: labelY, w: tileW, h: labelH,
@@ -2026,27 +2046,31 @@ async function exportPptx() {
           });
         }
 
-        slide.addText(c.code, {
-          x: x, y: labelStartY, w: tileW, h: labelH,
-          fontFace: 'Consolas', fontSize: 9, color: '555555',
-          align: 'center', charSpacing: 2,
-        });
+        let labelY = labelStartY;
+        if (c.code !== sc) {
+          slide.addText(c.code, {
+            x: x, y: labelY, w: tileW, h: labelH,
+            fontFace: 'Consolas', fontSize: 9, color: '555555',
+            align: 'center', charSpacing: 2,
+          });
+          labelY += labelH;
+        }
         if (showName) {
           slide.addText((colorName || '').toUpperCase(), {
-            x: x, y: labelStartY + labelH, w: tileW, h: labelH,
+            x: x, y: labelY, w: tileW, h: labelH,
             fontFace: 'Calibri', fontSize: 9, color: '555555',
             align: 'center', charSpacing: 1.5,
           });
+          labelY += labelH;
         }
         const showInv = getShowInventory(sc);
         const qty = showInv ? getEffectiveQty(sc, c.code) : '';
         if (qty !== '') {
-          const qtyY = labelStartY + (showName ? labelH * 2 : labelH) + 0.05;
           slide.addText([
             { text: 'QTY ', options: { color: '888888' } },
             { text: String(qty), options: { color: '333333', bold: true } },
           ], {
-            x: x, y: qtyY, w: tileW, h: labelH,
+            x: x, y: labelY + 0.05, w: tileW, h: labelH,
             fontFace: 'Consolas', fontSize: 9,
             align: 'center', charSpacing: 1.5,
           });
