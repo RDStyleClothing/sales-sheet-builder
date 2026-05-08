@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v2.3</title>
+<title>Sheet Builder · v2.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -135,6 +135,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .cheat-chip-info { flex: 1; min-width: 0; }
 .cheat-chip-codes { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
 .cheat-chip-style { font-family: var(--mono); font-weight: 500; font-size: 12px; color: var(--ink); }
+.cheat-chip-style-placeholder { color: var(--quiet); font-weight: 400; font-style: italic; }
 .cheat-chip-color { font-family: var(--mono); font-size: 11px; color: var(--mute); }
 .cheat-chip-name { font-size: 11px; color: var(--mute); margin-top: 2px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cheat-chip-edit { font-size: 11px; color: var(--mute); background: none; border: 0.5px solid transparent; cursor: pointer; padding: 3px 8px; border-radius: 4px; flex-shrink: 0; }
@@ -142,6 +143,19 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .cheat-chip-edit.on { color: var(--ink); border-color: var(--rule-strong); background: var(--cream); }
 .cheat-chip-rm { font-size: 14px; color: var(--mute); background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 3px; line-height: 1; flex-shrink: 0; }
 .cheat-chip-rm:hover { color: var(--accent); background: var(--accent-soft); }
+.cheat-chip-break { font-size: 13px; line-height: 1; color: var(--mute); background: none; border: 0.5px solid transparent; cursor: pointer; padding: 3px 6px; border-radius: 4px; flex-shrink: 0; }
+.cheat-chip-break:hover { color: var(--accent); border-color: var(--rule); background: white; }
+.cheat-chip-break.on { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+
+.cheat-page-divider { display: flex; align-items: center; gap: 8px; margin: 14px 4px 8px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mute); user-select: none; }
+.cheat-page-divider:first-child { margin-top: 0; }
+.cheat-page-divider .cpd-line { flex: 1; height: 0; border-top: 0.5px solid var(--rule); }
+.cheat-page-divider .cpd-label { white-space: nowrap; padding: 0 2px; }
+.cheat-page-divider.manual .cpd-label { color: var(--accent); }
+.cheat-page-divider.manual .cpd-line { border-top-color: var(--accent); border-top-style: dashed; }
+.cheat-page-divider .cpd-rm { font-size: 12px; line-height: 1; color: var(--mute); background: none; border: none; cursor: pointer; padding: 2px 6px; border-radius: 3px; }
+.cheat-page-divider .cpd-rm:hover { color: var(--accent); background: var(--accent-soft); }
+.cheat-page-section { display: flex; flex-direction: column; gap: 8px; }
 
 .sheet-page.cheat .sheet-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 1fr); gap: 0; padding: 14px 18px; align-items: stretch; justify-items: stretch; }
 .sheet-page.cheat .sheet-tile { width: auto; max-width: none; padding: 6px 8px; min-height: 0; min-width: 0; justify-content: flex-start; }
@@ -202,6 +216,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .page-chip-h { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .page-chip-grip { font-family: var(--mono); color: var(--quiet); font-size: 14px; line-height: 1; }
 .page-chip-code { font-family: var(--mono); font-weight: 500; font-size: 13px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.page-chip-code-placeholder { color: var(--quiet); font-weight: 400; font-style: italic; }
 .page-chip-edit { font-size: 11px; color: var(--mute); background: none; border: 0.5px solid transparent; cursor: pointer; padding: 3px 8px; border-radius: 4px; }
 .page-chip-edit:hover { color: var(--ink); border-color: var(--rule); }
 .page-chip-edit.on { color: var(--ink); border-color: var(--rule-strong); background: var(--cream); }
@@ -317,7 +332,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v2.3</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v2.5</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -437,7 +452,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v2.3</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v2.5</span>
 </footer>
 
 <div class="preview-shell" id="previewShell">
@@ -511,6 +526,7 @@ const state = {
   selections: {},
   pageOrder: [],
   cheatOrder: [],   // [{sc, cc}, ...] for cheat-sheet tile ordering
+  cheatBreaks: new Set(),  // Set of "sc|cc" keys that begin a new page (manual break)
   overrides: {},
   view: 'build',
   mode: 'sales',    // 'sales' or 'cheat'
@@ -540,6 +556,7 @@ function persistCurrentDraft() {
       season: state.season,
       pageOrder: state.pageOrder,
       cheatOrder: state.cheatOrder,
+      cheatBreaks: Array.from(state.cheatBreaks),
       mode: state.mode,
       selections: state.selections,
       overrides: state.overrides,
@@ -557,6 +574,7 @@ function loadCurrentDraft() {
     state.season = d.season || '';
     state.pageOrder = d.pageOrder || [];
     state.cheatOrder = Array.isArray(d.cheatOrder) ? d.cheatOrder : [];
+    state.cheatBreaks = new Set(Array.isArray(d.cheatBreaks) ? d.cheatBreaks : []);
     state.mode = (d.mode === 'cheat') ? 'cheat' : 'sales';
     state.selections = d.selections || {};
     state.overrides = d.overrides || {};
@@ -565,6 +583,7 @@ function loadCurrentDraft() {
     state.season = '';
     state.pageOrder = [];
     state.cheatOrder = [];
+    state.cheatBreaks = new Set();
     state.mode = 'sales';
     state.selections = {};
     state.overrides = {};
@@ -588,15 +607,31 @@ function getBrand()    { return BRANDS.find(b => b.id === state.brandId) || BRAN
 function getStyle(code){ return STYLES.find(s => s.code === code); }
 function getColor(style, code) { return style && style.colors.find(c => c.code === code); }
 
+function isSyntheticStyle(sc) {
+  const s = getStyle(sc);
+  return !!(s && s.synthetic);
+}
 function getEffectiveStyleNumber(sc) {
   const o = state.overrides[sc];
   if (o && o.styleNumber != null) return o.styleNumber;
-  const s = getStyle(sc); return s ? s.code : sc;
+  const s = getStyle(sc);
+  if (s && s.synthetic) return '';   // leave blank for unstructured uploads
+  return s ? s.code : sc;
+}
+// Display fallback used in sidebar chips so the user can identify which chip is which
+// even before they've filled in a real style number.
+function getChipLabel(sc) {
+  const num = getEffectiveStyleNumber(sc);
+  if (num) return num;
+  const s = getStyle(sc);
+  return s ? s.code : sc;
 }
 function getEffectiveStyleName(sc) {
   const o = state.overrides[sc];
   if (o && o.styleName != null) return o.styleName;
-  const s = getStyle(sc); return s ? (s.name || '') : '';
+  const s = getStyle(sc);
+  if (s && s.synthetic) return '';
+  return s ? (s.name || '') : '';
 }
 function getEffectiveFabric(sc) {
   const o = state.overrides[sc];
@@ -779,10 +814,10 @@ function loadStyleImages(files) {
     const g = grouped[seasonKey];
 
     g.imageMap[styleCode + '_' + colorCode] = URL.createObjectURL(f);
-    if (!g.styleMap[styleCode]) g.styleMap[styleCode] = { code: styleCode, name: synthetic ? '' : styleCode, cat: 'Top', spec: '', colors: [] };
+    if (!g.styleMap[styleCode]) g.styleMap[styleCode] = { code: styleCode, name: '', cat: 'Top', spec: '', colors: [], synthetic: synthetic };
     if (!g.styleMap[styleCode].colors.find(c => c.code === colorCode)) {
-      // Empty name for synthetic so showName=false until user fills it in
-      g.styleMap[styleCode].colors.push({ code: colorCode, name: synthetic ? '' : colorCode, hex: '#CCCCCC' });
+      // Names always blank from upload; user fills them in via the editor.
+      g.styleMap[styleCode].colors.push({ code: colorCode, name: '', hex: '#CCCCCC', synthetic: synthetic });
     }
   });
 
@@ -1073,6 +1108,8 @@ function renderCatalog() {
   });
 }
 
+function getCheatItemKey(it) { return it.sc + '|' + it.cc; }
+
 function syncCheatOrder() {
   // Drop entries no longer in selections
   state.cheatOrder = state.cheatOrder.filter(it =>
@@ -1092,6 +1129,18 @@ function syncCheatOrder() {
       }
     });
   });
+  // Drop any orphan breaks for tiles that no longer exist
+  const validKeys = new Set(state.cheatOrder.map(getCheatItemKey));
+  const cleaned = new Set();
+  state.cheatBreaks.forEach(k => { if (validKeys.has(k)) cleaned.add(k); });
+  state.cheatBreaks = cleaned;
+}
+
+function toggleCheatBreak(key) {
+  if (state.cheatBreaks.has(key)) state.cheatBreaks.delete(key);
+  else state.cheatBreaks.add(key);
+  renderSidebar();
+  persistCurrentDraft();
 }
 
 function toggleColor(styleCode, colorCode) {
@@ -1166,7 +1215,7 @@ function renderStyleEditor(sc, colorFilter) {
   return '<div class="page-editor">' +
     '<div class="editor-row">' +
       '<label class="editor-label">Style number</label>' +
-      '<input class="editor-input mono" data-field="styleNumber" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(styleNum) + '">' +
+      '<input class="editor-input mono" data-field="styleNumber" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(styleNum) + '" placeholder="e.g. 58MT400">' +
     '</div>' +
     '<div class="editor-row">' +
       '<label class="editor-label">Style name</label>' +
@@ -1197,13 +1246,14 @@ function renderStyleEditor(sc, colorFilter) {
       const thumb = url
         ? '<img src="' + url + '" alt="">'
         : '<div style="width:100%;height:100%;background:' + (c.hex || '#CCC') + '"></div>';
+      const isSynthColor = c.code === sc;
       const qtyCell = showInv
         ? '<input class="editor-color-qty" type="text" inputmode="numeric" placeholder="Qty" data-color-field="qty" data-style="' + escapeHtml(sc) + '" data-color="' + escapeHtml(c.code) + '" value="' + escapeHtml(getEffectiveQty(sc, c.code)) + '">'
         : '';
       return '<div class="editor-color' + (showInv ? ' with-qty' : '') + '">' +
         '<div class="editor-color-thumb">' + thumb + '</div>' +
-        '<div class="editor-color-code">' + escapeHtml(c.code) + '</div>' +
-        '<input class="editor-color-name" placeholder="Name" data-color-field="name" data-style="' + escapeHtml(sc) + '" data-color="' + escapeHtml(c.code) + '" value="' + escapeHtml(getEffectiveColorName(sc, c.code)) + '">' +
+        '<div class="editor-color-code">' + (isSynthColor ? '' : escapeHtml(c.code)) + '</div>' +
+        '<input class="editor-color-name" placeholder="Color name" data-color-field="name" data-style="' + escapeHtml(sc) + '" data-color="' + escapeHtml(c.code) + '" value="' + escapeHtml(getEffectiveColorName(sc, c.code)) + '">' +
         qtyCell +
       '</div>';
     }).join('') +
@@ -1254,27 +1304,31 @@ function renderCheatSidebar() {
     return;
   }
 
-  const pages = Math.ceil(items.length / MAX_TILES_PER_CHEAT);
-  tally.textContent = pages + ' ' + (pages === 1 ? 'page' : 'pages') + ' \u00B7 ' + items.length + ' tiles';
+  const pagePlan = buildCheatPagePlan();
+  const totalPages = pagePlan.length;
+  tally.textContent = totalPages + ' ' + (totalPages === 1 ? 'page' : 'pages') + ' \u00B7 ' + items.length + ' tiles';
 
-  const note = '<div class="cheat-mode-note">Tiles flow left-to-right, top-to-bottom &mdash; max <strong>8 per page</strong>. Drag to reorder, or click Edit to set price, names, and quantities.</div>';
+  const note = '<div class="cheat-mode-note">Default: <strong>8 per page</strong>, filled in order. Drag tiles to reorder &mdash; group outfits, match tops to bottoms, etc. Click <strong>\u21B5</strong> on any tile to start a new page on that tile.</div>';
 
-  const chips = items.map(it => {
+  // Render the sidebar grouped into the actual pages so the user can see
+  // which tile lands where, with manual-break dividers showing a remove button.
+  function renderChip(it) {
     const s = getStyle(it.sc);
     if (!s) return '';
     const c = getColor(s, it.cc);
     if (!c) return '';
-    const key = it.sc + '|' + it.cc;
+    const key = getCheatItemKey(it);
     const isEditing = state.expandedEditor === key;
     const styleNum = getEffectiveStyleNumber(it.sc);
+    const chipLabel = getChipLabel(it.sc);
     const styleName = getEffectiveStyleName(it.sc);
     const colorName = getEffectiveColorName(it.sc, it.cc);
     const showName = colorName && colorName !== it.cc;
+    const hasBreak = state.cheatBreaks.has(key);
     const url = getImageUrl(it.sc, it.cc);
     const thumb = url
       ? '<img src="' + url + '" alt="">'
       : shape(s.cat || 'Top', c.hex || '#CCC');
-
     const editor = isEditing ? renderStyleEditor(it.sc, it.cc) : '';
 
     return '<div class="cheat-chip ' + (isEditing ? 'expanded' : '') + '" draggable="' + (isEditing ? 'false' : 'true') + '" data-cheat-key="' + escapeHtml(key) + '" data-sc="' + escapeHtml(it.sc) + '" data-cc="' + escapeHtml(it.cc) + '">' +
@@ -1283,7 +1337,7 @@ function renderCheatSidebar() {
         '<div class="cheat-chip-thumb">' + thumb + '</div>' +
         '<div class="cheat-chip-info">' +
           '<div class="cheat-chip-codes">' +
-            '<span class="cheat-chip-style">' + escapeHtml(styleNum) + '</span>' +
+            '<span class="cheat-chip-style' + (!styleNum ? ' cheat-chip-style-placeholder' : '') + '">' + escapeHtml(chipLabel) + '</span>' +
             (it.cc !== it.sc ? '<span class="cheat-chip-color">' + escapeHtml(it.cc) + '</span>' : '') +
           '</div>' +
           (() => {
@@ -1291,14 +1345,39 @@ function renderCheatSidebar() {
             return meta ? '<div class="cheat-chip-name">' + escapeHtml(meta) + '</div>' : '';
           })() +
         '</div>' +
+        '<button class="cheat-chip-break ' + (hasBreak ? 'on' : '') + '" data-cheat-break="' + escapeHtml(key) + '" title="Start a new page on this tile">\u21B5</button>' +
         '<button class="cheat-chip-edit ' + (isEditing ? 'on' : '') + '" data-cheat-edit="' + escapeHtml(key) + '">' + (isEditing ? 'Done' : 'Edit') + '</button>' +
         '<button class="cheat-chip-rm" data-cheat-rm="' + escapeHtml(key) + '">\u00D7</button>' +
       '</div>' +
       editor +
     '</div>';
-  }).join('');
+  }
 
-  list.innerHTML = note + chips;
+  const html = [note];
+  pagePlan.forEach((pg, pi) => {
+    const firstKey = pg.items[0] ? getCheatItemKey(pg.items[0]) : '';
+    const isManual = !!pg.manual;
+    const dividerCls = 'cheat-page-divider' + (isManual ? ' manual' : '');
+    const tileCount = pg.items.length;
+    const cap = ' \u00B7 ' + tileCount + ' / ' + MAX_TILES_PER_CHEAT;
+    const removeBtn = isManual && firstKey
+      ? '<button class="cpd-rm" data-cheat-break-rm="' + escapeHtml(firstKey) + '" title="Remove manual break">\u00D7</button>'
+      : '';
+    const label = 'Page ' + (pi + 1) + (isManual ? ' \u00B7 manual break' : '') + cap;
+    html.push(
+      '<div class="' + dividerCls + '">' +
+        '<span class="cpd-line"></span>' +
+        '<span class="cpd-label">' + escapeHtml(label) + '</span>' +
+        removeBtn +
+        '<span class="cpd-line"></span>' +
+      '</div>'
+    );
+    html.push('<div class="cheat-page-section">');
+    pg.items.forEach(it => html.push(renderChip(it)));
+    html.push('</div>');
+  });
+
+  list.innerHTML = html.join('');
 
   list.querySelectorAll('.cheat-chip-rm').forEach(el => {
     el.addEventListener('click', e => {
@@ -1314,6 +1393,18 @@ function renderCheatSidebar() {
       const key = el.dataset.cheatEdit;
       state.expandedEditor = state.expandedEditor === key ? null : key;
       renderSidebar();
+    });
+  });
+  list.querySelectorAll('.cheat-chip-break').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      toggleCheatBreak(el.dataset.cheatBreak);
+    });
+  });
+  list.querySelectorAll('[data-cheat-break-rm]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      toggleCheatBreak(el.dataset.cheatBreakRm);
     });
   });
   wireEditorListeners(list);
@@ -1384,6 +1475,7 @@ function renderSalesSidebar() {
     const cols = state.selections[sc].map(cc => getColor(s, cc)).filter(Boolean);
     const isEditing = state.expandedEditor === sc;
     const styleNum = getEffectiveStyleNumber(sc);
+    const chipLabel = getChipLabel(sc);
     const styleName = getEffectiveStyleName(sc);
 
     const editor = isEditing ? renderStyleEditor(sc) : '';
@@ -1392,7 +1484,7 @@ function renderSalesSidebar() {
       '<div class="page-chip-summary">' +
         '<div class="page-chip-h">' +
           '<span class="page-chip-grip">\u22EE\u22EE</span>' +
-          '<span class="page-chip-code">' + escapeHtml(styleNum) + '</span>' +
+          '<span class="page-chip-code' + (!styleNum ? ' page-chip-code-placeholder' : '') + '">' + escapeHtml(chipLabel) + '</span>' +
           '<button class="page-chip-edit ' + (isEditing ? 'on' : '') + '" data-edit="' + escapeHtml(sc) + '">' + (isEditing ? 'Done' : 'Edit') + '</button>' +
           '<button class="page-chip-rm" data-rm="' + escapeHtml(sc) + '">\u00D7</button>' +
         '</div>' +
@@ -1495,9 +1587,29 @@ function buildCheatPagePlan() {
   syncCheatOrder();
   const items = state.cheatOrder.slice();
   const pages = [];
-  for (let i = 0; i < items.length; i += MAX_TILES_PER_CHEAT) {
-    pages.push({ items: items.slice(i, i + MAX_TILES_PER_CHEAT) });
-  }
+  let current = [];
+  let currentManual = false;
+
+  items.forEach((it) => {
+    const key = getCheatItemKey(it);
+    const hasBreakBefore = state.cheatBreaks.has(key);
+    if (hasBreakBefore) {
+      if (current.length > 0) {
+        pages.push({ items: current, manual: currentManual });
+        current = [];
+      }
+      // Mark the upcoming page as manual even if the break aligned with a
+      // natural 8-cap boundary (so the user's intent is still reflected).
+      currentManual = true;
+    }
+    current.push(it);
+    if (current.length >= MAX_TILES_PER_CHEAT) {
+      pages.push({ items: current, manual: currentManual });
+      current = [];
+      currentManual = false;
+    }
+  });
+  if (current.length > 0) pages.push({ items: current, manual: currentManual });
   return pages;
 }
 
@@ -1546,7 +1658,7 @@ function renderSalesPreview() {
     const stylePrice = getDisplayStylePrice(sc);
     const headerParts = [];
     if (state.season) headerParts.push(escapeHtml(state.season).toUpperCase());
-    headerParts.push(escapeHtml(styleNum));
+    if (styleNum) headerParts.push(escapeHtml(styleNum));
     if (contents) headerParts.push(escapeHtml(contents).toUpperCase());
     if (fabric) headerParts.push('S: ' + escapeHtml(fabric).toUpperCase());
     if (pg.totalParts > 1) headerParts.push((pg.partIndex + 1) + ' / ' + pg.totalParts);
@@ -1644,7 +1756,7 @@ function renderCheatPreview() {
       const qty = showInv ? getEffectiveQty(it.sc, it.cc) : '';
       return '<div class="sheet-tile">' +
         '<div class="sheet-shirt">' + garmentVisual(it.sc, it.cc, s, c) + '</div>' +
-        '<div class="sheet-tile-style">' + escapeHtml(styleNum) + '</div>' +
+        (styleNum ? '<div class="sheet-tile-style">' + escapeHtml(styleNum) + '</div>' : '') +
         (it.cc !== it.sc ? '<div class="sheet-tile-code">' + escapeHtml(it.cc) + '</div>' : '') +
         (showName ? '<div class="sheet-tile-name">' + escapeHtml(colorName) + '</div>' : '') +
         (stylePrice ? '<div class="sheet-tile-price">' + escapeHtml(stylePrice) + '</div>' : '') +
@@ -1842,8 +1954,9 @@ async function exportPptx() {
           const padY = 0.10;
           const tileW = cellW - padX * 2;
           const showCode = it.cc !== it.sc;
-          const labelLines = 1 + (showCode ? 1 : 0) + (showName ? 1 : 0) + (stylePrice ? 1 : 0) + (qty !== '' ? 1 : 0);
-          const labelsBlockH = labelGap + labelLines * labelH;
+          const showStyleNum = !!styleNum;
+          const labelLines = (showStyleNum ? 1 : 0) + (showCode ? 1 : 0) + (showName ? 1 : 0) + (stylePrice ? 1 : 0) + (qty !== '' ? 1 : 0);
+          const labelsBlockH = labelGap + Math.max(1, labelLines) * labelH;
           const imgH = Math.max(0.9, cellH - padY * 2 - labelsBlockH);
           const tileX = cellX + padX;
           const tileY = cellY + padY;
@@ -1866,12 +1979,14 @@ async function exportPptx() {
           }
 
           let labelY = tileY + imgH + labelGap;
-          slide.addText(styleNum, {
-            x: tileX, y: labelY, w: tileW, h: labelH,
-            fontFace: 'Consolas', fontSize: 9, color: '1A1814', bold: true,
-            align: 'center', charSpacing: 2,
-          });
-          labelY += labelH;
+          if (showStyleNum) {
+            slide.addText(styleNum, {
+              x: tileX, y: labelY, w: tileW, h: labelH,
+              fontFace: 'Consolas', fontSize: 9, color: '1A1814', bold: true,
+              align: 'center', charSpacing: 2,
+            });
+            labelY += labelH;
+          }
           if (showCode) {
             slide.addText(it.cc, {
               x: tileX, y: labelY, w: tileW, h: labelH,
@@ -1947,7 +2062,7 @@ async function exportPptx() {
       // Header text — left side (season prepended if set)
       const parts = [];
       if (state.season) parts.push(state.season.toUpperCase());
-      parts.push(styleNum);
+      if (styleNum) parts.push(styleNum);
       if (contents) parts.push((contents || '').toUpperCase());
       if (fabric) parts.push('S: ' + (fabric || '').toUpperCase());
       if (pg.totalParts > 1) parts.push((pg.partIndex + 1) + ' / ' + pg.totalParts);
@@ -2184,7 +2299,7 @@ $('reset').addEventListener('click', () => {
   const who = state.customerName ? ' for ' + state.customerName : '';
   const what = state.mode === 'cheat' ? 'tiles from this cheat sheet' : 'pages from this sheet';
   if (!confirm('Clear all ' + what + who + '?')) return;
-  state.selections = {}; state.overrides = {}; state.pageOrder = []; state.cheatOrder = [];
+  state.selections = {}; state.overrides = {}; state.pageOrder = []; state.cheatOrder = []; state.cheatBreaks = new Set();
   state.expandedStyle = null; state.expandedEditor = null;
   renderCatalog(); renderSidebar(); persistCurrentDraft();
 });
