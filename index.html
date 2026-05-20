@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v2.6</title>
+<title>Sheet Builder · v2.8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -240,6 +240,10 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .editor-price-input { padding-left: 22px !important; }
 .editor-color { display: grid; grid-template-columns: 26px 60px 1fr; gap: 6px; align-items: center; margin-bottom: 6px; }
 .editor-color.with-qty { grid-template-columns: 26px 60px 1fr 60px; }
+.editor-segmented { display: inline-flex; background: white; border: 0.5px solid var(--rule); border-radius: 999px; padding: 3px; gap: 2px; align-self: flex-start; }
+.editor-segmented button { font-family: var(--mono); font-size: 11px; background: transparent; border: none; color: var(--mute); padding: 5px 12px; border-radius: 999px; cursor: pointer; min-width: 28px; line-height: 1; transition: all 0.12s; }
+.editor-segmented button:hover { color: var(--ink); }
+.editor-segmented button.on { background: var(--ink); color: var(--paper); }
 .editor-toggle { display: flex; align-items: center; gap: 8px; padding: 10px 0; margin-top: 4px; cursor: pointer; user-select: none; font-size: 12px; color: var(--ink); }
 .editor-toggle input { width: 14px; height: 14px; accent-color: var(--ink); cursor: pointer; }
 .editor-toggle:hover span { color: var(--accent); }
@@ -287,6 +291,9 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .sheet-bar-brand img { max-height: 30px; max-width: 160px; object-fit: contain; filter: brightness(0) invert(0.85); }
 .sheet-grid { flex: 1; display: flex; align-items: stretch; justify-content: space-evenly; padding: 24px 16px; background: white; min-height: 0; }
 .sheet-tile { width: 22%; max-width: 280px; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; text-align: center; }
+.sheet-grid[data-cols="1"] .sheet-tile { width: 60%; max-width: 640px; }
+.sheet-grid[data-cols="2"] .sheet-tile { width: 38%; max-width: 460px; }
+.sheet-grid[data-cols="3"] .sheet-tile { width: 28%; max-width: 360px; }
 .sheet-shirt { width: 100%; aspect-ratio: 4 / 5; display: flex; align-items: center; justify-content: center; }
 .sheet-shirt svg { max-height: 100%; max-width: 100%; }
 .sheet-shirt img { max-height: 100%; max-width: 100%; object-fit: contain; }
@@ -332,7 +339,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v2.6</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v2.8</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -452,7 +459,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v2.6</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v2.8</span>
 </footer>
 
 <div class="preview-shell" id="previewShell">
@@ -668,6 +675,17 @@ function getDisplayStylePrice(sc) {
 function getShowInventory(sc) {
   const o = state.overrides[sc];
   return !!(o && o.showInventory);
+}
+// Per-style "colors per page" layout (1-4). Defaults to 4 (the historical max).
+// Stored as state.overrides[sc].colorsPerPage; clamped on read so a corrupted
+// draft can't produce zero or negative chunk sizes.
+function getEffectiveColorsPerPage(sc) {
+  const o = state.overrides[sc];
+  if (o && Number.isFinite(o.colorsPerPage)) {
+    const n = Math.max(1, Math.min(MAX_COLORS_PER_PAGE, Math.floor(o.colorsPerPage)));
+    return n;
+  }
+  return MAX_COLORS_PER_PAGE;
 }
 function getEffectiveQty(sc, cc) {
   const o = state.overrides[sc];
@@ -1152,16 +1170,21 @@ function renderCatalog() {
 function getCheatItemKey(it) { return it.sc + '|' + it.cc; }
 
 function syncCheatOrder() {
-  // Drop entries no longer in selections
-  state.cheatOrder = state.cheatOrder.filter(it =>
-    it && it.sc && it.cc &&
-    state.selections[it.sc] &&
-    state.selections[it.sc].includes(it.cc)
-  );
-  // Append any new (style, color) pairs not yet ordered
+  // Drop entries no longer in selections OR whose style/color no longer resolves
+  state.cheatOrder = state.cheatOrder.filter(it => {
+    if (!it || !it.sc || !it.cc) return false;
+    if (!state.selections[it.sc] || !state.selections[it.sc].includes(it.cc)) return false;
+    const s = getStyle(it.sc);
+    if (!s) return false;
+    if (!getColor(s, it.cc)) return false;
+    return true;
+  });
+  // Append any new (style, color) pairs not yet ordered -- but only for codes
+  // that actually resolve in the current catalog
   const existing = new Set(state.cheatOrder.map(it => it.sc + '\u0000' + it.cc));
-  state.pageOrder.forEach(sc => {
-    const colors = state.selections[sc] || [];
+  getActiveStyleCodes().forEach(sc => {
+    const s = getStyle(sc);
+    const colors = (state.selections[sc] || []).filter(cc => getColor(s, cc));
     colors.forEach(cc => {
       const key = sc + '\u0000' + cc;
       if (!existing.has(key)) {
@@ -1248,6 +1271,7 @@ function renderStyleEditor(sc, colorFilter) {
   const contents = getEffectiveContents(sc);
   const stylePrice = getEffectiveStylePrice(sc);
   const showInv = getShowInventory(sc);
+  const cpp = getEffectiveColorsPerPage(sc);
   const selectedColors = (state.selections[sc] || []).map(cc => getColor(s, cc)).filter(Boolean);
   const cols = colorFilter
     ? selectedColors.filter(c => c.code === colorFilter)
@@ -1277,6 +1301,19 @@ function renderStyleEditor(sc, colorFilter) {
         '<input class="editor-input mono editor-price-input" data-field="price" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(stylePrice) + '" placeholder="42.00" inputmode="decimal">' +
       '</div>' +
     '</div>' +
+    // Layout choice: how many color tiles per page in the Sales sheet. Only
+    // shown when editing the style as a whole (not when colorFilter scopes
+    // the editor to a single Cheat-sheet tile, where it doesn't apply).
+    (colorFilter ? '' :
+      '<div class="editor-row">' +
+        '<label class="editor-label">Colors per page</label>' +
+        '<div class="editor-segmented">' +
+          [1, 2, 3, 4].map(n =>
+            '<button type="button" data-cpp="' + n + '" data-style="' + escapeHtml(sc) + '" class="' + (n === cpp ? 'on' : '') + '">' + n + '</button>'
+          ).join('') +
+        '</div>' +
+      '</div>'
+    ) +
     '<label class="editor-toggle">' +
       '<input type="checkbox" data-toggle="showInventory" data-style="' + escapeHtml(sc) + '"' + (showInv ? ' checked' : '') + '>' +
       '<span>Show inventory quantities on sheet</span>' +
@@ -1320,6 +1357,14 @@ function wireEditorListeners(scope) {
   root.querySelectorAll('[data-toggle="showInventory"]').forEach(el => {
     el.addEventListener('change', () => {
       setOverride(el.dataset.style, 'showInventory', el.checked);
+      renderSidebar();
+    });
+  });
+  root.querySelectorAll('[data-cpp]').forEach(el => {
+    el.addEventListener('click', () => {
+      const n = parseInt(el.dataset.cpp, 10);
+      if (!n || n < 1 || n > 4) return;
+      setOverride(el.dataset.style, 'colorsPerPage', n);
       renderSidebar();
     });
   });
@@ -1497,7 +1542,7 @@ function wireCheatDrag() {
 function renderSalesSidebar() {
   const list = $('pagesList');
   const tally = $('tally');
-  const codes = state.pageOrder.filter(c => state.selections[c]);
+  const codes = getActiveStyleCodes();
 
   if (codes.length === 0) {
     list.innerHTML = '<div class="empty-state" style="padding: 24px 8px; font-size: 14px;">Click a style and tap colors to add pages.</div>';
@@ -1506,7 +1551,13 @@ function renderSalesSidebar() {
     return;
   }
 
-  const totalColors = Object.values(state.selections).reduce((a, arr) => a + arr.length, 0);
+  // Count only colors that belong to styles in the active catalog -- mirrors
+  // what buildPagePlan / the preview will actually render, so the tally and
+  // preview page count never disagree.
+  const totalColors = codes.reduce((a, sc) => {
+    const s = getStyle(sc);
+    return a + (state.selections[sc] || []).filter(cc => getColor(s, cc)).length;
+  }, 0);
   const totalPages = buildPagePlan().length;
   tally.textContent = totalPages + ' ' + (totalPages === 1 ? 'page' : 'pages') + ' \u00B7 ' + totalColors + ' colors';
 
@@ -1537,7 +1588,14 @@ function renderSalesSidebar() {
               : '<div class="color-swatch-mini" style="background:' + (c.hex || '#CCC') + '" title="' + escapeHtml(c.code) + '"></div>';
           }).join('') +
         '</div>' +
-        '<div class="page-chip-meta">' + escapeHtml(styleName || sc) + ' \u00B7 ' + cols.length + ' ' + (cols.length === 1 ? 'color' : 'colors') + (cols.length > MAX_COLORS_PER_PAGE ? ' \u00B7 ' + Math.ceil(cols.length / MAX_COLORS_PER_PAGE) + ' pages' : '') + '</div>' +
+        (() => {
+          const cpp = getEffectiveColorsPerPage(sc);
+          const pageCount = Math.ceil(cols.length / cpp);
+          const parts = [escapeHtml(styleName || sc), cols.length + ' ' + (cols.length === 1 ? 'color' : 'colors')];
+          if (pageCount > 1) parts.push(pageCount + ' pages');
+          if (cpp !== MAX_COLORS_PER_PAGE) parts.push(cpp + '-up');
+          return '<div class="page-chip-meta">' + parts.join(' \u00B7 ') + '</div>';
+        })() +
       '</div>' +
       editor +
     '</div>';
@@ -1605,17 +1663,37 @@ function wireDrag() {
 const MAX_COLORS_PER_PAGE = 4;
 const MAX_TILES_PER_CHEAT = 8;
 
+// Single source of truth for which selections are actually renderable.
+// Filters out:
+//   - duplicate codes in state.pageOrder (defensive against any historical bug
+//     or corrupted draft that left dupes behind),
+//   - codes without any colors selected,
+//   - codes that don't resolve to a style in the current STYLES catalog (stale
+//     selections from a previous source folder / season, etc.) -- these are
+//     preserved in state but won't generate blank preview pages.
+function getActiveStyleCodes() {
+  const seen = new Set();
+  return state.pageOrder.filter(c => {
+    if (seen.has(c)) return false;
+    if (!state.selections[c] || state.selections[c].length === 0) return false;
+    if (!getStyle(c)) return false;
+    seen.add(c);
+    return true;
+  });
+}
+
 function buildPagePlan() {
-  const codes = state.pageOrder.filter(c => state.selections[c]);
+  const codes = getActiveStyleCodes();
   const pages = [];
   codes.forEach(sc => {
-    const colors = state.selections[sc] || [];
+    const colors = (state.selections[sc] || []).filter(cc => getColor(getStyle(sc), cc));
     if (colors.length === 0) return;
-    const chunks = Math.ceil(colors.length / MAX_COLORS_PER_PAGE);
+    const perPage = getEffectiveColorsPerPage(sc);
+    const chunks = Math.ceil(colors.length / perPage);
     for (let i = 0; i < chunks; i++) {
       pages.push({
         styleCode: sc,
-        colors: colors.slice(i * MAX_COLORS_PER_PAGE, (i + 1) * MAX_COLORS_PER_PAGE),
+        colors: colors.slice(i * perPage, (i + 1) * perPage),
         partIndex: i,
         totalParts: chunks,
       });
@@ -1660,7 +1738,7 @@ function renderPreview() {
 }
 
 function renderSalesPreview() {
-  const codes = state.pageOrder.filter(c => state.selections[c]);
+  const codes = getActiveStyleCodes();
   const brand = getBrand();
   const titleParts = [];
   if (state.customerName) titleParts.push(state.customerName);
@@ -1719,7 +1797,7 @@ function renderSalesPreview() {
           '<div class="sheet-bar-brand">' + brandHtml + '</div>' +
         '</div>' +
       '</div>' +
-      '<div class="sheet-grid">' +
+      '<div class="sheet-grid" data-cols="' + cols.length + '">' +
         cols.map(c => {
           const colorName = getEffectiveColorName(sc, c.code);
           const showName = colorName && colorName !== c.code;
@@ -1871,7 +1949,7 @@ function getImageAspect(src) {
 }
 
 async function exportPptx() {
-  const codes = state.pageOrder.filter(c => state.selections[c]);
+  const codes = getActiveStyleCodes();
   if (codes.length === 0) return;
 
   const btn = $('pptBtn');
@@ -2148,11 +2226,12 @@ async function exportPptx() {
         });
       }
 
-      // Garment tiles — fixed width, space-evenly distribution, with labels.
-      // imgH is sized to the natural aspect of this style's images so the
-      // tile fits the photos cleanly without distortion or excess whitespace.
+      // Garment tiles — width scales with numCols so 1-up becomes a hero
+      // shot, 2-up is paired, etc. imgH is sized to the natural aspect of
+      // this style's images so the tile fits the photos cleanly.
       const numCols = cols.length;
-      const tileW = 2.5;
+      const tileWByCols = { 1: 5.5, 2: 4.2, 3: 3.2, 4: 2.5 };
+      const tileW = tileWByCols[numCols] || 2.5;
       const spacing = (SLIDE_W - numCols * tileW) / (numCols + 1);
       const bodyTop = HEADER_H;
       const bodyH = SLIDE_H - HEADER_H - FOOT_H;
@@ -2349,7 +2428,7 @@ $('pptBtn').addEventListener('click', exportPptx);
 
 function buildExportFilename() {
   const safe = s => (s || '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
-  const codes = state.pageOrder.filter(c => state.selections[c]);
+  const codes = getActiveStyleCodes();
   const styleNumbers = [...new Set(codes.map(sc => getEffectiveStyleNumber(sc)))].map(safe).filter(Boolean);
   const styleStr = styleNumbers.join('-').slice(0, 60) || 'Sheet';
   const custStr = safe(state.customerName);
