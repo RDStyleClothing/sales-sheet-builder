@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v3.1</title>
+<title>Sheet Builder · v3.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -341,7 +341,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v3.1</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v3.2</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -461,7 +461,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.1</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.2</span>
 </footer>
 
 <div class="preview-shell" id="previewShell">
@@ -1870,7 +1870,7 @@ function renderSalesPreview() {
     if (styleNum) headerParts.push(escapeHtml(styleNum));
     if (styleName) headerParts.push(escapeHtml(styleName).toUpperCase());
     if (contents) headerParts.push(escapeHtml(contents).toUpperCase());
-    if (fabric) headerParts.push('S: ' + escapeHtml(fabric).toUpperCase());
+    if (fabric) headerParts.push(escapeHtml(fabric).toUpperCase());
     if (pg.totalParts > 1) headerParts.push((pg.partIndex + 1) + ' / ' + pg.totalParts);
     const headerLeft = headerParts.join(' \u00B7 ');
     const priceHtml = stylePrice ? '<div class="sheet-bar-price">' + escapeHtml(stylePrice) + '</div>' : '';
@@ -2279,7 +2279,7 @@ async function exportPptx() {
       if (styleNum) parts.push(styleNum);
       if (styleName) parts.push((styleName || '').toUpperCase());
       if (contents) parts.push((contents || '').toUpperCase());
-      if (fabric) parts.push('S: ' + (fabric || '').toUpperCase());
+      if (fabric) parts.push((fabric || '').toUpperCase());
       if (pg.totalParts > 1) parts.push((pg.partIndex + 1) + ' / ' + pg.totalParts);
       slide.addText(parts.join('  \u00B7  '), {
         x: 0.4, y: 0, w: SLIDE_W - 4.2, h: HEADER_H,
