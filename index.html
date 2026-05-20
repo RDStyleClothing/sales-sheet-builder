@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v2.5</title>
+<title>Sheet Builder · v2.6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -332,7 +332,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v2.5</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v2.6</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -385,7 +385,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
         <div class="source-card-title">Style images</div>
         <div class="source-status"><span class="source-status-dot" id="imgDot"></span><span id="imgStatus">No images</span></div>
       </div>
-      <div class="source-card-desc">Folder of garment images. Filenames using <code>STYLE_COLOR.ext</code> auto-fill style and color codes &mdash; e.g. <code>58MT400_B-2178.png</code>. Anything else still uploads; you fill in the details via Edit.</div>
+      <div class="source-card-desc">Folder of garment images. Filenames using <code>STYLE - Color Name - ColorCode.ext</code> auto-group all colors of a style together &mdash; e.g. <code>58MT400 - BLACK - H34.png</code> and <code>58MT400 - SAGE-B-2182.png</code> both fall under style <code>58MT400</code>. Legacy <code>STYLE_COLOR.ext</code> still works. Anything else uploads as-is; fill in details via Edit.</div>
       <div class="source-input-wrap">
         <label class="source-pick-btn" for="imgFiles">Choose folder</label>
         <input type="file" class="source-input-hidden" id="imgFiles" webkitdirectory directory multiple>
@@ -452,7 +452,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v2.5</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v2.6</span>
 </footer>
 
 <div class="preview-shell" id="previewShell">
@@ -788,12 +788,51 @@ function loadStyleImages(files) {
   let unstructured = 0;
   imageFiles.forEach(f => {
     const base = f.name.replace(/\.[^.]+$/, '');
-    let styleCode = '', colorCode = '';
-    const idx = base.indexOf('_');
-    if (idx > 0 && idx < base.length - 1) {
-      const l = base.slice(0, idx).trim();
-      const r = base.slice(idx + 1).trim();
-      if (l && r) { styleCode = l; colorCode = r; }
+
+    // Recognized filename formats, tried in order:
+    //   1. "STYLE - Color Name - ColorCode"   e.g. "58MT400 - BLACK - H34"
+    //   2. "STYLE - ColorName-ColorCode"      e.g. "58MT400S - SAGE-B-2182"
+    //   3. "STYLE - Color Name"               e.g. "58MT400 - SILVER BLUE"  (no code)
+    //   4. Legacy "STYLE_COLOR"               e.g. "58MT400_B-2178"
+    //   5. Unstructured                        — whole filename kept as identifier
+    // All files sharing a styleCode are grouped under the same style card so
+    // the user sees one entry per style with each color as a swatch underneath.
+    let styleCode = '', colorCode = '', colorName = '';
+    if (base.includes(' - ')) {
+      const parts = base.split(' - ').map(p => p.trim()).filter(Boolean);
+      if (parts.length >= 2) {
+        styleCode = parts[0];
+        if (parts.length >= 3) {
+          // Last segment is color code; anything in between is the name.
+          colorCode = parts[parts.length - 1];
+          colorName = parts.slice(1, -1).join(' - ');
+        } else {
+          // Two parts only — try to extract a trailing color code from the
+          // tail (e.g. "SAGE-B-2182" -> name="SAGE", code="B-2182").
+          // Patterns recognized: B-2178, W-1101, H34, A9001, etc.
+          const tail = parts[1];
+          const m = tail.match(/^(.+?)\s*-\s*([A-Z]-\d+[A-Z]?\d*|H\d+|[A-Z]{1,3}\d+)$/i);
+          if (m) {
+            colorName = m[1].trim();
+            colorCode = m[2].trim();
+          } else {
+            // No code pattern found — treat the whole tail as the color name.
+            // The name doubles as the unique key so a second "SILVER BLUE" for
+            // the same style wouldn't collide with this one.
+            colorName = tail;
+            colorCode = tail;
+          }
+        }
+      }
+    }
+    if (!styleCode || !colorCode) {
+      // Legacy underscore format
+      const idx = base.indexOf('_');
+      if (idx > 0 && idx < base.length - 1) {
+        const l = base.slice(0, idx).trim();
+        const r = base.slice(idx + 1).trim();
+        if (l && r) { styleCode = l; colorCode = r; colorName = ''; }
+      }
     }
     let synthetic = false;
     if (!styleCode || !colorCode) {
@@ -803,6 +842,7 @@ function loadStyleImages(files) {
       const safe = (base.trim()) || ('image-' + (unstructured + 1));
       styleCode = safe;
       colorCode = safe;
+      colorName = '';
       synthetic = true;
       unstructured++;
     }
@@ -816,8 +856,9 @@ function loadStyleImages(files) {
     g.imageMap[styleCode + '_' + colorCode] = URL.createObjectURL(f);
     if (!g.styleMap[styleCode]) g.styleMap[styleCode] = { code: styleCode, name: '', cat: 'Top', spec: '', colors: [], synthetic: synthetic };
     if (!g.styleMap[styleCode].colors.find(c => c.code === colorCode)) {
-      // Names always blank from upload; user fills them in via the editor.
-      g.styleMap[styleCode].colors.push({ code: colorCode, name: '', hex: '#CCCCCC', synthetic: synthetic });
+      // Pre-fill the color name if the filename gave us one — user can still
+      // edit it via the Edit panel.
+      g.styleMap[styleCode].colors.push({ code: colorCode, name: colorName || '', hex: '#CCCCCC', synthetic: synthetic });
     }
   });
 
