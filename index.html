@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v3.6</title>
+<title>Sheet Builder · v3.7</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -356,6 +356,8 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .library-io { display: flex; gap: 8px; }
 .library-io-btn { flex: 1; font-family: var(--sans); font-size: 12px; font-weight: 500; border: 0.5px solid var(--rule); background: white; color: var(--ink); padding: 10px 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s; text-align: center; }
 .library-io-btn:hover { border-color: var(--ink); }
+.library-io-btn:disabled, .library-item-btn:disabled { opacity: 0.55; cursor: progress; }
+.library-io-btn.bundle-busy, .library-item-btn.bundle-busy { opacity: 0.55; cursor: progress; }
 
 @media (max-width: 900px) {
   .app { grid-template-columns: 1fr; }
@@ -388,7 +390,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v3.6</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v3.7</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -513,7 +515,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.6</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.7</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -529,8 +531,9 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
     <div class="library-actions">
       <button class="btn btn-primary" id="newSheetBtn">+ New sheet</button>
       <div class="library-io">
-        <button class="library-io-btn" id="exportLibBtn" title="Download all sheets as a .json file (for SharePoint, OneDrive, backups)">&darr; Save all to file</button>
-        <label class="library-io-btn" for="importLibFile" style="cursor:pointer" title="Restore sheets from a .json file you previously saved">&uarr; Load from file</label>
+        <button class="library-io-btn" id="exportLibBtn" title="Download all sheets as a small .json (no images; recipient needs the image folder too)">&darr; Save all</button>
+        <button class="library-io-btn" id="exportLibWithImgBtn" title="Download all sheets + every referenced image and logo as one portable .json. Larger file, but works without re-loading any images.">&darr; Save all + images</button>
+        <label class="library-io-btn" for="importLibFile" style="cursor:pointer" title="Restore sheets from a .json file you previously saved (works for both small and bundled exports)">&uarr; Load from file</label>
         <input type="file" id="importLibFile" accept=".json,application/json" style="display:none">
       </div>
     </div>
@@ -632,7 +635,7 @@ const state = {
 // explicitly clicked "+ New sheet".
 
 const LIBRARY_KEY = 'salesSheetBuilder.library.v1';
-const OLD_DRAFT_KEY = 'salesSheetBuilder.draft.v3';  // pre-v3.6 single-draft store
+const OLD_DRAFT_KEY = 'salesSheetBuilder.draft.v3';  // pre-v3.7 single-draft store
 
 function uuid() {
   return 'sh_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
@@ -646,7 +649,7 @@ function loadLibrary() {
       if (parsed && parsed.sheets) return parsed;
     }
   } catch {}
-  // First run on v3.6+ -- migrate any pre-existing single draft so the user
+  // First run on v3.7+ -- migrate any pre-existing single draft so the user
   // doesn't appear to lose their work.
   try {
     const oldRaw = localStorage.getItem(OLD_DRAFT_KEY);
@@ -939,7 +942,8 @@ function renderLibrary() {
       (isCurrent ? '<span class="library-item-current-badge">Open</span>' : '') +
       '<div class="library-item-actions">' +
         '<button class="library-item-btn" data-rename="' + escapeHtml(s.id) + '" title="Rename">\u270E</button>' +
-        '<button class="library-item-btn" data-export-sheet="' + escapeHtml(s.id) + '" title="Download as file">\u2193</button>' +
+        '<button class="library-item-btn" data-export-sheet="' + escapeHtml(s.id) + '" title="Download as small .json (no images)">\u2193</button>' +
+        '<button class="library-item-btn" data-export-sheet-with-images="' + escapeHtml(s.id) + '" title="Download as portable .json with images bundled in">\u21E9</button>' +
         '<button class="library-item-btn danger" data-delete="' + escapeHtml(s.id) + '" title="Delete">\u00D7</button>' +
       '</div>' +
     '</div>';
@@ -967,6 +971,9 @@ function renderLibrary() {
   });
   list.querySelectorAll('[data-export-sheet]').forEach(el => {
     el.addEventListener('click', e => { e.stopPropagation(); exportSheetFile(el.dataset.exportSheet); });
+  });
+  list.querySelectorAll('[data-export-sheet-with-images]').forEach(el => {
+    el.addEventListener('click', e => { e.stopPropagation(); exportSheetWithImagesFile(el.dataset.exportSheetWithImages); });
   });
 }
 
@@ -1029,6 +1036,187 @@ function exportSheetFile(id) {
   downloadJson(safe + '.json', { version: 1, exportedAt: Date.now(), sheet: s });
 }
 
+// ---- Image-bundled exports (self-contained .json files) ----
+//
+// "With images" exports wrap the same sheet/library payload as the light
+// export, but also embed: every image referenced by selections (as a base64
+// data URL), every brand logo used, and the style metadata needed to resolve
+// those references. The resulting file is the user's portable archive --
+// drop it on SharePoint, email it, or open on another machine; the recipient
+// only needs the .json to view & edit the sheet without re-loading images.
+//
+// Trade-off: file is much larger (typically 10-80 MB). Bundling can take
+// several seconds; we report progress via a callback so the UI button label
+// updates while it's running.
+
+async function blobToDataUrl(blobOrUrl) {
+  // Accepts either a blob URL (URL.createObjectURL output) or an already-
+  // encoded data: URL. Returns a data: URL in both cases.
+  if (typeof blobOrUrl === 'string' && blobOrUrl.startsWith('data:')) return blobOrUrl;
+  try {
+    const r = await fetch(blobOrUrl);
+    const b = await r.blob();
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('Failed to read image'));
+      reader.readAsDataURL(b);
+    });
+  } catch { return null; }
+}
+
+// Gather the union of styles + image keys + brand ids actually needed to
+// render the given sheets. Pulls style/image lookups from BOTH the current
+// in-memory STYLES/imageMap AND from every loaded seasonGroup, so sheets
+// referencing styles in a non-active season still bundle correctly.
+function collectAssetsForSheets(sheets) {
+  const usedPairs = new Set();    // "sc|cc"
+  const usedStyleCodes = new Set();
+  const usedBrandIds = new Set();
+  sheets.forEach(s => {
+    Object.entries(s.selections || {}).forEach(([sc, codes]) => {
+      usedStyleCodes.add(sc);
+      (codes || []).forEach(cc => usedPairs.add(sc + '|' + cc));
+    });
+    if (s.brandId) usedBrandIds.add(s.brandId);
+  });
+
+  // Build a lookup for image URLs from all known sources
+  const allImageMaps = [imageMap];
+  Object.values(seasonGroups).forEach(g => g && g.imageMap && allImageMaps.push(g.imageMap));
+  const findImageUrl = key => {
+    for (const m of allImageMaps) if (m[key]) return m[key];
+    return null;
+  };
+
+  // Build a lookup for style metadata
+  const allStyleArrays = [STYLES];
+  Object.values(seasonGroups).forEach(g => g && Array.isArray(g.styles) && allStyleArrays.push(g.styles));
+  const findStyle = code => {
+    for (const arr of allStyleArrays) {
+      const hit = arr.find(s => s.code === code);
+      if (hit) return hit;
+    }
+    return null;
+  };
+
+  return { usedPairs, usedStyleCodes, usedBrandIds, findImageUrl, findStyle };
+}
+
+async function buildImageBundle(sheets, onProgress) {
+  const { usedPairs, usedStyleCodes, usedBrandIds, findImageUrl, findStyle } = collectAssetsForSheets(sheets);
+
+  // Snapshot referenced styles (deep-cloned)
+  const stylesOut = [];
+  const seenCodes = new Set();
+  usedStyleCodes.forEach(code => {
+    const s = findStyle(code);
+    if (s && !seenCodes.has(s.code)) {
+      stylesOut.push({ ...s, colors: (s.colors || []).map(c => ({ ...c })) });
+      seenCodes.add(s.code);
+    }
+  });
+
+  // Snapshot referenced brands
+  const brandsOut = BRANDS.filter(b => usedBrandIds.has(b.id)).map(b => {
+    const { logoUrl, ...rest } = b; // logoUrl is a blob URL; rebuilt on import
+    return rest;
+  });
+
+  // Convert images, reporting progress
+  const pairs = Array.from(usedPairs);
+  const images = {};
+  let done = 0;
+  for (const pair of pairs) {
+    const [sc, cc] = pair.split('|');
+    const url = findImageUrl(sc + '_' + cc);
+    if (url) {
+      const dataUrl = await blobToDataUrl(url);
+      if (dataUrl) images[sc + '_' + cc] = dataUrl;
+    }
+    done++;
+    if (onProgress) onProgress(done, pairs.length, 'images');
+  }
+
+  // Convert logos
+  const logos = {};
+  let logoDone = 0;
+  for (const bid of usedBrandIds) {
+    const url = logoMap[bid];
+    if (url) {
+      const dataUrl = await blobToDataUrl(url);
+      if (dataUrl) logos[bid] = dataUrl;
+    }
+    logoDone++;
+    if (onProgress) onProgress(logoDone, usedBrandIds.size, 'logos');
+  }
+
+  return { images, logos, styles: stylesOut, brands: brandsOut };
+}
+
+async function exportSheetWithImagesFile(id) {
+  const lib = loadLibrary();
+  const s = lib.sheets[id];
+  if (!s) return;
+  const btn = document.querySelector('[data-export-sheet-with-images="' + cssEscape(id) + '"]');
+  const restoreBtn = setBundleButtonBusy(btn);
+  try {
+    const bundle = await buildImageBundle([s], (done, total) => {
+      if (btn) btn.title = 'Bundling \u2026 ' + done + ' / ' + total;
+    });
+    const safe = getSheetDisplayName(s).replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'sheet';
+    downloadJson(safe + '-bundle.json', {
+      version: 2,
+      exportedAt: Date.now(),
+      bundleType: 'sheet-with-images',
+      sheet: s,
+      ...bundle,
+    });
+  } finally { restoreBtn(); }
+}
+
+async function exportLibraryWithImagesFile() {
+  persistCurrentSheet();
+  const lib = loadLibrary();
+  const sheets = Object.values(lib.sheets);
+  if (sheets.length === 0) { alert('No sheets to export yet.'); return; }
+  const btn = $('exportLibWithImgBtn');
+  const restoreBtn = setBundleButtonBusy(btn);
+  try {
+    const bundle = await buildImageBundle(sheets, (done, total) => {
+      if (btn) btn.textContent = 'Bundling \u2026 ' + done + ' / ' + total;
+    });
+    const fname = 'sheet-library-bundle-' + new Date().toISOString().slice(0, 10) + '.json';
+    downloadJson(fname, {
+      version: 2,
+      exportedAt: Date.now(),
+      bundleType: 'library-with-images',
+      library: lib,
+      ...bundle,
+    });
+  } finally { restoreBtn(); }
+}
+
+function setBundleButtonBusy(btn) {
+  if (!btn) return () => {};
+  const originalText = btn.textContent;
+  const originalTitle = btn.title;
+  btn.disabled = true;
+  btn.classList.add('bundle-busy');
+  btn.textContent = 'Bundling \u2026';
+  return () => {
+    btn.disabled = false;
+    btn.classList.remove('bundle-busy');
+    btn.textContent = originalText;
+    btn.title = originalTitle;
+  };
+}
+
+// Safe CSS attribute selector helper for sheet IDs (which contain dots etc)
+function cssEscape(s) {
+  return String(s).replace(/(["\\])/g, '\\$1');
+}
+
 function importLibraryFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
@@ -1037,8 +1225,8 @@ function importLibraryFile(file) {
     catch (err) { alert('That file isn\'t valid JSON.'); return; }
 
     const lib = loadLibrary();
-    let imported = 0;
     let sheetsToImport = [];
+    const isBundle = !!(data && (data.images || data.styles || data.brands || data.logos));
 
     if (data && data.library && data.library.sheets) {
       sheetsToImport = Object.values(data.library.sheets);
@@ -1049,17 +1237,94 @@ function importLibraryFile(file) {
       return;
     }
 
+    // Merge bundled assets into in-memory stores BEFORE adding sheets, so the
+    // restored sheet's first render finds its images/styles ready.
+    let stylesAdded = 0, imagesAdded = 0, brandsAdded = 0;
+    if (isBundle) {
+      if (Array.isArray(data.styles)) {
+        const existing = new Set(STYLES.map(s => s.code));
+        data.styles.forEach(s => {
+          if (!existing.has(s.code)) {
+            STYLES.push({ ...s, colors: (s.colors || []).map(c => ({ ...c })) });
+            existing.add(s.code);
+            stylesAdded++;
+          }
+        });
+      }
+      if (Array.isArray(data.brands)) {
+        const existingB = new Set(BRANDS.map(b => b.id));
+        data.brands.forEach(b => {
+          if (!existingB.has(b.id)) {
+            BRANDS.push({ ...b });
+            existingB.add(b.id);
+            brandsAdded++;
+          }
+        });
+      }
+      if (data.images && typeof data.images === 'object') {
+        Object.entries(data.images).forEach(([key, dataUrl]) => {
+          if (!imageMap[key]) { imageMap[key] = dataUrl; imagesAdded++; }
+        });
+      }
+      if (data.logos && typeof data.logos === 'object') {
+        Object.entries(data.logos).forEach(([bid, dataUrl]) => {
+          if (!logoMap[bid]) {
+            logoMap[bid] = dataUrl;
+            // Patch the BRANDS entry so logoUrl resolves (the export strips it)
+            const brand = BRANDS.find(b => b.id === bid);
+            if (brand && !brand.logoUrl) brand.logoUrl = dataUrl;
+          }
+        });
+      }
+      // Reflect new assets in the Sources panel so the user sees them as loaded
+      if (imagesAdded > 0)  setStatus('images', Object.keys(imageMap).length + ' loaded (bundle)', true);
+      if (brandsAdded > 0)  setStatus('brands', BRANDS.length + ' loaded (bundle)', true);
+    }
+
+    // Add the sheet entries (always re-id to avoid clobbering existing sheets)
+    let imported = 0;
+    let firstNewId = null;
     sheetsToImport.forEach(s => {
       const newId = uuid();
-      // Re-id on import so importing the same file twice yields two copies
-      // rather than overwriting an existing sheet that happens to share an id.
       lib.sheets[newId] = { ...s, id: newId };
+      if (!firstNewId) firstNewId = newId;
       imported++;
     });
+
+    // If bundle import and no current sheet, switch to the first imported one
+    // so the user lands on real content rather than a blank screen.
+    if (isBundle && firstNewId && !lib.currentId) {
+      lib.currentId = firstNewId;
+    }
     saveLibrary(lib);
+
+    // If we changed catalog state, re-render the catalog and switch into the
+    // newly-imported sheet's context if appropriate.
+    if (isBundle) {
+      if (firstNewId && lib.currentId === firstNewId) {
+        applySheetToState(lib.sheets[firstNewId]);
+        reRenderAllForSheetSwap();
+      } else {
+        renderHeaderPickers();
+        renderCatalog();
+      }
+    }
     renderLibrary();
     refreshSheetPick();
-    alert('Imported ' + imported + ' ' + (imported === 1 ? 'sheet' : 'sheets') + '.');
+
+    const parts = [];
+    parts.push('Imported ' + imported + ' ' + (imported === 1 ? 'sheet' : 'sheets'));
+    if (isBundle) {
+      const bits = [];
+      if (stylesAdded)  bits.push(stylesAdded + ' ' + (stylesAdded === 1 ? 'style' : 'styles'));
+      if (imagesAdded)  bits.push(imagesAdded + ' ' + (imagesAdded === 1 ? 'image' : 'images'));
+      if (brandsAdded)  bits.push(brandsAdded + ' ' + (brandsAdded === 1 ? 'brand' : 'brands'));
+      if (bits.length) parts.push(' \u00B7 plus ' + bits.join(', '));
+      parts.push('.\n\nNote: bundled images live in memory only. If you refresh the page, re-import the bundle to restore them.');
+    } else {
+      parts.push('.');
+    }
+    alert(parts.join(''));
   };
   reader.readAsText(file);
 }
@@ -3067,6 +3332,7 @@ $('libraryOverlay').addEventListener('click', e => {
 });
 $('newSheetBtn').addEventListener('click', createNewSheet);
 $('exportLibBtn').addEventListener('click', exportLibraryFile);
+$('exportLibWithImgBtn').addEventListener('click', exportLibraryWithImagesFile);
 $('importLibFile').addEventListener('change', e => {
   if (e.target.files.length) {
     importLibraryFile(e.target.files[0]);
