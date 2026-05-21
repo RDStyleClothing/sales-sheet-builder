@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v3.5</title>
+<title>Sheet Builder · v3.4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -120,10 +120,6 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .cheat-mode-note strong { color: var(--ink); font-weight: 500; }
 .cheat-mode-note a { color: var(--accent); text-decoration: none; cursor: pointer; }
 .cheat-mode-note a:hover { text-decoration: underline; }
-.cheat-tpp { display: flex; align-items: center; gap: 8px; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 0.5px solid var(--rule); flex-wrap: wrap; }
-.cheat-tpp-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mute); }
-.cheat-tpp .editor-segmented { padding: 2px; }
-.cheat-tpp .editor-segmented button { padding: 4px 9px; font-size: 10px; }
 
 .cheat-chip { background: white; border: 0.5px solid var(--rule); border-radius: 7px; user-select: none; transition: border-color 0.15s; overflow: hidden; }
 .cheat-chip.expanded { border-color: var(--ink); }
@@ -164,31 +160,13 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .cheat-page-section { display: flex; flex-direction: column; gap: 8px; }
 
 .sheet-page.cheat .sheet-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 1fr); gap: 0; padding: 14px 18px; align-items: stretch; justify-items: stretch; }
-.sheet-page.cheat[data-tpp="1"] .sheet-grid { grid-template-columns: 1fr; grid-template-rows: 1fr; padding: 28px 36px; }
-.sheet-page.cheat[data-tpp="2"] .sheet-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: 1fr; padding: 24px 28px; }
-.sheet-page.cheat[data-tpp="3"] .sheet-grid { grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr; padding: 22px 22px; }
-.sheet-page.cheat[data-tpp="4"] .sheet-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); padding: 20px 28px; }
-.sheet-page.cheat[data-tpp="5"] .sheet-grid,
-.sheet-page.cheat[data-tpp="6"] .sheet-grid { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); padding: 18px 22px; }
-.sheet-page.cheat[data-tpp="7"] .sheet-grid,
-.sheet-page.cheat[data-tpp="8"] .sheet-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 1fr); padding: 14px 18px; }
-.sheet-page.cheat[data-tpp="1"] .sheet-tile-style,
-.sheet-page.cheat[data-tpp="2"] .sheet-tile-style { font-size: 14px; }
-.sheet-page.cheat[data-tpp="1"] .sheet-tile-code,
-.sheet-page.cheat[data-tpp="2"] .sheet-tile-code { font-size: 11px; }
-.sheet-page.cheat[data-tpp="1"] .sheet-tile-name,
-.sheet-page.cheat[data-tpp="2"] .sheet-tile-name { font-size: 10px; }
-.sheet-page.cheat[data-tpp="1"] .sheet-tile-price,
-.sheet-page.cheat[data-tpp="2"] .sheet-tile-price { font-size: 18px; }
-.sheet-page.cheat[data-tpp="3"] .sheet-tile-style,
-.sheet-page.cheat[data-tpp="4"] .sheet-tile-style { font-size: 12px; }
-.sheet-page.cheat[data-tpp="3"] .sheet-tile-price,
-.sheet-page.cheat[data-tpp="4"] .sheet-tile-price { font-size: 15px; }
 .sheet-page.cheat .sheet-tile { width: auto; max-width: none; padding: 6px 8px; min-height: 0; min-width: 0; justify-content: flex-start; }
 .sheet-page.cheat .sheet-shirt { flex: 1 1 auto; aspect-ratio: auto; min-height: 0; width: 100%; }
-.sheet-page.cheat .sheet-tile-style { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1814; margin-top: 6px; font-weight: 500; }
-.sheet-page.cheat .sheet-tile-code { font-size: 9px; letter-spacing: 0.12em; margin-top: 2px; color: #777; }
-.sheet-page.cheat .sheet-tile-name { font-size: 8px; letter-spacing: 0.08em; margin-top: 1px; }
+.sheet-page.cheat .sheet-tile-style { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1814; margin-top: 6px; font-weight: 500; word-break: break-word; }
+.sheet-page.cheat .sheet-tile-styname { font-family: var(--serif); font-style: italic; font-size: 11px; color: #333; margin-top: 1px; line-height: 1.2; word-break: break-word; }
+.sheet-page.cheat .sheet-tile-color { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: #666; margin-top: 3px; line-height: 1.2; word-break: break-word; }
+.sheet-page.cheat .sheet-tile-content { font-family: var(--mono); font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: #777; margin-top: 2px; word-break: break-word; }
+.sheet-page.cheat .sheet-tile-fabric { font-family: var(--sans); font-style: italic; font-size: 8.5px; color: #888; margin-top: 1px; line-height: 1.3; word-break: break-word; }
 .sheet-page.cheat .sheet-tile-price { font-size: 12px; margin-top: 3px; }
 .sheet-page.cheat .sheet-tile-qty { font-size: 8px; margin-top: 2px; }
 
@@ -334,6 +312,41 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .app-footer.hidden { display: none; }
 .version-pill { font-family: var(--mono); font-size: 9px; letter-spacing: 0.32em; text-transform: uppercase; color: var(--quiet); padding: 6px 14px; border: 0.5px solid var(--rule); border-radius: 999px; display: inline-block; }
 
+/* Sheet library — meta-bar picker + modal */
+.sheet-pick { display: inline-flex; align-items: baseline; max-width: 100%; min-width: 0; }
+.sheet-pick-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.meta-field.right .meta-display { justify-content: flex-end; }
+
+.library-overlay { position: fixed; inset: 0; background: rgba(26,24,20,0.5); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; animation: libFade 0.15s ease-out; }
+.library-overlay[hidden] { display: none; }
+@keyframes libFade { from { opacity: 0; } to { opacity: 1; } }
+.library-modal { background: var(--paper); border-radius: 12px; max-width: 580px; width: 100%; max-height: 82vh; display: flex; flex-direction: column; box-shadow: 0 24px 64px rgba(0,0,0,0.25); overflow: hidden; }
+.library-h { display: flex; align-items: flex-start; justify-content: space-between; padding: 24px 28px 8px; }
+.library-h-inner { flex: 1; min-width: 0; }
+.library-title { font-family: var(--serif); font-style: italic; font-size: 30px; font-weight: 400; line-height: 1.05; }
+.library-sub { font-family: var(--mono); font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase; color: var(--mute); margin-top: 6px; }
+.library-close { font-size: 22px; background: none; border: none; color: var(--mute); cursor: pointer; padding: 4px 12px; border-radius: 4px; line-height: 1; }
+.library-close:hover { color: var(--ink); background: var(--cream); }
+.library-list { flex: 1; overflow-y: auto; padding: 14px 22px 18px; display: flex; flex-direction: column; gap: 8px; min-height: 80px; }
+.library-empty { font-family: var(--serif); font-style: italic; color: var(--mute); text-align: center; padding: 36px 14px; font-size: 16px; line-height: 1.5; }
+.library-item { background: white; border: 0.5px solid var(--rule); border-radius: 8px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+.library-item:hover { border-color: var(--rule-strong); }
+.library-item.current { border: 1.5px solid var(--ink); padding: 13px 15px; background: var(--cream); }
+.library-item-info { flex: 1; min-width: 0; }
+.library-item-name { font-family: var(--serif); font-style: italic; font-size: 20px; font-weight: 400; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.library-item-name-input { font-family: var(--serif); font-style: italic; font-size: 20px; background: white; border: 0.5px solid var(--ink); border-radius: 4px; padding: 4px 8px; width: 100%; outline: none; }
+.library-item-meta { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); margin-top: 4px; }
+.library-item-current-badge { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); padding: 4px 9px; border-radius: 999px; flex-shrink: 0; }
+.library-item-actions { display: flex; gap: 2px; flex-shrink: 0; }
+.library-item-btn { font-size: 14px; background: none; border: none; color: var(--mute); cursor: pointer; padding: 6px 9px; border-radius: 4px; line-height: 1; }
+.library-item-btn:hover { color: var(--ink); background: var(--paper); }
+.library-item-btn.danger:hover { color: var(--accent); background: var(--accent-soft); }
+.library-actions { padding: 16px 22px 22px; border-top: 0.5px solid var(--rule); background: var(--cream); display: flex; flex-direction: column; gap: 10px; }
+.library-actions .btn-primary { width: 100%; }
+.library-io { display: flex; gap: 8px; }
+.library-io-btn { flex: 1; font-family: var(--sans); font-size: 12px; font-weight: 500; border: 0.5px solid var(--rule); background: white; color: var(--ink); padding: 10px 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s; text-align: center; }
+.library-io-btn:hover { border-color: var(--ink); }
+
 @media (max-width: 900px) {
   .app { grid-template-columns: 1fr; }
   .sheet-side { position: static; max-height: none; }
@@ -365,7 +378,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v3.5</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v3.4</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -452,7 +465,12 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
     <div class="meta-sub">Shown in header if filled</div>
   </div>
   <div class="meta-field right">
-    <div class="meta-label">Sheet status</div>
+    <div class="meta-label">Sheet</div>
+    <div class="meta-display">
+      <button class="meta-pick sheet-pick" id="sheetPick" type="button" title="Click to switch sheets, rename, or start a new one">
+        <span class="sheet-pick-label" id="sheetPickLabel">Untitled sheet</span>
+      </button>
+    </div>
     <div class="meta-sub" id="draftStatus" style="text-transform: none; letter-spacing: 0.04em; font-size: 12px;">New sheet</div>
   </div>
 </div>
@@ -485,8 +503,29 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.5</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.4</span>
 </footer>
+
+<div class="library-overlay" id="libraryOverlay" hidden>
+  <div class="library-modal" id="libraryModal">
+    <div class="library-h">
+      <div class="library-h-inner">
+        <div class="library-title">My sheets</div>
+        <div class="library-sub">Switch &middot; rename &middot; export</div>
+      </div>
+      <button class="library-close" id="libraryClose" title="Close">&times;</button>
+    </div>
+    <div class="library-list" id="libraryList"></div>
+    <div class="library-actions">
+      <button class="btn btn-primary" id="newSheetBtn">+ New sheet</button>
+      <div class="library-io">
+        <button class="library-io-btn" id="exportLibBtn" title="Download all sheets as a .json file (for SharePoint, OneDrive, backups)">&darr; Save all to file</button>
+        <label class="library-io-btn" for="importLibFile" style="cursor:pointer" title="Restore sheets from a .json file you previously saved">&uarr; Load from file</label>
+        <input type="file" id="importLibFile" accept=".json,application/json" style="display:none">
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="preview-shell" id="previewShell">
   <div class="preview-toolbar">
@@ -560,7 +599,6 @@ const state = {
   pageOrder: [],
   cheatOrder: [],   // [{sc, cc}, ...] for cheat-sheet tile ordering
   cheatBreaks: new Set(),  // Set of "sc|cc" keys that begin a new page (manual break)
-  cheatTilesPerPage: 8,    // 1-8, applies to all cheat-sheet pages
   overrides: {},
   view: 'build',
   mode: 'sales',    // 'sales' or 'cheat'
@@ -569,72 +607,446 @@ const state = {
   activeSeason: null,
 };
 
-const STORAGE_KEY = 'salesSheetBuilder.draft.v3';
+// =========================================================
+// SHEET LIBRARY — multiple saved sheets, persisted locally
+// =========================================================
+// All sheets live in one library object:
+//   { sheets: { sheetId: {...} }, currentId: "sheetId" }
+// Only the "current" sheet is loaded into `state` at any time.
+// Every state-mutating action calls persistCurrentSheet(), which writes the
+// current state back into its library entry. Switching sheets saves the
+// outgoing one first, then loads the incoming one into state. Empty/blank
+// sheets are NOT auto-created -- a library entry only appears once the user
+// has put real content into it (a customer name, a selection, etc.) or has
+// explicitly clicked "+ New sheet".
 
-function loadDraft() {
-  try { const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : null; }
-  catch { return null; }
+const LIBRARY_KEY = 'salesSheetBuilder.library.v1';
+const OLD_DRAFT_KEY = 'salesSheetBuilder.draft.v3';  // pre-v3.4 single-draft store
+
+function uuid() {
+  return 'sh_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
 }
-function saveDraft(d) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch {} }
 
-function persistCurrentDraft() {
-  const isEmpty = Object.keys(state.selections).length === 0
-    && Object.keys(state.overrides).length === 0
-    && !state.customerName && !state.season;
-  if (isEmpty) {
-    try { localStorage.removeItem(STORAGE_KEY); } catch {}
-  } else {
-    saveDraft({
-      brandId: state.brandId,
-      customerName: state.customerName,
-      season: state.season,
-      pageOrder: state.pageOrder,
-      cheatOrder: state.cheatOrder,
-      cheatBreaks: Array.from(state.cheatBreaks),
-      cheatTilesPerPage: state.cheatTilesPerPage,
-      mode: state.mode,
-      selections: state.selections,
-      overrides: state.overrides,
-      savedAt: Date.now(),
-    });
+function loadLibrary() {
+  try {
+    const raw = localStorage.getItem(LIBRARY_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.sheets) return parsed;
+    }
+  } catch {}
+  // First run on v3.4+ -- migrate any pre-existing single draft so the user
+  // doesn't appear to lose their work.
+  try {
+    const oldRaw = localStorage.getItem(OLD_DRAFT_KEY);
+    if (oldRaw) {
+      const old = JSON.parse(oldRaw);
+      const id = uuid();
+      const sheet = {
+        id,
+        name: '',
+        brandId: old.brandId || 'rdstyle',
+        customerName: old.customerName || '',
+        season: old.season || '',
+        mode: old.mode === 'cheat' ? 'cheat' : 'sales',
+        pageOrder: old.pageOrder || [],
+        cheatOrder: Array.isArray(old.cheatOrder) ? old.cheatOrder : [],
+        cheatBreaks: Array.isArray(old.cheatBreaks) ? old.cheatBreaks : [],
+        selections: old.selections || {},
+        overrides: old.overrides || {},
+        createdAt: old.savedAt || Date.now(),
+        savedAt: old.savedAt || Date.now(),
+      };
+      const lib = { sheets: { [id]: sheet }, currentId: id };
+      saveLibrary(lib);
+      return lib;
+    }
+  } catch {}
+  return { sheets: {}, currentId: null };
+}
+
+function saveLibrary(lib) {
+  try { localStorage.setItem(LIBRARY_KEY, JSON.stringify(lib)); } catch {}
+}
+
+function autoNameSheet(s) {
+  if (!s) return '';
+  const parts = [];
+  if (s.customerName) parts.push(s.customerName);
+  if (s.season) parts.push(s.season);
+  parts.push(s.mode === 'cheat' ? 'Cheat sheet' : 'Sales sheet');
+  return parts.join(' \u00B7 ');
+}
+
+function getSheetDisplayName(s) {
+  if (!s) return 'Untitled sheet';
+  return (s.name && s.name.trim()) || autoNameSheet(s) || 'Untitled sheet';
+}
+
+function sheetHasContent() {
+  return !!(state.customerName
+    || state.season
+    || Object.keys(state.selections).length > 0
+    || Object.keys(state.overrides).length > 0);
+}
+
+function persistCurrentSheet() {
+  const lib = loadLibrary();
+  let id = lib.currentId;
+  if (!id || !lib.sheets[id]) {
+    if (!sheetHasContent()) {
+      // Don't materialize an empty sheet just from idle keystrokes.
+      refreshDraftStatus();
+      refreshSheetPick();
+      return;
+    }
+    id = uuid();
+    lib.sheets[id] = { id, name: '', createdAt: Date.now() };
+    lib.currentId = id;
   }
+  const sheet = lib.sheets[id];
+  sheet.brandId = state.brandId;
+  sheet.customerName = state.customerName;
+  sheet.season = state.season;
+  sheet.mode = state.mode;
+  sheet.pageOrder = state.pageOrder;
+  sheet.cheatOrder = state.cheatOrder;
+  sheet.cheatBreaks = Array.from(state.cheatBreaks);
+  sheet.selections = state.selections;
+  sheet.overrides = state.overrides;
+  sheet.savedAt = Date.now();
+  saveLibrary(lib);
   refreshDraftStatus();
+  refreshSheetPick();
 }
 
-function loadCurrentDraft() {
-  const d = loadDraft();
-  if (d) {
-    state.brandId = (d.brandId && BRANDS.find(b => b.id === d.brandId)) ? d.brandId : (BRANDS[0] && BRANDS[0].id) || 'rdstyle';
-    state.customerName = d.customerName || '';
-    state.season = d.season || '';
-    state.pageOrder = d.pageOrder || [];
-    state.cheatOrder = Array.isArray(d.cheatOrder) ? d.cheatOrder : [];
-    state.cheatBreaks = new Set(Array.isArray(d.cheatBreaks) ? d.cheatBreaks : []);
-    state.cheatTilesPerPage = clampCheatTpp(d.cheatTilesPerPage);
-    state.mode = (d.mode === 'cheat') ? 'cheat' : 'sales';
-    state.selections = d.selections || {};
-    state.overrides = d.overrides || {};
+function applySheetToState(sheet) {
+  if (sheet) {
+    state.brandId = (sheet.brandId && BRANDS.find(b => b.id === sheet.brandId)) ? sheet.brandId : (BRANDS[0] && BRANDS[0].id) || 'rdstyle';
+    state.customerName = sheet.customerName || '';
+    state.season = sheet.season || '';
+    state.pageOrder = sheet.pageOrder || [];
+    state.cheatOrder = Array.isArray(sheet.cheatOrder) ? sheet.cheatOrder : [];
+    state.cheatBreaks = new Set(Array.isArray(sheet.cheatBreaks) ? sheet.cheatBreaks : []);
+    state.mode = (sheet.mode === 'cheat') ? 'cheat' : 'sales';
+    state.selections = sheet.selections || {};
+    state.overrides = sheet.overrides || {};
   } else {
+    state.brandId = (BRANDS[0] && BRANDS[0].id) || 'rdstyle';
     state.customerName = '';
     state.season = '';
     state.pageOrder = [];
     state.cheatOrder = [];
     state.cheatBreaks = new Set();
-    state.cheatTilesPerPage = 8;
     state.mode = 'sales';
     state.selections = {};
     state.overrides = {};
   }
 }
 
+function loadCurrentSheet() {
+  const lib = loadLibrary();
+  let sheet = null;
+  if (lib.currentId && lib.sheets[lib.currentId]) {
+    sheet = lib.sheets[lib.currentId];
+  } else {
+    // No "currentId" set (or stale) -- fall back to most recently saved.
+    const sheets = Object.values(lib.sheets);
+    if (sheets.length > 0) {
+      sheets.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+      sheet = sheets[0];
+      lib.currentId = sheet.id;
+      saveLibrary(lib);
+    }
+  }
+  applySheetToState(sheet);
+}
+
+function createNewSheet() {
+  persistCurrentSheet();  // commit outgoing work first
+  const lib = loadLibrary();
+  const id = uuid();
+  lib.sheets[id] = {
+    id,
+    name: '',
+    brandId: state.brandId || (BRANDS[0] && BRANDS[0].id) || 'rdstyle',
+    customerName: '',
+    season: '',
+    mode: state.mode,
+    pageOrder: [],
+    cheatOrder: [],
+    cheatBreaks: [],
+    selections: {},
+    overrides: {},
+    createdAt: Date.now(),
+    savedAt: Date.now(),
+  };
+  lib.currentId = id;
+  saveLibrary(lib);
+  applySheetToState(lib.sheets[id]);
+  reRenderAllForSheetSwap();
+  closeLibrary();
+}
+
+function switchToSheet(id) {
+  persistCurrentSheet();
+  const lib = loadLibrary();
+  if (!lib.sheets[id]) return;
+  lib.currentId = id;
+  saveLibrary(lib);
+  applySheetToState(lib.sheets[id]);
+  reRenderAllForSheetSwap();
+  closeLibrary();
+}
+
+function deleteSheetFromLib(id) {
+  const lib = loadLibrary();
+  if (!lib.sheets[id]) return;
+  const wasCurrent = lib.currentId === id;
+  delete lib.sheets[id];
+  if (wasCurrent) {
+    const remaining = Object.values(lib.sheets);
+    if (remaining.length > 0) {
+      remaining.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+      lib.currentId = remaining[0].id;
+      saveLibrary(lib);
+      applySheetToState(remaining[0]);
+    } else {
+      lib.currentId = null;
+      saveLibrary(lib);
+      applySheetToState(null);
+    }
+    reRenderAllForSheetSwap();
+  } else {
+    saveLibrary(lib);
+  }
+  renderLibrary();
+}
+
+function renameSheetInLib(id, newName) {
+  const lib = loadLibrary();
+  if (!lib.sheets[id]) return;
+  lib.sheets[id].name = (newName || '').trim();
+  saveLibrary(lib);
+  refreshSheetPick();
+  renderLibrary();
+}
+
+function reRenderAllForSheetSwap() {
+  state.expandedStyle = null;
+  state.expandedEditor = null;
+  // Mode tab UI
+  document.querySelectorAll('.mode-tab').forEach(el => {
+    const on = el.dataset.mode === state.mode;
+    el.classList.toggle('on', on);
+    el.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  $('mastheadTitle').textContent = state.mode === 'cheat' ? 'Cheat Sheet' : 'Sales Sheet';
+  const hint = document.querySelector('.sheet-side-hint');
+  if (hint) {
+    hint.textContent = state.mode === 'cheat'
+      ? 'Drag to reorder \u00B7 max 8 tiles per page'
+      : 'Drag to reorder \u00B7 click Edit for Fabric Content & price';
+  }
+  $('goPreview').textContent = state.mode === 'cheat' ? 'Preview cheat sheet \u2192' : 'Preview sheet \u2192';
+  renderHeaderPickers();
+  renderCatalog();
+  renderSidebar();
+  refreshSheetPick();
+}
+
 function refreshDraftStatus() {
-  const d = loadDraft();
+  const lib = loadLibrary();
+  const sheet = lib.currentId ? lib.sheets[lib.currentId] : null;
   const el = $('draftStatus');
-  if (!d) { el.textContent = 'New sheet'; return; }
-  const ago = Math.round((Date.now() - d.savedAt) / 1000);
-  if (ago < 5) el.textContent = 'Saved just now';
-  else if (ago < 60) el.textContent = 'Saved ' + ago + 's ago';
-  else el.textContent = 'Saved ' + new Date(d.savedAt).toLocaleString();
+  if (!sheet || !sheet.savedAt) { el.textContent = 'New sheet'; return; }
+  el.textContent = 'Saved ' + formatAgo(sheet.savedAt);
+}
+
+function refreshSheetPick() {
+  const lib = loadLibrary();
+  const sheet = lib.currentId ? lib.sheets[lib.currentId] : null;
+  const label = $('sheetPickLabel');
+  if (!label) return;
+  label.textContent = sheet ? getSheetDisplayName(sheet) : 'Untitled sheet';
+}
+
+function formatAgo(ts) {
+  if (!ts) return 'never';
+  const ago = Date.now() - ts;
+  if (ago < 30000) return 'just now';
+  const min = Math.floor(ago / 60000);
+  if (min < 60) return min + 'm ago';
+  const hr = Math.floor(ago / 3600000);
+  if (hr < 24) return hr + 'h ago';
+  const day = Math.floor(ago / 86400000);
+  if (day < 7) return day + 'd ago';
+  return new Date(ts).toLocaleDateString();
+}
+
+// -------- Library modal UI --------
+
+function openLibrary() {
+  persistCurrentSheet();  // make sure list shows latest "saved Xs ago" for current sheet
+  $('libraryOverlay').hidden = false;
+  renderLibrary();
+}
+function closeLibrary() {
+  $('libraryOverlay').hidden = true;
+}
+
+function renderLibrary() {
+  const lib = loadLibrary();
+  const list = $('libraryList');
+  const sheets = Object.values(lib.sheets);
+  sheets.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+
+  if (sheets.length === 0) {
+    list.innerHTML = '<div class="library-empty">No saved sheets yet.<br>Click <strong>+ New sheet</strong> below to start one.</div>';
+    return;
+  }
+
+  list.innerHTML = sheets.map(s => {
+    const isCurrent = s.id === lib.currentId;
+    const numColors = Object.values(s.selections || {}).reduce((a, arr) => a + (Array.isArray(arr) ? arr.length : 0), 0);
+    const numStyles = Object.keys(s.selections || {}).length;
+    const ago = formatAgo(s.savedAt);
+    const modeLabel = s.mode === 'cheat' ? 'Cheat sheet' : 'Sales sheet';
+    const metaBits = [modeLabel];
+    if (numStyles > 0) metaBits.push(numStyles + ' ' + (numStyles === 1 ? 'style' : 'styles'));
+    if (numColors > 0) metaBits.push(numColors + ' ' + (numColors === 1 ? 'color' : 'colors'));
+    metaBits.push('saved ' + ago);
+    return '<div class="library-item' + (isCurrent ? ' current' : '') + '" data-sheet-id="' + escapeHtml(s.id) + '">' +
+      '<div class="library-item-info">' +
+        '<div class="library-item-name" data-name-display="' + escapeHtml(s.id) + '">' + escapeHtml(getSheetDisplayName(s)) + '</div>' +
+        '<div class="library-item-meta">' + metaBits.join(' \u00B7 ') + '</div>' +
+      '</div>' +
+      (isCurrent ? '<span class="library-item-current-badge">Open</span>' : '') +
+      '<div class="library-item-actions">' +
+        '<button class="library-item-btn" data-rename="' + escapeHtml(s.id) + '" title="Rename">\u270E</button>' +
+        '<button class="library-item-btn" data-export-sheet="' + escapeHtml(s.id) + '" title="Download as file">\u2193</button>' +
+        '<button class="library-item-btn danger" data-delete="' + escapeHtml(s.id) + '" title="Delete">\u00D7</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  list.querySelectorAll('.library-item').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('.library-item-actions')) return;
+      if (e.target.closest('.library-item-name-input')) return;
+      switchToSheet(el.dataset.sheetId);
+    });
+  });
+  list.querySelectorAll('[data-rename]').forEach(el => {
+    el.addEventListener('click', e => { e.stopPropagation(); startRename(el.dataset.rename); });
+  });
+  list.querySelectorAll('[data-delete]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const lib2 = loadLibrary();
+      const s = lib2.sheets[el.dataset.delete];
+      if (!s) return;
+      if (!confirm('Delete "' + getSheetDisplayName(s) + '"?\n\nThis cannot be undone (unless you exported a backup).')) return;
+      deleteSheetFromLib(el.dataset.delete);
+    });
+  });
+  list.querySelectorAll('[data-export-sheet]').forEach(el => {
+    el.addEventListener('click', e => { e.stopPropagation(); exportSheetFile(el.dataset.exportSheet); });
+  });
+}
+
+function startRename(id) {
+  const lib = loadLibrary();
+  const s = lib.sheets[id];
+  if (!s) return;
+  const nameEl = document.querySelector('[data-name-display="' + id + '"]');
+  if (!nameEl) return;
+  const current = s.name || autoNameSheet(s);
+  // Swap span for input
+  const input = document.createElement('input');
+  input.className = 'library-item-name-input';
+  input.dataset.nameInput = id;
+  input.value = current;
+  nameEl.replaceWith(input);
+  input.focus();
+  input.select();
+  let committed = false;
+  const commit = () => {
+    if (committed) return;
+    committed = true;
+    renameSheetInLib(id, input.value);
+  };
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { committed = true; renderLibrary(); }
+  });
+  input.addEventListener('click', e => e.stopPropagation());
+}
+
+// -------- File export / import (.json) --------
+
+function downloadJson(filename, payload) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+}
+
+function exportLibraryFile() {
+  persistCurrentSheet();
+  const lib = loadLibrary();
+  const count = Object.keys(lib.sheets).length;
+  if (count === 0) { alert('No sheets to export yet.'); return; }
+  const fname = 'sheet-library-' + new Date().toISOString().slice(0, 10) + '.json';
+  downloadJson(fname, { version: 1, exportedAt: Date.now(), library: lib });
+}
+
+function exportSheetFile(id) {
+  const lib = loadLibrary();
+  const s = lib.sheets[id];
+  if (!s) return;
+  const safe = getSheetDisplayName(s).replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'sheet';
+  downloadJson(safe + '.json', { version: 1, exportedAt: Date.now(), sheet: s });
+}
+
+function importLibraryFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    let data;
+    try { data = JSON.parse(e.target.result); }
+    catch (err) { alert('That file isn\'t valid JSON.'); return; }
+
+    const lib = loadLibrary();
+    let imported = 0;
+    let sheetsToImport = [];
+
+    if (data && data.library && data.library.sheets) {
+      sheetsToImport = Object.values(data.library.sheets);
+    } else if (data && data.sheet) {
+      sheetsToImport = [data.sheet];
+    } else {
+      alert('Couldn\'t read that file as a sheet export.');
+      return;
+    }
+
+    sheetsToImport.forEach(s => {
+      const newId = uuid();
+      // Re-id on import so importing the same file twice yields two copies
+      // rather than overwriting an existing sheet that happens to share an id.
+      lib.sheets[newId] = { ...s, id: newId };
+      imported++;
+    });
+    saveLibrary(lib);
+    renderLibrary();
+    refreshSheetPick();
+    alert('Imported ' + imported + ' ' + (imported === 1 ? 'sheet' : 'sheets') + '.');
+  };
+  reader.readAsText(file);
 }
 
 const $ = id => document.getElementById(id);
@@ -728,14 +1140,14 @@ function setOverride(sc, field, value) {
   if (!state.overrides[sc]) state.overrides[sc] = { colors: {} };
   if (!state.overrides[sc].colors) state.overrides[sc].colors = {};
   state.overrides[sc][field] = value;
-  persistCurrentDraft();
+  persistCurrentSheet();
 }
 function setColorOverride(sc, cc, field, value) {
   if (!state.overrides[sc]) state.overrides[sc] = { colors: {} };
   if (!state.overrides[sc].colors) state.overrides[sc].colors = {};
   if (!state.overrides[sc].colors[cc]) state.overrides[sc].colors[cc] = {};
   state.overrides[sc].colors[cc][field] = value;
-  persistCurrentDraft();
+  persistCurrentSheet();
 }
 
 const SHAPES = {
@@ -771,42 +1183,10 @@ function refreshSourcesBtn() {
 }
 function setLoadedNote(id, html) { $(id).innerHTML = html; }
 
-// OS-generated noise we never want to surface as "rejected" — silently skip
-const SYSTEM_FILE = /(^|\/)(\._|\.DS_Store$|Thumbs\.db$|desktop\.ini$|\.gitkeep$|\.gitignore$)/i;
-function isSystemFile(f) {
-  return SYSTEM_FILE.test(f.name) || SYSTEM_FILE.test(f.webkitRelativePath || '');
-}
-
-// Build the "files skipped" warning block used by every source loader.
-// `rejected` is [{ name, reason, path? }, ...]. `headline` is the top line text.
-function renderRejectedBlock(rejected, headline) {
-  if (!rejected || rejected.length === 0) return '';
-  const previewN = 8;
-  const shown = rejected.slice(0, previewN);
-  const more = rejected.length - shown.length;
-  const lines = shown.map(d => {
-    const where = d.path ? '<span style="opacity:0.7"> [' + escapeHtml(d.path) + ']</span>' : '';
-    return '<div><span class="source-warn-files">' + escapeHtml(d.name) + '</span>' + where + ' &mdash; ' + escapeHtml(d.reason) + '</div>';
-  }).join('');
-  const moreLine = more > 0 ? '<div>&hellip; and ' + more + ' more</div>' : '';
-  return '<div class="source-warn">' +
-    '\u26A0 ' + rejected.length + ' file' + (rejected.length === 1 ? '' : 's') + ' skipped &mdash; ' + escapeHtml(headline) +
-    '<div style="margin-top:6px">' + lines + moreLine + '</div>' +
-  '</div>';
-}
-
 function loadBrandLogos(files) {
-  const all = Array.from(files).filter(f => !isSystemFile(f));
-  const imageFiles = all.filter(f => /\.(svg|png|jpg|jpeg|webp|gif)$/i.test(f.name));
-  const rejected = all
-    .filter(f => !/\.(svg|png|jpg|jpeg|webp|gif)$/i.test(f.name))
-    .map(f => ({ name: f.name, reason: 'not an image file (only .svg, .png, .jpg, .jpeg, .webp, .gif accepted)' }));
-
+  const imageFiles = Array.from(files).filter(f => /\.(svg|png|jpg|jpeg|webp|gif)$/i.test(f.name));
   if (imageFiles.length === 0) {
-    const why = rejected.length
-      ? renderRejectedBlock(rejected, 'no usable logo files found.')
-      : '<div class="source-error">\u26A0 No image files found</div>';
-    setLoadedNote('brandLoaded', why);
+    setLoadedNote('brandLoaded', '<div class="source-error">\u26A0 No image files found</div>');
     return;
   }
   Object.values(logoMap).forEach(url => URL.revokeObjectURL(url));
@@ -823,13 +1203,8 @@ function loadBrandLogos(files) {
   BRANDS = newBrands;
   if (!BRANDS.find(b => b.id === state.brandId)) state.brandId = BRANDS[0].id;
   setStatus('brands', newBrands.length + ' loaded', true);
-  const totalScanned = all.length;
-  const acct = newBrands.length === totalScanned
-    ? newBrands.length + ' logo' + (newBrands.length === 1 ? '' : 's') + ' loaded'
-    : newBrands.length + ' of ' + totalScanned + ' files loaded as logos';
   setLoadedNote('brandLoaded',
-    '<div class="source-loaded">\u2713 ' + acct + ': ' + newBrands.map(b => escapeHtml(b.name)).join(', ') + '</div>' +
-    renderRejectedBlock(rejected, 'not uploaded as logos.') +
+    '<div class="source-loaded">\u2713 ' + newBrands.length + ' logos: ' + newBrands.map(b => escapeHtml(b.name)).join(', ') + '</div>' +
     '<button class="source-clear" data-clear="brands">reset to seed brands</button>');
   renderHeaderPickers();
 }
@@ -854,21 +1229,9 @@ function seasonSortKey(s) {
 }
 
 function loadStyleImages(files) {
-  const all = Array.from(files).filter(f => !isSystemFile(f));
-  const imageFiles = all.filter(f => /\.(png|jpg|jpeg|webp|gif|svg)$/i.test(f.name));
-  const rejected = all
-    .filter(f => !/\.(png|jpg|jpeg|webp|gif|svg)$/i.test(f.name))
-    .map(f => {
-      const path = f.webkitRelativePath || '';
-      const folder = path ? path.split('/').slice(0, -1).join('/') : '';
-      return { name: f.name, path: folder || null, reason: 'not an image file (only .png, .jpg, .jpeg, .webp, .gif, .svg accepted)' };
-    });
-
+  const imageFiles = Array.from(files).filter(f => /\.(png|jpg|jpeg|webp|gif|svg)$/i.test(f.name));
   if (imageFiles.length === 0) {
-    const why = rejected.length
-      ? renderRejectedBlock(rejected, 'no usable image files found in folder.')
-      : '<div class="source-error">\u26A0 No image files found in folder</div>';
-    setLoadedNote('imgLoaded', why);
+    setLoadedNote('imgLoaded', '<div class="source-error">\u26A0 No image files found in folder</div>');
     return;
   }
 
@@ -1042,34 +1405,27 @@ function loadStyleImages(files) {
   const allCodes = new Set();
   Object.values(seasonGroups).forEach(g => g.styles.forEach(s => allCodes.add(s.code)));
   const totalStyles = allCodes.size;
-  const totalScanned = all.length;
 
   const realSeasonCount = realSeasons.length;
-  // Always show explicit "loaded of scanned" so users can verify nothing was silently dropped.
-  const fileAcct = totalImages + ' of ' + totalScanned + ' file' + (totalScanned === 1 ? '' : 's') + ' loaded';
+  // "13 of 17 images" when files were skipped, just "13 images" otherwise.
+  const imgPart = duplicates.length
+    ? totalImages + ' of ' + imageFiles.length + ' images'
+    : totalImages + ' images';
   const summary = realSeasonCount > 1
-    ? realSeasonCount + ' seasons \u00B7 ' + fileAcct
-    : totalStyles + ' styles \u00B7 ' + fileAcct;
+    ? realSeasonCount + ' seasons \u00B7 ' + imgPart
+    : totalStyles + ' styles \u00B7 ' + imgPart;
   setStatus('images', summary, true);
 
   const unstructuredNote = unstructured ? ' \u00B7 ' + unstructured + ' need style info' : '';
-  // If anything was filtered out, show the gap breakdown (non-images / duplicates)
-  const gap = totalScanned - totalImages;
-  const gapBits = [];
-  if (rejected.length) gapBits.push(rejected.length + ' non-image');
-  if (duplicates.length) gapBits.push(duplicates.length + ' duplicate' + (duplicates.length === 1 ? '' : 's'));
-  const gapNote = gap > 0 && gapBits.length
-    ? ' <span style="opacity:0.75">(' + gapBits.join(', ') + ' skipped \u2014 see below)</span>'
-    : '';
   let loadedHtml;
   if (realSeasonCount > 0) {
     const breakdown = availableSeasons.map(k => {
       const label = k === '__flat__' ? '(no folder)' : k;
       return escapeHtml(label) + ' (' + seasonGroups[k].styles.length + ')';
     }).join(' \u00B7 ');
-    loadedHtml = '<div class="source-loaded">\u2713 ' + totalStyles + ' styles \u00B7 ' + fileAcct + ' \u2014 ' + breakdown + unstructuredNote + gapNote + '</div>';
+    loadedHtml = '<div class="source-loaded">\u2713 ' + realSeasonCount + ' season' + (realSeasonCount === 1 ? '' : 's') + ' \u2014 ' + breakdown + unstructuredNote + '</div>';
   } else {
-    loadedHtml = '<div class="source-loaded">\u2713 ' + totalStyles + ' styles \u00B7 ' + fileAcct + unstructuredNote + gapNote + '</div>';
+    loadedHtml = '<div class="source-loaded">\u2713 ' + totalStyles + ' styles, ' + totalImages + ' images' + unstructuredNote + '</div>';
   }
 
   // When two files in the same season parse to the same style+color, the
@@ -1094,7 +1450,7 @@ function loadStyleImages(files) {
       '</div>';
   }
 
-  setLoadedNote('imgLoaded', loadedHtml + warnHtml + renderRejectedBlock(rejected, 'not uploaded as style images.') + '<button class="source-clear" data-clear="images">reset to seed images</button>');
+  setLoadedNote('imgLoaded', loadedHtml + warnHtml + '<button class="source-clear" data-clear="images">reset to seed images</button>');
 }
 
 function setActiveSeason(seasonKey, opts) {
@@ -1112,7 +1468,7 @@ function setActiveSeason(seasonKey, opts) {
     state.season = seasonKey;
     const el = $('seasonInput');
     if (el) el.value = seasonKey;
-    persistCurrentDraft();
+    persistCurrentSheet();
   }
 
   state.expandedStyle = null;
@@ -1136,7 +1492,7 @@ function renderSeasonPicker() {
 }
 
 async function loadAllFromFolder(files) {
-  const fileList = Array.from(files).filter(f => !isSystemFile(f));
+  const fileList = Array.from(files);
   if (fileList.length === 0) return;
 
   const isImg = n => /\.(svg|png|jpe?g|webp|gif)$/i.test(n);
@@ -1152,25 +1508,6 @@ async function loadAllFromFolder(files) {
     const path = '/' + (f.webkitRelativePath || '');
     return isImg(f.name) && /\/(style[-_ ]?images?|images|styles)\//i.test(path);
   });
-
-  // Anything that didn't get claimed by either bucket. Split into two reasons:
-  // image files that landed outside the expected folders, and non-image files.
-  const claimed = new Set([...logoFiles, ...styleFiles]);
-  const unclaimed = fileList.filter(f => !claimed.has(f));
-  const orphanImages = unclaimed
-    .filter(f => isImg(f.name))
-    .map(f => {
-      const path = f.webkitRelativePath || '';
-      const folder = path ? path.split('/').slice(0, -1).join('/') : '';
-      return { name: f.name, path: folder || null, reason: 'image found, but not inside a Logos/, Brands/, StyleImages/, Images/, or Styles/ subfolder' };
-    });
-  const nonImages = unclaimed
-    .filter(f => !isImg(f.name))
-    .map(f => {
-      const path = f.webkitRelativePath || '';
-      const folder = path ? path.split('/').slice(0, -1).join('/') : '';
-      return { name: f.name, path: folder || null, reason: 'not an image file' };
-    });
 
   const results = [];
   const misses = [];
@@ -1192,17 +1529,6 @@ async function loadAllFromFolder(files) {
   if (results.length) html += '<div class="ok">\u2713 Loaded ' + results.join(' \u00B7 ') + '</div>';
   if (misses.length) html += '<div class="miss">\u26A0 ' + misses.join(' \u00B7 ') + '</div>';
   if (!results.length && !misses.length) html = '<div class="miss">\u26A0 No matching files found in folder</div>';
-
-  // Explicit accounting so users can verify nothing was silently dropped
-  const matched = logoFiles.length + styleFiles.length;
-  const totalScanned = fileList.length;
-  html += '<div class="hint" style="margin-top:6px">' + matched + ' of ' + totalScanned + ' file' + (totalScanned === 1 ? '' : 's') + ' matched into Logos/StyleImages</div>';
-
-  // Surface unclaimed files so the user knows what got ignored and why.
-  // Images come first (more likely the user wanted them included), then non-images.
-  html += renderRejectedBlock(orphanImages, 'images outside the expected subfolders.');
-  html += renderRejectedBlock(nonImages, 'not image files.');
-
   $('quickLoaded').innerHTML = html;
 }
 
@@ -1402,7 +1728,7 @@ function toggleCheatBreak(key) {
   if (state.cheatBreaks.has(key)) state.cheatBreaks.delete(key);
   else state.cheatBreaks.add(key);
   renderSidebar();
-  persistCurrentDraft();
+  persistCurrentSheet();
 }
 
 function toggleColor(styleCode, colorCode) {
@@ -1425,7 +1751,7 @@ function toggleColor(styleCode, colorCode) {
   syncCheatOrder();
   renderCatalog();
   renderSidebar();
-  persistCurrentDraft();
+  persistCurrentSheet();
 }
 
 function removePage(styleCode) {
@@ -1436,7 +1762,7 @@ function removePage(styleCode) {
   syncCheatOrder();
   renderCatalog();
   renderSidebar();
-  persistCurrentDraft();
+  persistCurrentSheet();
 }
 
 function removeCheatItem(sc, cc) {
@@ -1453,7 +1779,7 @@ function removeCheatItem(sc, cc) {
   syncCheatOrder();
   renderCatalog();
   renderSidebar();
-  persistCurrentDraft();
+  persistCurrentSheet();
 }
 
 // Shared editor used by both Sales and Cheat sidebars.
@@ -1593,17 +1919,7 @@ function renderCheatSidebar() {
   const totalPages = pagePlan.length;
   tally.textContent = totalPages + ' ' + (totalPages === 1 ? 'page' : 'pages') + ' \u00B7 ' + items.length + ' tiles';
 
-  const tpp = getCheatTilesPerPage();
-  const tppButtons = [1,2,3,4,5,6,7,8].map(n =>
-    '<button type="button" data-cheat-tpp="' + n + '" class="' + (n === tpp ? 'on' : '') + '">' + n + '</button>'
-  ).join('');
-  const note = '<div class="cheat-mode-note">' +
-    '<div class="cheat-tpp">' +
-      '<span class="cheat-tpp-label">Tiles per page</span>' +
-      '<div class="editor-segmented">' + tppButtons + '</div>' +
-    '</div>' +
-    'Tiles fill in order to <strong>' + tpp + ' per page</strong>. Drag tiles to reorder &mdash; group outfits, match tops to bottoms, etc. Click <strong>\u21B5</strong> on any tile to start a new page on that tile.' +
-  '</div>';
+  const note = '<div class="cheat-mode-note">Default: <strong>8 per page</strong>, filled in order. Drag tiles to reorder &mdash; group outfits, match tops to bottoms, etc. Click <strong>\u21B5</strong> on any tile to start a new page on that tile.</div>';
 
   // Render the sidebar grouped into the actual pages so the user can see
   // which tile lands where, with manual-break dividers showing a remove button.
@@ -1655,7 +1971,7 @@ function renderCheatSidebar() {
     const isManual = !!pg.manual;
     const dividerCls = 'cheat-page-divider' + (isManual ? ' manual' : '');
     const tileCount = pg.items.length;
-    const cap = ' \u00B7 ' + tileCount + ' / ' + tpp;
+    const cap = ' \u00B7 ' + tileCount + ' / ' + MAX_TILES_PER_CHEAT;
     const removeBtn = isManual && firstKey
       ? '<button class="cpd-rm" data-cheat-break-rm="' + escapeHtml(firstKey) + '" title="Remove manual break">\u00D7</button>'
       : '';
@@ -1703,17 +2019,6 @@ function renderCheatSidebar() {
       toggleCheatBreak(el.dataset.cheatBreakRm);
     });
   });
-  list.querySelectorAll('[data-cheat-tpp]').forEach(el => {
-    el.addEventListener('click', e => {
-      e.stopPropagation();
-      const n = clampCheatTpp(el.dataset.cheatTpp);
-      if (n === state.cheatTilesPerPage) return;
-      state.cheatTilesPerPage = n;
-      state.curPage = 0;
-      renderSidebar();
-      persistCurrentDraft();
-    });
-  });
   wireEditorListeners(list);
 
   wireCheatDrag();
@@ -1753,7 +2058,7 @@ function wireCheatDrag() {
           order.splice(toIdx, 0, moved);
           state.cheatOrder = order;
           renderSidebar();
-          persistCurrentDraft();
+          persistCurrentSheet();
         }
       }
     });
@@ -1874,7 +2179,7 @@ function wireDrag() {
         order.splice(toIdx, 0, dragSrc);
         state.pageOrder = order;
         renderSidebar();
-        persistCurrentDraft();
+        persistCurrentSheet();
       }
     });
   });
@@ -1886,22 +2191,6 @@ function wireDrag() {
 
 const MAX_COLORS_PER_PAGE = 4;
 const MAX_TILES_PER_CHEAT = 8;
-const MIN_TILES_PER_CHEAT = 1;
-function clampCheatTpp(n) {
-  const v = parseInt(n, 10);
-  if (!Number.isFinite(v)) return 8;
-  return Math.max(MIN_TILES_PER_CHEAT, Math.min(MAX_TILES_PER_CHEAT, v));
-}
-function getCheatTilesPerPage() { return clampCheatTpp(state.cheatTilesPerPage); }
-// Grid shape used by both the on-screen cheat preview and PowerPoint export.
-// Falls into "natural" rectangles: 1=1x1, 2=2x1, 3=3x1, 4=2x2, 5/6=3x2, 7/8=4x2.
-function getCheatGridDims(tpp) {
-  const n = clampCheatTpp(tpp);
-  if (n <= 3) return { cols: n, rows: 1 };
-  if (n === 4) return { cols: 2, rows: 2 };
-  if (n <= 6) return { cols: 3, rows: 2 };
-  return { cols: 4, rows: 2 };
-}
 
 // Single source of truth for which selections are actually renderable.
 // Filters out:
@@ -1945,7 +2234,6 @@ function buildPagePlan() {
 function buildCheatPagePlan() {
   syncCheatOrder();
   const items = state.cheatOrder.slice();
-  const tpp = getCheatTilesPerPage();
   const pages = [];
   let current = [];
   let currentManual = false;
@@ -1959,11 +2247,11 @@ function buildCheatPagePlan() {
         current = [];
       }
       // Mark the upcoming page as manual even if the break aligned with a
-      // natural cap boundary (so the user's intent is still reflected).
+      // natural 8-cap boundary (so the user's intent is still reflected).
       currentManual = true;
     }
     current.push(it);
-    if (current.length >= tpp) {
+    if (current.length >= MAX_TILES_PER_CHEAT) {
       pages.push({ items: current, manual: currentManual });
       current = [];
       currentManual = false;
@@ -2111,24 +2399,38 @@ function renderCheatPreview() {
       if (!s) return '';
       const c = getColor(s, it.cc);
       if (!c) return '';
-      const styleNum = getEffectiveStyleNumber(it.sc);
-      const dispCode = c.patternCode || c.code;
-      const colorName = getEffectiveColorName(it.sc, it.cc);
-      const showName = colorName && colorName !== dispCode;
+      const styleNum   = getEffectiveStyleNumber(it.sc);
+      const styleName  = getEffectiveStyleName(it.sc);
+      const contents   = getEffectiveContents(it.sc);
+      const fabric     = getEffectiveFabric(it.sc);
+      const dispCode   = c.patternCode || c.code;
+      const colorName  = getEffectiveColorName(it.sc, it.cc);
+      const showName   = colorName && colorName !== dispCode;
       const stylePrice = getDisplayStylePrice(it.sc);
-      const showInv = getShowInventory(it.sc);
-      const qty = showInv ? getEffectiveQty(it.sc, it.cc) : '';
+      const showInv    = getShowInventory(it.sc);
+      const qty        = showInv ? getEffectiveQty(it.sc, it.cc) : '';
+
+      // Combine color code and color name onto a single tight line when both
+      // are present (e.g. "H34 \u00B7 BLUE"). Falls back to whichever exists.
+      let colorLine = '';
+      const hasCode = dispCode !== it.sc;  // suppress synthetic-style placeholder code
+      if (hasCode && showName) colorLine = dispCode + ' \u00B7 ' + colorName;
+      else if (hasCode)        colorLine = dispCode;
+      else if (showName)       colorLine = colorName;
+
       return '<div class="sheet-tile">' +
         '<div class="sheet-shirt">' + garmentVisual(it.sc, it.cc, s, c) + '</div>' +
-        (styleNum ? '<div class="sheet-tile-style">' + escapeHtml(styleNum) + '</div>' : '') +
-        (dispCode !== it.sc ? '<div class="sheet-tile-code">' + escapeHtml(dispCode) + '</div>' : '') +
-        (showName ? '<div class="sheet-tile-name">' + escapeHtml(colorName) + '</div>' : '') +
-        (stylePrice ? '<div class="sheet-tile-price">' + escapeHtml(stylePrice) + '</div>' : '') +
+        (styleNum   ? '<div class="sheet-tile-style">'   + escapeHtml(styleNum)   + '</div>' : '') +
+        (styleName  ? '<div class="sheet-tile-styname">' + escapeHtml(styleName)  + '</div>' : '') +
+        (colorLine  ? '<div class="sheet-tile-color">'   + escapeHtml(colorLine)  + '</div>' : '') +
+        (contents   ? '<div class="sheet-tile-content">' + escapeHtml(contents)   + '</div>' : '') +
+        (fabric     ? '<div class="sheet-tile-fabric">'  + escapeHtml(fabric)     + '</div>' : '') +
+        (stylePrice ? '<div class="sheet-tile-price">'   + escapeHtml(stylePrice) + '</div>' : '') +
         (qty !== '' ? '<div class="sheet-tile-qty">Qty <strong>' + escapeHtml(qty) + '</strong></div>' : '') +
       '</div>';
     }).join('');
 
-    return '<div class="sheet-page cheat" data-i="' + i + '" data-tpp="' + getCheatTilesPerPage() + '"' + (i !== state.curPage ? ' hidden' : '') + '>' +
+    return '<div class="sheet-page cheat" data-i="' + i + '"' + (i !== state.curPage ? ' hidden' : '') + '>' +
       '<div class="sheet-bar">' +
         '<div class="sheet-bar-spec">' + headerLeft + '</div>' +
         '<div class="sheet-bar-right">' +
@@ -2287,9 +2589,8 @@ async function exportPptx() {
         }
 
         // 4-col x 2-row grid for up to 8 tiles
-        const dims = getCheatGridDims(getCheatTilesPerPage());
-        const COLS = dims.cols;
-        const ROWS = dims.rows;
+        const COLS = 4;
+        const ROWS = 2;
         const bodyTop = HEADER_H + 0.15;
         const bodyH = SLIDE_H - HEADER_H - FOOT_H - 0.30;
         const cellW = SLIDE_W / COLS;
@@ -2307,23 +2608,46 @@ async function exportPptx() {
           const cellX = col * cellW;
           const cellY = bodyTop + row * cellH;
           const data = imgData[it.sc + '_' + it.cc];
-          const styleNum = getEffectiveStyleNumber(it.sc);
-          const dispCode = c.patternCode || c.code;
-          const colorName = getEffectiveColorName(it.sc, it.cc);
-          const showName = colorName && colorName !== dispCode;
+          const styleNum   = getEffectiveStyleNumber(it.sc);
+          const styleName  = getEffectiveStyleName(it.sc);
+          const contents   = getEffectiveContents(it.sc);
+          const fabric     = getEffectiveFabric(it.sc);
+          const dispCode   = c.patternCode || c.code;
+          const colorName  = getEffectiveColorName(it.sc, it.cc);
+          const showName   = colorName && colorName !== dispCode;
           const stylePrice = getDisplayStylePrice(it.sc);
-          const showInv = getShowInventory(it.sc);
-          const qty = showInv ? getEffectiveQty(it.sc, it.cc) : '';
+          const showInv    = getShowInventory(it.sc);
+          const qty        = showInv ? getEffectiveQty(it.sc, it.cc) : '';
 
-          // Inset within cell
+          const hasCode = dispCode !== it.sc;
+          let colorLine = '';
+          if (hasCode && showName) colorLine = dispCode + '  \u00B7  ' + (colorName || '').toUpperCase();
+          else if (hasCode)        colorLine = dispCode;
+          else if (showName)       colorLine = (colorName || '').toUpperCase();
+
+          // Inset within cell. We pre-compute how many label lines we'll draw
+          // so the image height can shrink to make room for them -- otherwise
+          // long fabric descriptions would overlap the next row of tiles.
           const padX = 0.20;
           const padY = 0.10;
           const tileW = cellW - padX * 2;
-          const showCode = dispCode !== it.sc;
-          const showStyleNum = !!styleNum;
-          const labelLines = (showStyleNum ? 1 : 0) + (showCode ? 1 : 0) + (showName ? 1 : 0) + (stylePrice ? 1 : 0) + (qty !== '' ? 1 : 0);
+          const showStyleNum  = !!styleNum;
+          const showStyleName = !!styleName;
+          const showContents  = !!contents;
+          const showFabric    = !!fabric;
+          const showColorLine = !!colorLine;
+          const showPrice     = !!stylePrice;
+          const showQty       = qty !== '';
+          const labelLines =
+            (showStyleNum   ? 1 : 0) +
+            (showStyleName  ? 1 : 0) +
+            (showColorLine  ? 1 : 0) +
+            (showContents   ? 1 : 0) +
+            (showFabric     ? 1 : 0) +
+            (showPrice      ? 1 : 0) +
+            (showQty        ? 1 : 0);
           const labelsBlockH = labelGap + Math.max(1, labelLines) * labelH;
-          const imgH = Math.max(0.9, cellH - padY * 2 - labelsBlockH);
+          const imgH = Math.max(0.6, cellH - padY * 2 - labelsBlockH);
           const tileX = cellX + padX;
           const tileY = cellY + padY;
 
@@ -2353,23 +2677,39 @@ async function exportPptx() {
             });
             labelY += labelH;
           }
-          if (showCode) {
-            slide.addText(dispCode, {
+          if (showStyleName) {
+            slide.addText(styleName, {
               x: tileX, y: labelY, w: tileW, h: labelH,
-              fontFace: 'Consolas', fontSize: 8, color: '777777',
-              align: 'center', charSpacing: 1.5,
+              fontFace: 'Cambria', fontSize: 9, italic: true, color: '333333',
+              align: 'center',
             });
             labelY += labelH;
           }
-          if (showName) {
-            slide.addText((colorName || '').toUpperCase(), {
+          if (showColorLine) {
+            slide.addText(colorLine, {
               x: tileX, y: labelY, w: tileW, h: labelH,
-              fontFace: 'Calibri', fontSize: 8, color: '555555',
+              fontFace: 'Consolas', fontSize: 8, color: '666666',
               align: 'center', charSpacing: 1.2,
             });
             labelY += labelH;
           }
-          if (stylePrice) {
+          if (showContents) {
+            slide.addText(contents.toUpperCase(), {
+              x: tileX, y: labelY, w: tileW, h: labelH,
+              fontFace: 'Consolas', fontSize: 7, color: '777777',
+              align: 'center', charSpacing: 1.2,
+            });
+            labelY += labelH;
+          }
+          if (showFabric) {
+            slide.addText(fabric, {
+              x: tileX, y: labelY, w: tileW, h: labelH,
+              fontFace: 'Calibri', fontSize: 7.5, italic: true, color: '888888',
+              align: 'center',
+            });
+            labelY += labelH;
+          }
+          if (showPrice) {
             slide.addText(stylePrice, {
               x: tileX, y: labelY, w: tileW, h: labelH,
               fontFace: 'Cambria', fontSize: 11, italic: true, color: '1A1814',
@@ -2377,7 +2717,7 @@ async function exportPptx() {
             });
             labelY += labelH;
           }
-          if (qty !== '') {
+          if (showQty) {
             slide.addText([
               { text: 'QTY ', options: { color: '888888' } },
               { text: String(qty), options: { color: '333333', bold: true } },
@@ -2598,12 +2938,12 @@ function setMode(newMode) {
   const hint = document.querySelector('.sheet-side-hint');
   if (hint) {
     hint.textContent = newMode === 'cheat'
-      ? 'Drag tiles to reorder \u00B7 set tiles per page below'
+      ? 'Drag to reorder \u00B7 max 8 tiles per page'
       : 'Drag to reorder \u00B7 click Edit for Fabric Content & price';
   }
   $('goPreview').textContent = newMode === 'cheat' ? 'Preview cheat sheet \u2192' : 'Preview sheet \u2192';
   renderSidebar();
-  persistCurrentDraft();
+  persistCurrentSheet();
 }
 
 function showPreview() {
@@ -2649,16 +2989,16 @@ document.addEventListener('click', e => {
 });
 $('custInput').addEventListener('input', e => {
   state.customerName = e.target.value;
-  persistCurrentDraft();
+  persistCurrentSheet();
 });
 $('seasonInput').addEventListener('input', e => {
   state.season = e.target.value;
-  persistCurrentDraft();
+  persistCurrentSheet();
 });
 $('brandPick').addEventListener('change', e => {
   state.brandId = e.target.value;
   renderHeaderPickers();
-  persistCurrentDraft();
+  persistCurrentSheet();
 });
 $('search').addEventListener('input', e => { state.search = e.target.value; renderCatalog(); });
 $('seasonPicker').addEventListener('change', e => setActiveSeason(e.target.value, { force: true }));
@@ -2669,12 +3009,28 @@ $('reset').addEventListener('click', () => {
   const who = state.customerName ? ' for ' + state.customerName : '';
   const what = state.mode === 'cheat' ? 'tiles from this cheat sheet' : 'pages from this sheet';
   if (!confirm('Clear all ' + what + who + '?')) return;
-  state.selections = {}; state.overrides = {}; state.pageOrder = []; state.cheatOrder = []; state.cheatBreaks = new Set(); state.cheatTilesPerPage = 8;
+  state.selections = {}; state.overrides = {}; state.pageOrder = []; state.cheatOrder = []; state.cheatBreaks = new Set();
   state.expandedStyle = null; state.expandedEditor = null;
-  renderCatalog(); renderSidebar(); persistCurrentDraft();
+  renderCatalog(); renderSidebar(); persistCurrentSheet();
 });
 $('printBtn').addEventListener('click', () => window.print());
 $('pptBtn').addEventListener('click', exportPptx);
+
+// Sheet library wiring
+$('sheetPick').addEventListener('click', openLibrary);
+$('libraryClose').addEventListener('click', closeLibrary);
+$('libraryOverlay').addEventListener('click', e => {
+  // Click on the dim backdrop (not on the modal itself) closes the modal
+  if (e.target === $('libraryOverlay')) closeLibrary();
+});
+$('newSheetBtn').addEventListener('click', createNewSheet);
+$('exportLibBtn').addEventListener('click', exportLibraryFile);
+$('importLibFile').addEventListener('change', e => {
+  if (e.target.files.length) {
+    importLibraryFile(e.target.files[0]);
+    e.target.value = '';  // allow re-importing same file
+  }
+});
 
 function buildExportFilename() {
   const safe = s => (s || '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
@@ -2698,6 +3054,11 @@ window.addEventListener('afterprint', () => {
 });
 
 document.addEventListener('keydown', e => {
+  // Modal Escape — close the library if it's open, regardless of view
+  if (e.key === 'Escape' && !$('libraryOverlay').hidden) {
+    closeLibrary();
+    return;
+  }
   if (state.view === 'preview') {
     if (e.key === 'Escape') showBuild();
     if (e.key === 'ArrowLeft' && state.curPage > 0) { state.curPage--; renderPreview(); }
@@ -2710,7 +3071,7 @@ document.addEventListener('keydown', e => {
 
 setInterval(refreshDraftStatus, 15000);
 
-loadCurrentDraft();
+loadCurrentSheet();
 syncCheatOrder();
 // Apply persisted mode UI without firing setMode (which short-circuits if same)
 document.querySelectorAll('.mode-tab').forEach(el => {
@@ -2726,10 +3087,12 @@ renderSidebar();
 // Apply mode-dependent labels after sidebar exists
 const _hint = document.querySelector('.sheet-side-hint');
 if (_hint) _hint.textContent = state.mode === 'cheat'
-  ? 'Drag tiles to reorder \u00B7 set tiles per page below'
+  ? 'Drag to reorder \u00B7 max 8 tiles per page'
   : 'Drag to reorder \u00B7 click Edit for Fabric Content & price';
 $('goPreview').textContent = state.mode === 'cheat' ? 'Preview cheat sheet \u2192' : 'Preview sheet \u2192';
 refreshSourcesBtn();
+refreshSheetPick();
+refreshDraftStatus();
 
 // On first load, if no sources are loaded, expand the sources panel and show what was loaded last time
 if (!Object.values(sourcesLoaded).some(Boolean)) {
