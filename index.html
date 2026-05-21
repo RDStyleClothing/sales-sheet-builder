@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v3.4</title>
+<title>Sheet Builder · v3.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -120,6 +120,10 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .cheat-mode-note strong { color: var(--ink); font-weight: 500; }
 .cheat-mode-note a { color: var(--accent); text-decoration: none; cursor: pointer; }
 .cheat-mode-note a:hover { text-decoration: underline; }
+.cheat-tpp { display: flex; align-items: center; gap: 8px; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 0.5px solid var(--rule); flex-wrap: wrap; }
+.cheat-tpp-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mute); }
+.cheat-tpp .editor-segmented { padding: 2px; }
+.cheat-tpp .editor-segmented button { padding: 4px 9px; font-size: 10px; }
 
 .cheat-chip { background: white; border: 0.5px solid var(--rule); border-radius: 7px; user-select: none; transition: border-color 0.15s; overflow: hidden; }
 .cheat-chip.expanded { border-color: var(--ink); }
@@ -160,6 +164,26 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .cheat-page-section { display: flex; flex-direction: column; gap: 8px; }
 
 .sheet-page.cheat .sheet-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 1fr); gap: 0; padding: 14px 18px; align-items: stretch; justify-items: stretch; }
+.sheet-page.cheat[data-tpp="1"] .sheet-grid { grid-template-columns: 1fr; grid-template-rows: 1fr; padding: 28px 36px; }
+.sheet-page.cheat[data-tpp="2"] .sheet-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: 1fr; padding: 24px 28px; }
+.sheet-page.cheat[data-tpp="3"] .sheet-grid { grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr; padding: 22px 22px; }
+.sheet-page.cheat[data-tpp="4"] .sheet-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); padding: 20px 28px; }
+.sheet-page.cheat[data-tpp="5"] .sheet-grid,
+.sheet-page.cheat[data-tpp="6"] .sheet-grid { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); padding: 18px 22px; }
+.sheet-page.cheat[data-tpp="7"] .sheet-grid,
+.sheet-page.cheat[data-tpp="8"] .sheet-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 1fr); padding: 14px 18px; }
+.sheet-page.cheat[data-tpp="1"] .sheet-tile-style,
+.sheet-page.cheat[data-tpp="2"] .sheet-tile-style { font-size: 14px; }
+.sheet-page.cheat[data-tpp="1"] .sheet-tile-code,
+.sheet-page.cheat[data-tpp="2"] .sheet-tile-code { font-size: 11px; }
+.sheet-page.cheat[data-tpp="1"] .sheet-tile-name,
+.sheet-page.cheat[data-tpp="2"] .sheet-tile-name { font-size: 10px; }
+.sheet-page.cheat[data-tpp="1"] .sheet-tile-price,
+.sheet-page.cheat[data-tpp="2"] .sheet-tile-price { font-size: 18px; }
+.sheet-page.cheat[data-tpp="3"] .sheet-tile-style,
+.sheet-page.cheat[data-tpp="4"] .sheet-tile-style { font-size: 12px; }
+.sheet-page.cheat[data-tpp="3"] .sheet-tile-price,
+.sheet-page.cheat[data-tpp="4"] .sheet-tile-price { font-size: 15px; }
 .sheet-page.cheat .sheet-tile { width: auto; max-width: none; padding: 6px 8px; min-height: 0; min-width: 0; justify-content: flex-start; }
 .sheet-page.cheat .sheet-shirt { flex: 1 1 auto; aspect-ratio: auto; min-height: 0; width: 100%; }
 .sheet-page.cheat .sheet-tile-style { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1814; margin-top: 6px; font-weight: 500; }
@@ -341,7 +365,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v3.4</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v3.5</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -461,7 +485,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.4</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.5</span>
 </footer>
 
 <div class="preview-shell" id="previewShell">
@@ -536,6 +560,7 @@ const state = {
   pageOrder: [],
   cheatOrder: [],   // [{sc, cc}, ...] for cheat-sheet tile ordering
   cheatBreaks: new Set(),  // Set of "sc|cc" keys that begin a new page (manual break)
+  cheatTilesPerPage: 8,    // 1-8, applies to all cheat-sheet pages
   overrides: {},
   view: 'build',
   mode: 'sales',    // 'sales' or 'cheat'
@@ -566,6 +591,7 @@ function persistCurrentDraft() {
       pageOrder: state.pageOrder,
       cheatOrder: state.cheatOrder,
       cheatBreaks: Array.from(state.cheatBreaks),
+      cheatTilesPerPage: state.cheatTilesPerPage,
       mode: state.mode,
       selections: state.selections,
       overrides: state.overrides,
@@ -584,6 +610,7 @@ function loadCurrentDraft() {
     state.pageOrder = d.pageOrder || [];
     state.cheatOrder = Array.isArray(d.cheatOrder) ? d.cheatOrder : [];
     state.cheatBreaks = new Set(Array.isArray(d.cheatBreaks) ? d.cheatBreaks : []);
+    state.cheatTilesPerPage = clampCheatTpp(d.cheatTilesPerPage);
     state.mode = (d.mode === 'cheat') ? 'cheat' : 'sales';
     state.selections = d.selections || {};
     state.overrides = d.overrides || {};
@@ -593,6 +620,7 @@ function loadCurrentDraft() {
     state.pageOrder = [];
     state.cheatOrder = [];
     state.cheatBreaks = new Set();
+    state.cheatTilesPerPage = 8;
     state.mode = 'sales';
     state.selections = {};
     state.overrides = {};
@@ -1565,7 +1593,17 @@ function renderCheatSidebar() {
   const totalPages = pagePlan.length;
   tally.textContent = totalPages + ' ' + (totalPages === 1 ? 'page' : 'pages') + ' \u00B7 ' + items.length + ' tiles';
 
-  const note = '<div class="cheat-mode-note">Default: <strong>8 per page</strong>, filled in order. Drag tiles to reorder &mdash; group outfits, match tops to bottoms, etc. Click <strong>\u21B5</strong> on any tile to start a new page on that tile.</div>';
+  const tpp = getCheatTilesPerPage();
+  const tppButtons = [1,2,3,4,5,6,7,8].map(n =>
+    '<button type="button" data-cheat-tpp="' + n + '" class="' + (n === tpp ? 'on' : '') + '">' + n + '</button>'
+  ).join('');
+  const note = '<div class="cheat-mode-note">' +
+    '<div class="cheat-tpp">' +
+      '<span class="cheat-tpp-label">Tiles per page</span>' +
+      '<div class="editor-segmented">' + tppButtons + '</div>' +
+    '</div>' +
+    'Tiles fill in order to <strong>' + tpp + ' per page</strong>. Drag tiles to reorder &mdash; group outfits, match tops to bottoms, etc. Click <strong>\u21B5</strong> on any tile to start a new page on that tile.' +
+  '</div>';
 
   // Render the sidebar grouped into the actual pages so the user can see
   // which tile lands where, with manual-break dividers showing a remove button.
@@ -1617,7 +1655,7 @@ function renderCheatSidebar() {
     const isManual = !!pg.manual;
     const dividerCls = 'cheat-page-divider' + (isManual ? ' manual' : '');
     const tileCount = pg.items.length;
-    const cap = ' \u00B7 ' + tileCount + ' / ' + MAX_TILES_PER_CHEAT;
+    const cap = ' \u00B7 ' + tileCount + ' / ' + tpp;
     const removeBtn = isManual && firstKey
       ? '<button class="cpd-rm" data-cheat-break-rm="' + escapeHtml(firstKey) + '" title="Remove manual break">\u00D7</button>'
       : '';
@@ -1663,6 +1701,17 @@ function renderCheatSidebar() {
     el.addEventListener('click', e => {
       e.stopPropagation();
       toggleCheatBreak(el.dataset.cheatBreakRm);
+    });
+  });
+  list.querySelectorAll('[data-cheat-tpp]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const n = clampCheatTpp(el.dataset.cheatTpp);
+      if (n === state.cheatTilesPerPage) return;
+      state.cheatTilesPerPage = n;
+      state.curPage = 0;
+      renderSidebar();
+      persistCurrentDraft();
     });
   });
   wireEditorListeners(list);
@@ -1837,6 +1886,22 @@ function wireDrag() {
 
 const MAX_COLORS_PER_PAGE = 4;
 const MAX_TILES_PER_CHEAT = 8;
+const MIN_TILES_PER_CHEAT = 1;
+function clampCheatTpp(n) {
+  const v = parseInt(n, 10);
+  if (!Number.isFinite(v)) return 8;
+  return Math.max(MIN_TILES_PER_CHEAT, Math.min(MAX_TILES_PER_CHEAT, v));
+}
+function getCheatTilesPerPage() { return clampCheatTpp(state.cheatTilesPerPage); }
+// Grid shape used by both the on-screen cheat preview and PowerPoint export.
+// Falls into "natural" rectangles: 1=1x1, 2=2x1, 3=3x1, 4=2x2, 5/6=3x2, 7/8=4x2.
+function getCheatGridDims(tpp) {
+  const n = clampCheatTpp(tpp);
+  if (n <= 3) return { cols: n, rows: 1 };
+  if (n === 4) return { cols: 2, rows: 2 };
+  if (n <= 6) return { cols: 3, rows: 2 };
+  return { cols: 4, rows: 2 };
+}
 
 // Single source of truth for which selections are actually renderable.
 // Filters out:
@@ -1880,6 +1945,7 @@ function buildPagePlan() {
 function buildCheatPagePlan() {
   syncCheatOrder();
   const items = state.cheatOrder.slice();
+  const tpp = getCheatTilesPerPage();
   const pages = [];
   let current = [];
   let currentManual = false;
@@ -1893,11 +1959,11 @@ function buildCheatPagePlan() {
         current = [];
       }
       // Mark the upcoming page as manual even if the break aligned with a
-      // natural 8-cap boundary (so the user's intent is still reflected).
+      // natural cap boundary (so the user's intent is still reflected).
       currentManual = true;
     }
     current.push(it);
-    if (current.length >= MAX_TILES_PER_CHEAT) {
+    if (current.length >= tpp) {
       pages.push({ items: current, manual: currentManual });
       current = [];
       currentManual = false;
@@ -2062,7 +2128,7 @@ function renderCheatPreview() {
       '</div>';
     }).join('');
 
-    return '<div class="sheet-page cheat" data-i="' + i + '"' + (i !== state.curPage ? ' hidden' : '') + '>' +
+    return '<div class="sheet-page cheat" data-i="' + i + '" data-tpp="' + getCheatTilesPerPage() + '"' + (i !== state.curPage ? ' hidden' : '') + '>' +
       '<div class="sheet-bar">' +
         '<div class="sheet-bar-spec">' + headerLeft + '</div>' +
         '<div class="sheet-bar-right">' +
@@ -2221,8 +2287,9 @@ async function exportPptx() {
         }
 
         // 4-col x 2-row grid for up to 8 tiles
-        const COLS = 4;
-        const ROWS = 2;
+        const dims = getCheatGridDims(getCheatTilesPerPage());
+        const COLS = dims.cols;
+        const ROWS = dims.rows;
         const bodyTop = HEADER_H + 0.15;
         const bodyH = SLIDE_H - HEADER_H - FOOT_H - 0.30;
         const cellW = SLIDE_W / COLS;
@@ -2531,7 +2598,7 @@ function setMode(newMode) {
   const hint = document.querySelector('.sheet-side-hint');
   if (hint) {
     hint.textContent = newMode === 'cheat'
-      ? 'Drag to reorder \u00B7 max 8 tiles per page'
+      ? 'Drag tiles to reorder \u00B7 set tiles per page below'
       : 'Drag to reorder \u00B7 click Edit for Fabric Content & price';
   }
   $('goPreview').textContent = newMode === 'cheat' ? 'Preview cheat sheet \u2192' : 'Preview sheet \u2192';
@@ -2602,7 +2669,7 @@ $('reset').addEventListener('click', () => {
   const who = state.customerName ? ' for ' + state.customerName : '';
   const what = state.mode === 'cheat' ? 'tiles from this cheat sheet' : 'pages from this sheet';
   if (!confirm('Clear all ' + what + who + '?')) return;
-  state.selections = {}; state.overrides = {}; state.pageOrder = []; state.cheatOrder = []; state.cheatBreaks = new Set();
+  state.selections = {}; state.overrides = {}; state.pageOrder = []; state.cheatOrder = []; state.cheatBreaks = new Set(); state.cheatTilesPerPage = 8;
   state.expandedStyle = null; state.expandedEditor = null;
   renderCatalog(); renderSidebar(); persistCurrentDraft();
 });
@@ -2659,7 +2726,7 @@ renderSidebar();
 // Apply mode-dependent labels after sidebar exists
 const _hint = document.querySelector('.sheet-side-hint');
 if (_hint) _hint.textContent = state.mode === 'cheat'
-  ? 'Drag to reorder \u00B7 max 8 tiles per page'
+  ? 'Drag tiles to reorder \u00B7 set tiles per page below'
   : 'Drag to reorder \u00B7 click Edit for Fabric Content & price';
 $('goPreview').textContent = state.mode === 'cheat' ? 'Preview cheat sheet \u2192' : 'Preview sheet \u2192';
 refreshSourcesBtn();
