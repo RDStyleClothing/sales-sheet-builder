@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v3.2</title>
+<title>Sheet Builder · v3.4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -341,7 +341,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v3.2</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v3.4</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -461,7 +461,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.2</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.4</span>
 </footer>
 
 <div class="preview-shell" id="previewShell">
@@ -743,10 +743,42 @@ function refreshSourcesBtn() {
 }
 function setLoadedNote(id, html) { $(id).innerHTML = html; }
 
+// OS-generated noise we never want to surface as "rejected" — silently skip
+const SYSTEM_FILE = /(^|\/)(\._|\.DS_Store$|Thumbs\.db$|desktop\.ini$|\.gitkeep$|\.gitignore$)/i;
+function isSystemFile(f) {
+  return SYSTEM_FILE.test(f.name) || SYSTEM_FILE.test(f.webkitRelativePath || '');
+}
+
+// Build the "files skipped" warning block used by every source loader.
+// `rejected` is [{ name, reason, path? }, ...]. `headline` is the top line text.
+function renderRejectedBlock(rejected, headline) {
+  if (!rejected || rejected.length === 0) return '';
+  const previewN = 8;
+  const shown = rejected.slice(0, previewN);
+  const more = rejected.length - shown.length;
+  const lines = shown.map(d => {
+    const where = d.path ? '<span style="opacity:0.7"> [' + escapeHtml(d.path) + ']</span>' : '';
+    return '<div><span class="source-warn-files">' + escapeHtml(d.name) + '</span>' + where + ' &mdash; ' + escapeHtml(d.reason) + '</div>';
+  }).join('');
+  const moreLine = more > 0 ? '<div>&hellip; and ' + more + ' more</div>' : '';
+  return '<div class="source-warn">' +
+    '\u26A0 ' + rejected.length + ' file' + (rejected.length === 1 ? '' : 's') + ' skipped &mdash; ' + escapeHtml(headline) +
+    '<div style="margin-top:6px">' + lines + moreLine + '</div>' +
+  '</div>';
+}
+
 function loadBrandLogos(files) {
-  const imageFiles = Array.from(files).filter(f => /\.(svg|png|jpg|jpeg|webp|gif)$/i.test(f.name));
+  const all = Array.from(files).filter(f => !isSystemFile(f));
+  const imageFiles = all.filter(f => /\.(svg|png|jpg|jpeg|webp|gif)$/i.test(f.name));
+  const rejected = all
+    .filter(f => !/\.(svg|png|jpg|jpeg|webp|gif)$/i.test(f.name))
+    .map(f => ({ name: f.name, reason: 'not an image file (only .svg, .png, .jpg, .jpeg, .webp, .gif accepted)' }));
+
   if (imageFiles.length === 0) {
-    setLoadedNote('brandLoaded', '<div class="source-error">\u26A0 No image files found</div>');
+    const why = rejected.length
+      ? renderRejectedBlock(rejected, 'no usable logo files found.')
+      : '<div class="source-error">\u26A0 No image files found</div>';
+    setLoadedNote('brandLoaded', why);
     return;
   }
   Object.values(logoMap).forEach(url => URL.revokeObjectURL(url));
@@ -763,8 +795,13 @@ function loadBrandLogos(files) {
   BRANDS = newBrands;
   if (!BRANDS.find(b => b.id === state.brandId)) state.brandId = BRANDS[0].id;
   setStatus('brands', newBrands.length + ' loaded', true);
+  const totalScanned = all.length;
+  const acct = newBrands.length === totalScanned
+    ? newBrands.length + ' logo' + (newBrands.length === 1 ? '' : 's') + ' loaded'
+    : newBrands.length + ' of ' + totalScanned + ' files loaded as logos';
   setLoadedNote('brandLoaded',
-    '<div class="source-loaded">\u2713 ' + newBrands.length + ' logos: ' + newBrands.map(b => escapeHtml(b.name)).join(', ') + '</div>' +
+    '<div class="source-loaded">\u2713 ' + acct + ': ' + newBrands.map(b => escapeHtml(b.name)).join(', ') + '</div>' +
+    renderRejectedBlock(rejected, 'not uploaded as logos.') +
     '<button class="source-clear" data-clear="brands">reset to seed brands</button>');
   renderHeaderPickers();
 }
@@ -789,9 +826,21 @@ function seasonSortKey(s) {
 }
 
 function loadStyleImages(files) {
-  const imageFiles = Array.from(files).filter(f => /\.(png|jpg|jpeg|webp|gif|svg)$/i.test(f.name));
+  const all = Array.from(files).filter(f => !isSystemFile(f));
+  const imageFiles = all.filter(f => /\.(png|jpg|jpeg|webp|gif|svg)$/i.test(f.name));
+  const rejected = all
+    .filter(f => !/\.(png|jpg|jpeg|webp|gif|svg)$/i.test(f.name))
+    .map(f => {
+      const path = f.webkitRelativePath || '';
+      const folder = path ? path.split('/').slice(0, -1).join('/') : '';
+      return { name: f.name, path: folder || null, reason: 'not an image file (only .png, .jpg, .jpeg, .webp, .gif, .svg accepted)' };
+    });
+
   if (imageFiles.length === 0) {
-    setLoadedNote('imgLoaded', '<div class="source-error">\u26A0 No image files found in folder</div>');
+    const why = rejected.length
+      ? renderRejectedBlock(rejected, 'no usable image files found in folder.')
+      : '<div class="source-error">\u26A0 No image files found in folder</div>';
+    setLoadedNote('imgLoaded', why);
     return;
   }
 
@@ -965,27 +1014,34 @@ function loadStyleImages(files) {
   const allCodes = new Set();
   Object.values(seasonGroups).forEach(g => g.styles.forEach(s => allCodes.add(s.code)));
   const totalStyles = allCodes.size;
+  const totalScanned = all.length;
 
   const realSeasonCount = realSeasons.length;
-  // "13 of 17 images" when files were skipped, just "13 images" otherwise.
-  const imgPart = duplicates.length
-    ? totalImages + ' of ' + imageFiles.length + ' images'
-    : totalImages + ' images';
+  // Always show explicit "loaded of scanned" so users can verify nothing was silently dropped.
+  const fileAcct = totalImages + ' of ' + totalScanned + ' file' + (totalScanned === 1 ? '' : 's') + ' loaded';
   const summary = realSeasonCount > 1
-    ? realSeasonCount + ' seasons \u00B7 ' + imgPart
-    : totalStyles + ' styles \u00B7 ' + imgPart;
+    ? realSeasonCount + ' seasons \u00B7 ' + fileAcct
+    : totalStyles + ' styles \u00B7 ' + fileAcct;
   setStatus('images', summary, true);
 
   const unstructuredNote = unstructured ? ' \u00B7 ' + unstructured + ' need style info' : '';
+  // If anything was filtered out, show the gap breakdown (non-images / duplicates)
+  const gap = totalScanned - totalImages;
+  const gapBits = [];
+  if (rejected.length) gapBits.push(rejected.length + ' non-image');
+  if (duplicates.length) gapBits.push(duplicates.length + ' duplicate' + (duplicates.length === 1 ? '' : 's'));
+  const gapNote = gap > 0 && gapBits.length
+    ? ' <span style="opacity:0.75">(' + gapBits.join(', ') + ' skipped \u2014 see below)</span>'
+    : '';
   let loadedHtml;
   if (realSeasonCount > 0) {
     const breakdown = availableSeasons.map(k => {
       const label = k === '__flat__' ? '(no folder)' : k;
       return escapeHtml(label) + ' (' + seasonGroups[k].styles.length + ')';
     }).join(' \u00B7 ');
-    loadedHtml = '<div class="source-loaded">\u2713 ' + realSeasonCount + ' season' + (realSeasonCount === 1 ? '' : 's') + ' \u2014 ' + breakdown + unstructuredNote + '</div>';
+    loadedHtml = '<div class="source-loaded">\u2713 ' + totalStyles + ' styles \u00B7 ' + fileAcct + ' \u2014 ' + breakdown + unstructuredNote + gapNote + '</div>';
   } else {
-    loadedHtml = '<div class="source-loaded">\u2713 ' + totalStyles + ' styles, ' + totalImages + ' images' + unstructuredNote + '</div>';
+    loadedHtml = '<div class="source-loaded">\u2713 ' + totalStyles + ' styles \u00B7 ' + fileAcct + unstructuredNote + gapNote + '</div>';
   }
 
   // When two files in the same season parse to the same style+color, the
@@ -1010,7 +1066,7 @@ function loadStyleImages(files) {
       '</div>';
   }
 
-  setLoadedNote('imgLoaded', loadedHtml + warnHtml + '<button class="source-clear" data-clear="images">reset to seed images</button>');
+  setLoadedNote('imgLoaded', loadedHtml + warnHtml + renderRejectedBlock(rejected, 'not uploaded as style images.') + '<button class="source-clear" data-clear="images">reset to seed images</button>');
 }
 
 function setActiveSeason(seasonKey, opts) {
@@ -1052,7 +1108,7 @@ function renderSeasonPicker() {
 }
 
 async function loadAllFromFolder(files) {
-  const fileList = Array.from(files);
+  const fileList = Array.from(files).filter(f => !isSystemFile(f));
   if (fileList.length === 0) return;
 
   const isImg = n => /\.(svg|png|jpe?g|webp|gif)$/i.test(n);
@@ -1068,6 +1124,25 @@ async function loadAllFromFolder(files) {
     const path = '/' + (f.webkitRelativePath || '');
     return isImg(f.name) && /\/(style[-_ ]?images?|images|styles)\//i.test(path);
   });
+
+  // Anything that didn't get claimed by either bucket. Split into two reasons:
+  // image files that landed outside the expected folders, and non-image files.
+  const claimed = new Set([...logoFiles, ...styleFiles]);
+  const unclaimed = fileList.filter(f => !claimed.has(f));
+  const orphanImages = unclaimed
+    .filter(f => isImg(f.name))
+    .map(f => {
+      const path = f.webkitRelativePath || '';
+      const folder = path ? path.split('/').slice(0, -1).join('/') : '';
+      return { name: f.name, path: folder || null, reason: 'image found, but not inside a Logos/, Brands/, StyleImages/, Images/, or Styles/ subfolder' };
+    });
+  const nonImages = unclaimed
+    .filter(f => !isImg(f.name))
+    .map(f => {
+      const path = f.webkitRelativePath || '';
+      const folder = path ? path.split('/').slice(0, -1).join('/') : '';
+      return { name: f.name, path: folder || null, reason: 'not an image file' };
+    });
 
   const results = [];
   const misses = [];
@@ -1089,6 +1164,17 @@ async function loadAllFromFolder(files) {
   if (results.length) html += '<div class="ok">\u2713 Loaded ' + results.join(' \u00B7 ') + '</div>';
   if (misses.length) html += '<div class="miss">\u26A0 ' + misses.join(' \u00B7 ') + '</div>';
   if (!results.length && !misses.length) html = '<div class="miss">\u26A0 No matching files found in folder</div>';
+
+  // Explicit accounting so users can verify nothing was silently dropped
+  const matched = logoFiles.length + styleFiles.length;
+  const totalScanned = fileList.length;
+  html += '<div class="hint" style="margin-top:6px">' + matched + ' of ' + totalScanned + ' file' + (totalScanned === 1 ? '' : 's') + ' matched into Logos/StyleImages</div>';
+
+  // Surface unclaimed files so the user knows what got ignored and why.
+  // Images come first (more likely the user wanted them included), then non-images.
+  html += renderRejectedBlock(orphanImages, 'images outside the expected subfolders.');
+  html += renderRejectedBlock(nonImages, 'not image files.');
+
   $('quickLoaded').innerHTML = html;
 }
 
