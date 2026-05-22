@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v3.7</title>
+<title>Sheet Builder · v3.8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -308,6 +308,18 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .sheet-grid[data-cols="1"] .sheet-tile { width: 60%; max-width: 640px; }
 .sheet-grid[data-cols="2"] .sheet-tile { width: 38%; max-width: 460px; }
 .sheet-grid[data-cols="3"] .sheet-tile { width: 28%; max-width: 360px; }
+.sheet-grid[data-cols="4"] .sheet-tile { width: 22%; max-width: 280px; }
+.sheet-grid[data-cols="5"] .sheet-tile { width: 17.5%; max-width: 220px; }
+.sheet-grid[data-cols="6"] .sheet-tile { width: 14.5%; max-width: 180px; }
+.sheet-grid[data-cols="5"] .sheet-tile-code,
+.sheet-grid[data-cols="6"] .sheet-tile-code { font-size: 10px; margin-top: 10px; }
+.sheet-grid[data-cols="5"] .sheet-tile-name,
+.sheet-grid[data-cols="6"] .sheet-tile-name { font-size: 10px; }
+.sheet-grid[data-cols="5"] .sheet-tile-price,
+.sheet-grid[data-cols="6"] .sheet-tile-price { font-size: 14px; }
+.sheet-grid[data-cols="6"] .sheet-tile-code,
+.sheet-grid[data-cols="6"] .sheet-tile-name { font-size: 9px; letter-spacing: 0.12em; }
+.sheet-grid[data-cols="6"] .sheet-tile-price { font-size: 13px; }
 .sheet-shirt { width: 100%; aspect-ratio: 4 / 5; display: flex; align-items: center; justify-content: center; }
 .sheet-shirt svg { max-height: 100%; max-width: 100%; }
 .sheet-shirt img { max-height: 100%; max-width: 100%; object-fit: contain; }
@@ -390,7 +402,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v3.7</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v3.8</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -515,7 +527,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.7</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.8</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -635,7 +647,7 @@ const state = {
 // explicitly clicked "+ New sheet".
 
 const LIBRARY_KEY = 'salesSheetBuilder.library.v1';
-const OLD_DRAFT_KEY = 'salesSheetBuilder.draft.v3';  // pre-v3.7 single-draft store
+const OLD_DRAFT_KEY = 'salesSheetBuilder.draft.v3';  // pre-v3.8 single-draft store
 
 function uuid() {
   return 'sh_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
@@ -649,7 +661,7 @@ function loadLibrary() {
       if (parsed && parsed.sheets) return parsed;
     }
   } catch {}
-  // First run on v3.7+ -- migrate any pre-existing single draft so the user
+  // First run on v3.8+ -- migrate any pre-existing single draft so the user
   // doesn't appear to lose their work.
   try {
     const oldRaw = localStorage.getItem(OLD_DRAFT_KEY);
@@ -2112,7 +2124,7 @@ function renderStyleEditor(sc, colorFilter) {
       '<div class="editor-row">' +
         '<label class="editor-label">Colors per page</label>' +
         '<div class="editor-segmented">' +
-          [1, 2, 3, 4].map(n =>
+          [1, 2, 3, 4, 5, 6].map(n =>
             '<button type="button" data-cpp="' + n + '" data-style="' + escapeHtml(sc) + '" class="' + (n === cpp ? 'on' : '') + '">' + n + '</button>'
           ).join('') +
         '</div>' +
@@ -2491,7 +2503,7 @@ function wireDrag() {
 // PAGE PLAN — chunk colors so each page has at most 4
 // =========================================================
 
-const MAX_COLORS_PER_PAGE = 4;
+const MAX_COLORS_PER_PAGE = 6;
 const CHEAT_TILES_OPTIONS = [2, 4, 6, 8, 9, 12];
 function clampCheatTiles(n) {
   return CHEAT_TILES_OPTIONS.includes(n) ? n : 8;
@@ -3126,8 +3138,8 @@ async function exportPptx() {
       // shot, 2-up is paired, etc. imgH is sized to the natural aspect of
       // this style's images so the tile fits the photos cleanly.
       const numCols = cols.length;
-      const tileWByCols = { 1: 5.5, 2: 4.2, 3: 3.2, 4: 2.5 };
-      const tileW = tileWByCols[numCols] || 2.5;
+      const tileWByCols = { 1: 5.5, 2: 4.2, 3: 3.2, 4: 2.5, 5: 2.05, 6: 1.7 };
+      const tileW = tileWByCols[numCols] || 1.7;
       const spacing = (SLIDE_W - numCols * tileW) / (numCols + 1);
       const bodyTop = HEADER_H;
       const bodyH = SLIDE_H - HEADER_H - FOOT_H;
