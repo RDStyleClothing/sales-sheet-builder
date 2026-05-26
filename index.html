@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v3.11</title>
+<title>Sheet Builder · v3.12</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -403,7 +403,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v3.11</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v3.12</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -528,7 +528,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.11</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.12</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -562,6 +562,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
     <div class="preview-nav" id="previewNav"></div>
     <div class="preview-actions">
       <button class="btn" id="xlsxBtn">Export as Chart (Excel)</button>
+      <button class="btn cheat-only-action" id="xlsxGroupBtn">Export as Group (Excel)</button>
       <button class="btn" id="pptBtn">Export to PowerPoint</button>
       <button class="btn btn-primary" id="printBtn">Export to PDF</button>
     </div>
@@ -649,7 +650,7 @@ const state = {
 // explicitly clicked "+ New sheet".
 
 const LIBRARY_KEY = 'salesSheetBuilder.library.v1';
-const OLD_DRAFT_KEY = 'salesSheetBuilder.draft.v3';  // pre-v3.11 single-draft store
+const OLD_DRAFT_KEY = 'salesSheetBuilder.draft.v3';  // pre-v3.12 single-draft store
 
 function uuid() {
   return 'sh_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
@@ -663,7 +664,7 @@ function loadLibrary() {
       if (parsed && parsed.sheets) return parsed;
     }
   } catch {}
-  // First run on v3.11+ -- migrate any pre-existing single draft so the user
+  // First run on v3.12+ -- migrate any pre-existing single draft so the user
   // doesn't appear to lose their work.
   try {
     const oldRaw = localStorage.getItem(OLD_DRAFT_KEY);
@@ -885,6 +886,7 @@ function reRenderAllForSheetSwap() {
   renderCatalog();
   renderSidebar();
   refreshSheetPick();
+  refreshExportButtons();
 }
 
 function refreshDraftStatus() {
@@ -2908,7 +2910,7 @@ async function exportXlsx() {
     const ws = wb.addWorksheet('Chart');
 
     // Column widths copied from the template (cell A1 has the IMAGE header).
-    // FOB PRICE was added in v3.11 just before PRICE; mirrors PRICE's width.
+    // FOB PRICE was added in v3.12 just before PRICE; mirrors PRICE's width.
     ws.columns = [
       { header: 'STYLE IMAGE',              key: 'image',     width: 19.0 },
       { header: 'STYLE NUMBER',             key: 'styleNum',  width: 17.1 },
@@ -3051,6 +3053,173 @@ async function exportXlsx() {
     setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
   } catch (err) {
     alert('Excel export failed: ' + (err && err.message ? err.message : err));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = originalLabel; }
+  }
+}
+
+// =========================================================
+// EXCEL GROUP EXPORT (cheat-sheet mode only)
+// =========================================================
+// Companion to the Chart export. Matches the user's
+// Export_to_Group_Excel_Template.xlsx layout: a 5-up grid of style cells
+// flowing down the page. Each cell shows the style image, "STYLE #: <num>",
+// and "PRICE: <price>" -- no fabric/color/qty info. One cell per cheat
+// tile (state.cheatOrder entry); cheat-page breaks and tiles-per-page
+// settings are ignored -- this export is a flat continuous grid.
+//
+// Layout (1-indexed rows/cols):
+//   Row 1, col B:  Title "<CUSTOMER> <SEASON>" (uppercased)
+//   Block stride: 5 columns wide, 15 rows tall
+//   Block (br, bc) occupies:
+//     image area: rows (2 + br*15) ... (2 + br*15 + 10)
+//     style # at row (2 + br*15 + 11), cols B+bc*5 (label) / B+bc*5+1 (value)
+//     price   at row (2 + br*15 + 12)
+//   Columns B..Z (25 cols total) at width 11; col A is a 2-char gutter.
+
+async function exportXlsxGroup() {
+  // Cheat-only export -- flatten state.cheatOrder, ignore page breaks.
+  syncCheatOrder();
+  const tiles = (state.cheatOrder || []).filter(it => {
+    const s = getStyle(it.sc);
+    return s && getColor(s, it.cc);
+  });
+  if (tiles.length === 0) return;
+
+  const btn = $('xlsxGroupBtn');
+  const originalLabel = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Building\u2026'; }
+
+  try {
+    await loadExcelJsLib();
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'Sheet Builder';
+    wb.created = new Date();
+    const ws = wb.addWorksheet('Group');
+    ws.pageSetup.orientation = 'landscape';
+    ws.pageSetup.fitToHeight = 0;
+
+    const COLS_PER_ROW = 5;
+    const BLOCK_COL_WIDTH = 5;
+    const BLOCK_ROW_STRIDE = 15;
+    const IMAGE_ROW_SPAN = 11;
+
+    // Column widths -- A is a thin gutter, B..Z are uniform 11
+    const totalCols = COLS_PER_ROW * BLOCK_COL_WIDTH;  // 25
+    ws.getColumn(1).width = 2;
+    for (let c = 2; c <= totalCols + 1; c++) ws.getColumn(c).width = 11;
+
+    // Title at B1
+    const customer = (state.customerName || '').trim();
+    const season   = (state.season || '').trim();
+    const title    = [customer, season].filter(Boolean).join(' ').toUpperCase();
+    if (title) {
+      const titleCell = ws.getCell('B1');
+      titleCell.value = title;
+      titleCell.font = { name: 'Calibri', size: 11 };
+    }
+
+    // Pre-fetch images in parallel
+    const imgData = {};
+    const imgAsp  = {};
+    await Promise.all(tiles.map(async (it) => {
+      const url = getImageUrl(it.sc, it.cc);
+      if (!url) return;
+      try {
+        const dataUrl = await urlToDataUrl(url);
+        imgData[it.sc + '_' + it.cc] = dataUrl;
+        imgAsp[it.sc + '_' + it.cc]  = await getImageAspect(dataUrl);
+      } catch {}
+    }));
+
+    // Build each cell
+    tiles.forEach((it, idx) => {
+      const blockRow = Math.floor(idx / COLS_PER_ROW);  // 0,1,2,...
+      const blockCol = idx % COLS_PER_ROW;              // 0..4
+      const rowStart = 2 + blockRow * BLOCK_ROW_STRIDE;
+      const styleRow = rowStart + IMAGE_ROW_SPAN;       // 13, 28, 43, ...
+      const priceRow = styleRow + 1;                    // 14, 29, 44, ...
+      const colStart = 2 + blockCol * BLOCK_COL_WIDTH;  // 2,7,12,17,22 = B,G,L,Q,V
+
+      const sc = it.sc;
+      const cc = it.cc;
+      const styleNum  = getEffectiveStyleNumber(sc) || sc;
+      const stylePN   = parseNumericLoose(getEffectiveStylePrice(sc));
+      const colorPN   = parseNumericLoose(getEffectivePrice(sc, cc));
+      const priceN    = colorPN != null ? colorPN : stylePN;
+
+      // Style # row
+      const sLabel = ws.getCell(styleRow, colStart);
+      sLabel.value = 'STYLE #:';
+      sLabel.font  = { name: 'Calibri', size: 11 };
+      const sValue = ws.getCell(styleRow, colStart + 1);
+      sValue.value = styleNum;
+      sValue.font  = { name: 'Calibri', size: 11 };
+
+      // Price row
+      const pLabel = ws.getCell(priceRow, colStart);
+      pLabel.value = 'PRICE: ';
+      pLabel.font  = { name: 'Calibri', size: 11 };
+      if (priceN != null) {
+        const pValue = ws.getCell(priceRow, colStart + 1);
+        pValue.value  = priceN;
+        pValue.font   = { name: 'Calibri', size: 11 };
+        pValue.numFmt = '"$"#,##0.00;[Red]\\-"$"#,##0.00';
+        pValue.alignment = { horizontal: 'left' };
+      }
+
+      // Image
+      const dataUrl = imgData[sc + '_' + cc];
+      if (dataUrl) {
+        const m = dataUrl.match(/^data:image\/(\w+);base64,/);
+        if (m) {
+          let ext = m[1].toLowerCase();
+          if (ext === 'jpg') ext = 'jpeg';
+          const imageId = wb.addImage({ base64: dataUrl, extension: ext });
+          const aspect = imgAsp[sc + '_' + cc] || 0.8;
+          // Image envelope: ~4 cols × ~11 chars wide ≈ 300px, 11 rows × ~22pt
+          // ≈ 240px tall. Fit-to-envelope keeping aspect ratio.
+          const envW = 300;
+          const envH = 240;
+          let imgW = envH * aspect;
+          let imgH = envH;
+          if (imgW > envW) { imgW = envW; imgH = envW / aspect; }
+          // Center inside the block's image area, tl in 0-indexed col/row
+          const startCol0 = colStart - 1;   // -> 1,6,11,16,21
+          const startRow0 = rowStart - 1;   // -> 1, 16, 31, ...
+          // Block image area is 4 cols × 11 rows visually (last col reserved
+          // for breathing room before the next block).
+          ws.addImage(imageId, {
+            tl: { col: startCol0 + 0.1, row: startRow0 + 0.05 },
+            ext: { width: imgW, height: imgH },
+            editAs: 'oneCell',
+          });
+        }
+      }
+    });
+
+    // Uniform row heights across the populated blocks for predictable layout
+    const totalBlockRows = Math.ceil(tiles.length / COLS_PER_ROW);
+    for (let br = 0; br < totalBlockRows; br++) {
+      const rowStart = 2 + br * BLOCK_ROW_STRIDE;
+      for (let r = rowStart; r < rowStart + IMAGE_ROW_SPAN; r++) {
+        ws.getRow(r).height = 22;
+      }
+      ws.getRow(rowStart + IMAGE_ROW_SPAN).height = 18;
+      ws.getRow(rowStart + IMAGE_ROW_SPAN + 1).height = 18;
+    }
+
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = buildExportFilename() + ' - group.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+  } catch (err) {
+    alert('Group export failed: ' + (err && err.message ? err.message : err));
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = originalLabel; }
   }
@@ -3505,6 +3674,7 @@ function setMode(newMode) {
   }
   $('goPreview').textContent = newMode === 'cheat' ? 'Preview cheat sheet \u2192' : 'Preview sheet \u2192';
   renderSidebar();
+  refreshExportButtons();
   persistCurrentSheet();
 }
 
@@ -3519,6 +3689,7 @@ function showPreview() {
   $('appFooter').classList.add('hidden');
   $('modeTabsWrap').classList.add('hidden');
   $('previewShell').classList.add('on');
+  refreshExportButtons();
   renderPreview();
   window.scrollTo(0, 0);
 }
@@ -3578,6 +3749,15 @@ $('reset').addEventListener('click', () => {
 $('printBtn').addEventListener('click', () => window.print());
 $('pptBtn').addEventListener('click', exportPptx);
 $('xlsxBtn').addEventListener('click', exportXlsx);
+$('xlsxGroupBtn').addEventListener('click', exportXlsxGroup);
+
+// Some export buttons are scoped to a single mode. The Group Excel export
+// only makes sense as a flat cheat-tile grid, so hide it in sales mode.
+function refreshExportButtons() {
+  document.querySelectorAll('.cheat-only-action').forEach(el => {
+    el.style.display = (state.mode === 'cheat') ? '' : 'none';
+  });
+}
 
 // Sheet library wiring
 $('sheetPick').addEventListener('click', openLibrary);
@@ -3657,6 +3837,7 @@ $('goPreview').textContent = state.mode === 'cheat' ? 'Preview cheat sheet \u219
 refreshSourcesBtn();
 refreshSheetPick();
 refreshDraftStatus();
+refreshExportButtons();
 
 // On first load, if no sources are loaded, expand the sources panel and show what was loaded last time
 if (!Object.values(sourcesLoaded).some(Boolean)) {
