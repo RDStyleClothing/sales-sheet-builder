@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v3.9</title>
+<title>Sheet Builder · v3.10</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -402,7 +402,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v3.9</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v3.10</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -527,7 +527,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.9</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.10</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -560,6 +560,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
     </div>
     <div class="preview-nav" id="previewNav"></div>
     <div class="preview-actions">
+      <button class="btn" id="xlsxBtn">Export as Chart (Excel)</button>
       <button class="btn" id="pptBtn">Export to PowerPoint</button>
       <button class="btn btn-primary" id="printBtn">Export to PDF</button>
     </div>
@@ -647,7 +648,7 @@ const state = {
 // explicitly clicked "+ New sheet".
 
 const LIBRARY_KEY = 'salesSheetBuilder.library.v1';
-const OLD_DRAFT_KEY = 'salesSheetBuilder.draft.v3';  // pre-v3.9 single-draft store
+const OLD_DRAFT_KEY = 'salesSheetBuilder.draft.v3';  // pre-v3.10 single-draft store
 
 function uuid() {
   return 'sh_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
@@ -661,7 +662,7 @@ function loadLibrary() {
       if (parsed && parsed.sheets) return parsed;
     }
   } catch {}
-  // First run on v3.9+ -- migrate any pre-existing single draft so the user
+  // First run on v3.10+ -- migrate any pre-existing single draft so the user
   // doesn't appear to lose their work.
   try {
     const oldRaw = localStorage.getItem(OLD_DRAFT_KEY);
@@ -2838,6 +2839,199 @@ function getImageAspect(src) {
   });
 }
 
+// =========================================================
+// EXCEL CHART EXPORT
+// =========================================================
+// One row per (style, color) pair, matching the user-supplied chart template
+// CHART_EXPORT_TEMPLATE.xlsx exactly:
+//   Columns A-I: STYLE IMAGE | STYLE NUMBER | STYLE NAME / DESCRIPTION |
+//                FABRIC CONTENT | FABRIC DESCRIPTION | COLORS NAMES |
+//                COLOR CODE | PRICE | QTY
+//   Header row: bold white text on #1F2937, Aptos Narrow 11pt, centered/wrapped
+//   Data rows: Aptos Narrow 11pt, centered, wrapped, 80pt tall, price in
+//              currency format. Style image embedded in column A.
+//   Header row frozen so it stays visible while scrolling.
+// ExcelJS is lazy-loaded only when this export runs (it's the only place that
+// needs cell images; SheetJS, which is loaded eagerly for other tools, can't
+// reliably embed images).
+
+let exceljsLoading = null;
+function loadExcelJsLib() {
+  if (window.ExcelJS) return Promise.resolve();
+  if (exceljsLoading) return exceljsLoading;
+  exceljsLoading = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('Could not load Excel library. Check your internet connection.'));
+    document.head.appendChild(s);
+  });
+  return exceljsLoading;
+}
+
+function parseNumericLoose(v) {
+  // Strip $, spaces, commas, currency symbols; keep digits, dot, minus.
+  if (v == null || v === '') return null;
+  const n = parseFloat(String(v).replace(/[^0-9.\-]/g, ''));
+  return Number.isFinite(n) ? n : null;
+}
+
+async function exportXlsx() {
+  const codes = getActiveStyleCodes();
+  if (codes.length === 0) return;
+
+  const btn = $('xlsxBtn');
+  const originalLabel = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Building\u2026'; }
+
+  try {
+    await loadExcelJsLib();
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'Sheet Builder';
+    wb.created = new Date();
+    const ws = wb.addWorksheet('Chart');
+
+    // Column widths copied from the template (cell A1 has the IMAGE header)
+    ws.columns = [
+      { header: 'STYLE IMAGE',              key: 'image',     width: 19.0 },
+      { header: 'STYLE NUMBER',             key: 'styleNum',  width: 17.1 },
+      { header: 'STYLE NAME / DESCRIPTION', key: 'styleName', width: 38.1 },
+      { header: 'FABRIC CONTENT',           key: 'contents',  width: 24.7 },
+      { header: 'FABRIC DESCRIPTION',       key: 'fabric',    width: 38.1 },
+      { header: 'COLORS  NAMES',            key: 'colorName', width: 41.9 },
+      { header: 'COLOR CODE',               key: 'colorCode', width: 12.0 },
+      { header: 'PRICE',                    key: 'price',     width: 15.3 },
+      { header: 'QTY',                      key: 'qty',       width: 28.6 },
+    ];
+
+    // Header row styling -- bold white on #1F2937 (dark slate), Aptos Narrow
+    const headerRow = ws.getRow(1);
+    headerRow.height = 30;
+    headerRow.eachCell({ includeEmpty: false }, cell => {
+      cell.font = { name: 'Aptos Narrow', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F2937' } };
+      cell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+    });
+
+    // Freeze the header so the chart's column labels stay visible
+    ws.views = [{ state: 'frozen', ySplit: 1 }];
+
+    // Pre-load all image data URLs (parallel) so the row loop is just synchronous formatting
+    const pairs = [];
+    codes.forEach(sc => {
+      const st = getStyle(sc);
+      if (!st) return;
+      (state.selections[sc] || []).forEach(cc => {
+        if (getColor(st, cc)) pairs.push({ sc, cc });
+      });
+    });
+    const imgDataByKey = {};
+    const imgAspectByKey = {};
+    await Promise.all(pairs.map(async ({ sc, cc }) => {
+      const url = getImageUrl(sc, cc);
+      if (!url) return;
+      try {
+        const dataUrl = await urlToDataUrl(url);
+        imgDataByKey[sc + '_' + cc] = dataUrl;
+        imgAspectByKey[sc + '_' + cc] = await getImageAspect(dataUrl);
+      } catch {}
+    }));
+
+    // Build data rows -- one per (style, color) pair
+    let rowIdx = 2;
+    for (const sc of codes) {
+      const style = getStyle(sc);
+      if (!style) continue;
+      const colors = (state.selections[sc] || []).filter(cc => getColor(style, cc));
+      if (colors.length === 0) continue;
+
+      const styleNum    = getEffectiveStyleNumber(sc);
+      const styleName   = getEffectiveStyleName(sc);
+      const contents    = getEffectiveContents(sc);
+      const fabric      = getEffectiveFabric(sc);
+      const showInv     = getShowInventory(sc);
+      const stylePriceN = parseNumericLoose(getEffectiveStylePrice(sc));
+
+      for (const cc of colors) {
+        const color     = getColor(style, cc);
+        const colorName = getEffectiveColorName(sc, cc);
+        const dispCode  = (color && color.patternCode) || (color && color.code) || cc;
+        const colorPriceN = parseNumericLoose(getEffectivePrice(sc, cc));
+        const priceN    = colorPriceN != null ? colorPriceN : stylePriceN;
+        const qtyN      = showInv ? parseNumericLoose(getEffectiveQty(sc, cc)) : null;
+
+        const row = ws.getRow(rowIdx);
+        row.height = 80;
+        row.getCell(1).value = null;                       // image goes here
+        row.getCell(2).value = styleNum || sc;
+        row.getCell(3).value = styleName || '';
+        row.getCell(4).value = contents || '';
+        row.getCell(5).value = fabric || '';
+        row.getCell(6).value = colorName || '';
+        // Hide the synthetic "code = style" placeholder used when a color has
+        // no real per-color code; that string would just be noise in a chart.
+        row.getCell(7).value = (dispCode && dispCode !== sc) ? dispCode : '';
+        if (priceN != null) {
+          row.getCell(8).value = priceN;
+          row.getCell(8).numFmt = '"$"#,##0.00';
+        }
+        if (qtyN != null) row.getCell(9).value = qtyN;
+
+        // Match template: Aptos Narrow 11pt, centered, wrapped on every cell
+        for (let c = 1; c <= 9; c++) {
+          const cell = row.getCell(c);
+          if (!cell.font || !cell.font.name) cell.font = { name: 'Aptos Narrow', size: 11 };
+          cell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+        }
+
+        // Embed image in column A. ExcelJS uses 0-indexed col/row in `tl`.
+        // tl: { col: 0.1, row: rowIdx - 1 + 0.05 } centers a small offset
+        // inside the cell. Sizing in pixels with the natural aspect preserved.
+        const dataUrl = imgDataByKey[sc + '_' + cc];
+        if (dataUrl) {
+          const m = dataUrl.match(/^data:image\/(\w+);base64,/);
+          if (m) {
+            let ext = m[1].toLowerCase();
+            if (ext === 'jpg') ext = 'jpeg';
+            const imageId = wb.addImage({ base64: dataUrl, extension: ext });
+            const aspect = imgAspectByKey[sc + '_' + cc] || 0.8;
+            // Row height 80pt = ~107px usable. Target ~98px so there's padding.
+            const cellPxH = 100;
+            const cellPxW = 135;  // column A ~19 chars wide
+            let imgH = cellPxH;
+            let imgW = cellPxH * aspect;
+            if (imgW > cellPxW) { imgW = cellPxW; imgH = cellPxW / aspect; }
+            // Center the image within the cell
+            const offsetCol = ((cellPxW - imgW) / 2) / cellPxW;
+            const offsetRow = ((cellPxH - imgH) / 2) / cellPxH;
+            ws.addImage(imageId, {
+              tl: { col: offsetCol, row: (rowIdx - 1) + offsetRow * 0.5 + 0.04 },
+              ext: { width: imgW, height: imgH },
+              editAs: 'oneCell',
+            });
+          }
+        }
+
+        rowIdx++;
+      }
+    }
+
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = buildExportFilename() + ' - chart.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+  } catch (err) {
+    alert('Excel export failed: ' + (err && err.message ? err.message : err));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = originalLabel; }
+  }
+}
+
 async function exportPptx() {
   const codes = getActiveStyleCodes();
   if (codes.length === 0) return;
@@ -3359,6 +3553,7 @@ $('reset').addEventListener('click', () => {
 });
 $('printBtn').addEventListener('click', () => window.print());
 $('pptBtn').addEventListener('click', exportPptx);
+$('xlsxBtn').addEventListener('click', exportXlsx);
 
 // Sheet library wiring
 $('sheetPick').addEventListener('click', openLibrary);
