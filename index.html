@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v3.10</title>
+<title>Sheet Builder · v3.11</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -244,6 +244,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .page-editor { background: var(--cream); padding: 14px 16px; border-top: 0.5px solid var(--rule); }
 .editor-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
 .editor-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mute); }
+.editor-label-note { display: inline-block; margin-left: 8px; font-family: var(--sans); font-size: 9px; letter-spacing: 0.04em; text-transform: none; color: var(--quiet); font-style: italic; }
 .editor-input, .editor-textarea { background: white; border: 0.5px solid var(--rule); border-radius: 4px; padding: 7px 10px; font-size: 12px; outline: none; transition: border-color 0.15s; font-family: var(--sans); width: 100%; }
 .editor-input.mono { font-family: var(--mono); }
 .editor-input:focus, .editor-textarea:focus { border-color: var(--ink); }
@@ -402,7 +403,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v3.10</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v3.11</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -527,7 +528,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.10</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.11</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -648,7 +649,7 @@ const state = {
 // explicitly clicked "+ New sheet".
 
 const LIBRARY_KEY = 'salesSheetBuilder.library.v1';
-const OLD_DRAFT_KEY = 'salesSheetBuilder.draft.v3';  // pre-v3.10 single-draft store
+const OLD_DRAFT_KEY = 'salesSheetBuilder.draft.v3';  // pre-v3.11 single-draft store
 
 function uuid() {
   return 'sh_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
@@ -662,7 +663,7 @@ function loadLibrary() {
       if (parsed && parsed.sheets) return parsed;
     }
   } catch {}
-  // First run on v3.10+ -- migrate any pre-existing single draft so the user
+  // First run on v3.11+ -- migrate any pre-existing single draft so the user
   // doesn't appear to lose their work.
   try {
     const oldRaw = localStorage.getItem(OLD_DRAFT_KEY);
@@ -1402,6 +1403,13 @@ function getEffectiveStylePrice(sc) {
   if (o && o.price != null) return o.price;
   return '';
 }
+// FOB (Free On Board) wholesale price. Optional; hidden from every rendered
+// sales/cheat sheet -- the only place it surfaces is the Excel chart export.
+function getEffectiveFobPrice(sc) {
+  const o = state.overrides[sc];
+  if (o && o.fobPrice != null) return o.fobPrice;
+  return '';
+}
 function getDisplayStylePrice(sc) {
   const raw = (getEffectiveStylePrice(sc) || '').trim();
   if (!raw) return '';
@@ -2112,6 +2120,7 @@ function renderStyleEditor(sc, colorFilter) {
   const fabric = getEffectiveFabric(sc);
   const contents = getEffectiveContents(sc);
   const stylePrice = getEffectiveStylePrice(sc);
+  const fobPrice = getEffectiveFobPrice(sc);
   const showInv = getShowInventory(sc);
   const cpp = getEffectiveColorsPerPage(sc);
   const selectedColors = (state.selections[sc] || []).map(cc => getColor(s, cc)).filter(Boolean);
@@ -2141,6 +2150,13 @@ function renderStyleEditor(sc, colorFilter) {
       '<div class="editor-price-wrap">' +
         '<span class="editor-price-prefix">$</span>' +
         '<input class="editor-input mono editor-price-input" data-field="price" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(stylePrice) + '" placeholder="42.00" inputmode="decimal">' +
+      '</div>' +
+    '</div>' +
+    '<div class="editor-row">' +
+      '<label class="editor-label">FOB Price <span class="editor-label-note">hidden \u00B7 Excel export only</span></label>' +
+      '<div class="editor-price-wrap">' +
+        '<span class="editor-price-prefix">$</span>' +
+        '<input class="editor-input mono editor-price-input" data-field="fobPrice" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(fobPrice) + '" placeholder="optional" inputmode="decimal">' +
       '</div>' +
     '</div>' +
     // Layout choice: how many color tiles per page in the Sales sheet. Only
@@ -2187,7 +2203,7 @@ function wireEditorListeners(scope) {
   root.querySelectorAll('[data-field]').forEach(el => {
     el.addEventListener('input', () => {
       let v = el.value;
-      if (el.dataset.field === 'price') {
+      if (el.dataset.field === 'price' || el.dataset.field === 'fobPrice') {
         const stripped = v.replace(/^\s*\$\s*/, '');
         if (stripped !== v) { el.value = stripped; v = stripped; }
       }
@@ -2206,7 +2222,7 @@ function wireEditorListeners(scope) {
   root.querySelectorAll('[data-cpp]').forEach(el => {
     el.addEventListener('click', () => {
       const n = parseInt(el.dataset.cpp, 10);
-      if (!n || n < 1 || n > 4) return;
+      if (!n || n < 1 || n > MAX_COLORS_PER_PAGE) return;
       setOverride(el.dataset.style, 'colorsPerPage', n);
       renderSidebar();
     });
@@ -2891,7 +2907,8 @@ async function exportXlsx() {
     wb.created = new Date();
     const ws = wb.addWorksheet('Chart');
 
-    // Column widths copied from the template (cell A1 has the IMAGE header)
+    // Column widths copied from the template (cell A1 has the IMAGE header).
+    // FOB PRICE was added in v3.11 just before PRICE; mirrors PRICE's width.
     ws.columns = [
       { header: 'STYLE IMAGE',              key: 'image',     width: 19.0 },
       { header: 'STYLE NUMBER',             key: 'styleNum',  width: 17.1 },
@@ -2900,6 +2917,7 @@ async function exportXlsx() {
       { header: 'FABRIC DESCRIPTION',       key: 'fabric',    width: 38.1 },
       { header: 'COLORS  NAMES',            key: 'colorName', width: 41.9 },
       { header: 'COLOR CODE',               key: 'colorCode', width: 12.0 },
+      { header: 'FOB PRICE',                key: 'fobPrice',  width: 15.3 },
       { header: 'PRICE',                    key: 'price',     width: 15.3 },
       { header: 'QTY',                      key: 'qty',       width: 28.6 },
     ];
@@ -2951,6 +2969,7 @@ async function exportXlsx() {
       const fabric      = getEffectiveFabric(sc);
       const showInv     = getShowInventory(sc);
       const stylePriceN = parseNumericLoose(getEffectiveStylePrice(sc));
+      const fobPriceN   = parseNumericLoose(getEffectiveFobPrice(sc));
 
       for (const cc of colors) {
         const color     = getColor(style, cc);
@@ -2971,14 +2990,19 @@ async function exportXlsx() {
         // Hide the synthetic "code = style" placeholder used when a color has
         // no real per-color code; that string would just be noise in a chart.
         row.getCell(7).value = (dispCode && dispCode !== sc) ? dispCode : '';
-        if (priceN != null) {
-          row.getCell(8).value = priceN;
+        // Col 8 = FOB PRICE (style-level only -- no per-color override).
+        if (fobPriceN != null) {
+          row.getCell(8).value = fobPriceN;
           row.getCell(8).numFmt = '"$"#,##0.00';
         }
-        if (qtyN != null) row.getCell(9).value = qtyN;
+        if (priceN != null) {
+          row.getCell(9).value = priceN;
+          row.getCell(9).numFmt = '"$"#,##0.00';
+        }
+        if (qtyN != null) row.getCell(10).value = qtyN;
 
         // Match template: Aptos Narrow 11pt, centered, wrapped on every cell
-        for (let c = 1; c <= 9; c++) {
+        for (let c = 1; c <= 10; c++) {
           const cell = row.getCell(c);
           if (!cell.font || !cell.font.name) cell.font = { name: 'Aptos Narrow', size: 11 };
           cell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
