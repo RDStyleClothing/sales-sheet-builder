@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v3.12</title>
+<title>Sheet Builder · v3.13</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -403,7 +403,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v3.12</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v3.13</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -528,7 +528,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.12</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.13</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -650,7 +650,7 @@ const state = {
 // explicitly clicked "+ New sheet".
 
 const LIBRARY_KEY = 'salesSheetBuilder.library.v1';
-const OLD_DRAFT_KEY = 'salesSheetBuilder.draft.v3';  // pre-v3.12 single-draft store
+const OLD_DRAFT_KEY = 'salesSheetBuilder.draft.v3';  // pre-v3.13 single-draft store
 
 function uuid() {
   return 'sh_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
@@ -664,7 +664,7 @@ function loadLibrary() {
       if (parsed && parsed.sheets) return parsed;
     }
   } catch {}
-  // First run on v3.12+ -- migrate any pre-existing single draft so the user
+  // First run on v3.13+ -- migrate any pre-existing single draft so the user
   // doesn't appear to lose their work.
   try {
     const oldRaw = localStorage.getItem(OLD_DRAFT_KEY);
@@ -2910,7 +2910,7 @@ async function exportXlsx() {
     const ws = wb.addWorksheet('Chart');
 
     // Column widths copied from the template (cell A1 has the IMAGE header).
-    // FOB PRICE was added in v3.12 just before PRICE; mirrors PRICE's width.
+    // FOB PRICE was added in v3.13 just before PRICE; mirrors PRICE's width.
     ws.columns = [
       { header: 'STYLE IMAGE',              key: 'image',     width: 19.0 },
       { header: 'STYLE NUMBER',             key: 'styleNum',  width: 17.1 },
@@ -3208,6 +3208,32 @@ async function exportXlsxGroup() {
       ws.getRow(rowStart + IMAGE_ROW_SPAN).height = 18;
       ws.getRow(rowStart + IMAGE_ROW_SPAN + 1).height = 18;
     }
+
+    // Black box outline around each populated style block. Spans the image
+    // area + style# row + price row (13 rows tall, 4 cols wide -- the 5th
+    // column of each block is the gap before the next block).
+    const borderStyle = { style: 'thin', color: { argb: 'FF000000' } };
+    const applyBoxBorder = (rTop, rBot, cLeft, cRight) => {
+      for (let r = rTop; r <= rBot; r++) {
+        for (let c = cLeft; c <= cRight; c++) {
+          const cell = ws.getCell(r, c);
+          const b = cell.border ? { ...cell.border } : {};
+          if (r === rTop)   b.top    = borderStyle;
+          if (r === rBot)   b.bottom = borderStyle;
+          if (c === cLeft)  b.left   = borderStyle;
+          if (c === cRight) b.right  = borderStyle;
+          cell.border = b;
+        }
+      }
+    };
+    tiles.forEach((it, idx) => {
+      const blockRow = Math.floor(idx / COLS_PER_ROW);
+      const blockCol = idx % COLS_PER_ROW;
+      const rowStart = 2 + blockRow * BLOCK_ROW_STRIDE;
+      const priceRow = rowStart + IMAGE_ROW_SPAN + 1;
+      const colStart = 2 + blockCol * BLOCK_COL_WIDTH;
+      applyBoxBorder(rowStart, priceRow, colStart, colStart + 3);
+    });
 
     const buffer = await wb.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
