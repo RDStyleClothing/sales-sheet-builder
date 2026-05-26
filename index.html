@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v3.13</title>
+<title>Sheet Builder · v3.14</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -403,7 +403,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v3.13</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v3.14</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -528,7 +528,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.13</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.14</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -650,7 +650,7 @@ const state = {
 // explicitly clicked "+ New sheet".
 
 const LIBRARY_KEY = 'salesSheetBuilder.library.v1';
-const OLD_DRAFT_KEY = 'salesSheetBuilder.draft.v3';  // pre-v3.13 single-draft store
+const OLD_DRAFT_KEY = 'salesSheetBuilder.draft.v3';  // pre-v3.14 single-draft store
 
 function uuid() {
   return 'sh_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
@@ -664,7 +664,7 @@ function loadLibrary() {
       if (parsed && parsed.sheets) return parsed;
     }
   } catch {}
-  // First run on v3.13+ -- migrate any pre-existing single draft so the user
+  // First run on v3.14+ -- migrate any pre-existing single draft so the user
   // doesn't appear to lose their work.
   try {
     const oldRaw = localStorage.getItem(OLD_DRAFT_KEY);
@@ -2910,7 +2910,7 @@ async function exportXlsx() {
     const ws = wb.addWorksheet('Chart');
 
     // Column widths copied from the template (cell A1 has the IMAGE header).
-    // FOB PRICE was added in v3.13 just before PRICE; mirrors PRICE's width.
+    // FOB PRICE was added in v3.14 just before PRICE; mirrors PRICE's width.
     ws.columns = [
       { header: 'STYLE IMAGE',              key: 'image',     width: 19.0 },
       { header: 'STYLE NUMBER',             key: 'styleNum',  width: 17.1 },
@@ -2920,7 +2920,7 @@ async function exportXlsx() {
       { header: 'COLORS  NAMES',            key: 'colorName', width: 41.9 },
       { header: 'COLOR CODE',               key: 'colorCode', width: 12.0 },
       { header: 'FOB PRICE',                key: 'fobPrice',  width: 15.3 },
-      { header: 'PRICE',                    key: 'price',     width: 15.3 },
+      { header: 'SELLING PRICE',            key: 'price',     width: 15.3 },
       { header: 'QTY',                      key: 'qty',       width: 28.6 },
     ];
 
@@ -3040,6 +3040,27 @@ async function exportXlsx() {
 
         rowIdx++;
       }
+    }
+
+    // Total qty tally beneath column J. Use an Excel SUM formula rather than
+    // a precomputed value so the total stays live if the user later edits
+    // qty cells in the workbook.
+    if (rowIdx > 2) {
+      const totalRow = rowIdx;
+      const lastDataRow = rowIdx - 1;
+      const totalBorder = { top: { style: 'thin', color: { argb: 'FF000000' } } };
+      const totalLabel = ws.getCell(totalRow, 9);
+      totalLabel.value = 'TOTAL QTY';
+      totalLabel.font  = { name: 'Aptos Narrow', size: 11, bold: true };
+      totalLabel.alignment = { horizontal: 'right', vertical: 'center' };
+      totalLabel.border = totalBorder;
+      const totalSum = ws.getCell(totalRow, 10);
+      totalSum.value  = { formula: 'SUM(J2:J' + lastDataRow + ')' };
+      totalSum.font   = { name: 'Aptos Narrow', size: 11, bold: true };
+      totalSum.alignment = { horizontal: 'center', vertical: 'center' };
+      totalSum.numFmt = '#,##0';
+      totalSum.border = totalBorder;
+      ws.getRow(totalRow).height = 22;
     }
 
     const buffer = await wb.xlsx.writeBuffer();
