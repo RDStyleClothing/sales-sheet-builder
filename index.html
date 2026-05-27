@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v3.15</title>
+<title>Sheet Builder · v3.19</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -97,7 +97,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .source-note { background: var(--cream); border-left: 2px solid var(--rule-strong); padding: 12px 16px; margin: 18px auto 0; font-size: 12px; color: var(--mute); line-height: 1.55; max-width: 1280px; }
 .source-note strong { color: var(--ink); font-weight: 500; }
 
-.app { max-width: 1280px; margin: 0 auto; padding: 32px; display: grid; grid-template-columns: 1fr 360px; gap: 32px; align-items: start; }
+.app { max-width: 1440px; margin: 0 auto; padding: 32px; display: grid; grid-template-columns: 2fr 3fr; gap: 32px; align-items: start; }
 .app.hidden { display: none; }
 
 .catalog-tools { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
@@ -223,6 +223,10 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .pages-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; min-height: 80px; }
 .page-chip { background: white; border: 0.5px solid var(--rule); border-radius: 7px; transition: border-color 0.15s; user-select: none; overflow: hidden; }
 .page-chip.expanded { border-color: var(--ink); }
+.page-chip.draft { border-style: dashed; }
+.page-chip.draft .page-chip-summary { cursor: default; }
+.page-chip-draft-badge { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); padding: 3px 8px; border-radius: 999px; flex-shrink: 0; }
+.page-chip-draft-hint { font-size: 11px; color: var(--mute); line-height: 1.5; font-style: italic; }
 .page-chip-summary { padding: 12px 14px; cursor: grab; }
 .page-chip-summary:active { cursor: grabbing; }
 .page-chip.dragging { opacity: 0.4; }
@@ -255,8 +259,21 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .editor-price-input { padding-left: 22px !important; }
 .editor-price-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
 .editor-price-row .editor-row { margin-bottom: 0; }
-.editor-color { display: grid; grid-template-columns: 26px 60px 1fr; gap: 6px; align-items: center; margin-bottom: 6px; }
-.editor-color.with-qty { grid-template-columns: 26px 60px 1fr 60px; }
+.editor-color { display: grid; grid-template-columns: 20px 26px 60px 1fr; gap: 6px; align-items: center; margin-bottom: 6px; }
+.editor-color.with-qty { grid-template-columns: 20px 26px 60px 1fr 60px; }
+.editor-color.dragging { opacity: 0.4; }
+.editor-color.drag-over { box-shadow: 0 -2px 0 0 var(--ink); }
+.editor-color-grip { font-family: var(--mono); color: var(--quiet); font-size: 14px; line-height: 1; cursor: grab; user-select: none; text-align: center; padding: 4px 0; border-radius: 3px; transition: background 0.12s, color 0.12s; }
+.editor-color-grip[draggable="true"]:hover { color: var(--ink); background: var(--cream); }
+.editor-color-grip:active { cursor: grabbing; }
+.editor-scale-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.editor-scale-row .editor-scale-slider { flex: 1; appearance: none; height: 4px; background: var(--rule); border-radius: 2px; outline: none; cursor: pointer; }
+.editor-scale-row .editor-scale-slider::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: var(--ink); border-radius: 50%; cursor: pointer; border: none; }
+.editor-scale-row .editor-scale-slider::-moz-range-thumb { width: 16px; height: 16px; background: var(--ink); border-radius: 50%; cursor: pointer; border: none; }
+.editor-scale-value { font-family: var(--mono); font-size: 11px; color: var(--ink); min-width: 38px; text-align: right; }
+.editor-scale-reset { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; color: var(--mute); background: none; border: 0.5px solid transparent; cursor: pointer; padding: 3px 7px; border-radius: 4px; }
+.editor-scale-reset:hover { color: var(--ink); border-color: var(--rule); }
+.editor-scale-reset.hidden { visibility: hidden; }
 .editor-segmented { display: inline-flex; background: white; border: 0.5px solid var(--rule); border-radius: 999px; padding: 3px; gap: 2px; align-self: flex-start; }
 .editor-segmented button { font-family: var(--mono); font-size: 11px; background: transparent; border: none; color: var(--mute); padding: 5px 12px; border-radius: 999px; cursor: pointer; min-width: 28px; line-height: 1; transition: all 0.12s; }
 .editor-segmented button:hover { color: var(--ink); }
@@ -295,6 +312,15 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .preview-nav button:hover:not(:disabled) { border-color: var(--ink); background: white; }
 .preview-nav button:disabled { opacity: 0.3; cursor: not-allowed; }
 .preview-actions { display: flex; gap: 8px; }
+.preview-scale-wrap { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--cream); border: 0.5px solid var(--rule); border-radius: 999px; }
+.preview-scale-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mute); }
+.preview-scale-slider { appearance: none; width: 110px; height: 3px; background: var(--rule-strong); border-radius: 2px; outline: none; cursor: pointer; }
+.preview-scale-slider::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; background: var(--ink); border-radius: 50%; cursor: pointer; border: none; }
+.preview-scale-slider::-moz-range-thumb { width: 14px; height: 14px; background: var(--ink); border-radius: 50%; cursor: pointer; border: none; }
+.preview-scale-value { font-family: var(--mono); font-size: 11px; color: var(--ink); min-width: 34px; text-align: right; }
+.preview-scale-reset { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; color: var(--mute); background: none; border: 0.5px solid transparent; cursor: pointer; padding: 3px 7px; border-radius: 4px; text-transform: uppercase; }
+.preview-scale-reset:hover { color: var(--ink); border-color: var(--rule); }
+.preview-scale-reset[hidden] { display: none; }
 
 .preview-stage { max-width: 1100px; margin: 0 auto; }
 
@@ -324,8 +350,8 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .sheet-grid[data-cols="6"] .sheet-tile-name { font-size: 9px; letter-spacing: 0.12em; }
 .sheet-grid[data-cols="6"] .sheet-tile-price { font-size: 13px; }
 .sheet-shirt { width: 100%; aspect-ratio: 4 / 5; display: flex; align-items: center; justify-content: center; }
-.sheet-shirt svg { max-height: 100%; max-width: 100%; }
-.sheet-shirt img { max-height: 100%; max-width: 100%; object-fit: contain; }
+.sheet-shirt svg { max-height: 100%; max-width: 100%; transform: scale(calc(var(--img-scale, 1) * var(--sheet-img-scale, 1))); transform-origin: center; transition: transform 0.15s ease; }
+.sheet-shirt img { max-height: 100%; max-width: 100%; object-fit: contain; transform: scale(calc(var(--img-scale, 1) * var(--sheet-img-scale, 1))); transform-origin: center; transition: transform 0.15s ease; }
 .sheet-tile-code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #555; margin-top: 14px; word-break: break-word; }
 .sheet-tile-name { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #555; margin-top: 4px; word-break: break-word; }
 .sheet-tile-qty { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #888; margin-top: 6px; }
@@ -405,7 +431,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v3.15</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v3.19</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -530,7 +556,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.15</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.19</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -562,6 +588,12 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
       <div class="preview-title" id="previewTitle"></div>
     </div>
     <div class="preview-nav" id="previewNav"></div>
+    <div class="preview-scale-wrap" title="Shrink every image on the sheet by the same amount. Combine with per-style scale (Edit panel) to make tiles match.">
+      <span class="preview-scale-label">Image size</span>
+      <input type="range" class="preview-scale-slider" id="previewScaleSlider" min="50" max="100" step="5" value="100">
+      <span class="preview-scale-value" id="previewScaleValue">100%</span>
+      <button class="preview-scale-reset" id="previewScaleReset" hidden>reset</button>
+    </div>
     <div class="preview-actions">
       <button class="btn" id="xlsxBtn">Export as Chart (Excel)</button>
       <button class="btn cheat-only-action" id="xlsxGroupBtn">Export as Group (Excel)</button>
@@ -636,6 +668,10 @@ const state = {
   curPage: 0,
   sourcesOpen: false,
   activeSeason: null,
+  // Sheet-wide image scale (v3.16). Multiplied with each style's individual
+  // imageScale override at render time. 0.50–1.00, default 1.00. Lives on
+  // the sheet so each saved sheet keeps its own scaling preference.
+  sheetImageScale: 1.00,
 };
 
 // =========================================================
@@ -746,6 +782,7 @@ function persistCurrentSheet() {
   sheet.cheatTilesPerPage = state.cheatTilesPerPage;
   sheet.selections = state.selections;
   sheet.overrides = state.overrides;
+  sheet.sheetImageScale = state.sheetImageScale;
   sheet.savedAt = Date.now();
   saveLibrary(lib);
   refreshDraftStatus();
@@ -764,6 +801,7 @@ function applySheetToState(sheet) {
     state.mode = (sheet.mode === 'cheat') ? 'cheat' : 'sales';
     state.selections = sheet.selections || {};
     state.overrides = sheet.overrides || {};
+    state.sheetImageScale = clampSheetScale(sheet.sheetImageScale);
   } else {
     state.brandId = (BRANDS[0] && BRANDS[0].id) || 'rdstyle';
     state.customerName = '';
@@ -775,6 +813,7 @@ function applySheetToState(sheet) {
     state.mode = 'sales';
     state.selections = {};
     state.overrides = {};
+    state.sheetImageScale = 1.00;
   }
 }
 
@@ -1462,6 +1501,35 @@ function getEffectiveQty(sc, cc) {
   if (o && o.colors && o.colors[cc] && o.colors[cc].qty != null) return o.colors[cc].qty;
   return '';
 }
+// Per-style image scale (0.50–1.00). Lets users shrink an oversized photo so
+// it visually matches the other tiles on a page. Clamped to a safe range so
+// a corrupted draft can't push images off-canvas. Default 1.00.
+const MIN_IMG_SCALE = 0.50;
+const MAX_IMG_SCALE = 1.00;
+function getEffectiveImageScale(sc) {
+  const o = state.overrides[sc];
+  if (o && Number.isFinite(o.imageScale)) {
+    return Math.max(MIN_IMG_SCALE, Math.min(MAX_IMG_SCALE, o.imageScale));
+  }
+  return 1.00;
+}
+// Sheet-wide image scale -- one slider, applies to every tile on the sheet.
+// Lives in state.sheetImageScale (default 1.00). Independent of per-style
+// scale; render sites multiply the two together via getTileImageScale().
+function clampSheetScale(v) {
+  if (!Number.isFinite(v)) return 1.00;
+  return Math.max(MIN_IMG_SCALE, Math.min(MAX_IMG_SCALE, v));
+}
+function getSheetImageScale() {
+  return clampSheetScale(state.sheetImageScale);
+}
+// Combined scale used on every rendered tile -- per-style × sheet-wide.
+// Clamped to MIN..MAX so the product itself stays in range even when both
+// inputs are at the floor (0.5 × 0.5 = 0.25 would otherwise be absurd).
+function getTileImageScale(sc) {
+  const combined = getEffectiveImageScale(sc) * getSheetImageScale();
+  return Math.max(MIN_IMG_SCALE, Math.min(MAX_IMG_SCALE, combined));
+}
 function getImageUrl(sc, cc) { return imageMap[sc + '_' + cc] || null; }
 
 function setOverride(sc, field, value) {
@@ -1475,6 +1543,20 @@ function setColorOverride(sc, cc, field, value) {
   if (!state.overrides[sc].colors) state.overrides[sc].colors = {};
   if (!state.overrides[sc].colors[cc]) state.overrides[sc].colors[cc] = {};
   state.overrides[sc].colors[cc][field] = value;
+  persistCurrentSheet();
+}
+// Reorder a single color within state.selections[sc] so it shows in a chosen
+// position on the sales sheet. Both `fromCc` and `toCc` must already be in
+// the selection array. Inserts `fromCc` at the index currently held by
+// `toCc` (matching the "drop on this row" mental model from page-chip drag).
+function reorderColor(sc, fromCc, toCc) {
+  const arr = state.selections[sc];
+  if (!arr) return;
+  const fromIdx = arr.indexOf(fromCc);
+  const toIdx = arr.indexOf(toCc);
+  if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
+  arr.splice(fromIdx, 1);
+  arr.splice(toIdx, 0, fromCc);
   persistCurrentSheet();
 }
 
@@ -2034,8 +2116,18 @@ function renderCatalog() {
   c.querySelectorAll('.style-head').forEach(el => {
     el.addEventListener('click', () => {
       const code = el.dataset.style;
-      state.expandedStyle = state.expandedStyle === code ? null : code;
+      const opening = state.expandedStyle !== code;
+      state.expandedStyle = opening ? code : null;
+      // Sales-mode side-effect (v3.17): clicking a style on the left also
+      // focuses the right-side editor on that same style, so the user can
+      // edit details immediately -- even before picking any colors. Cheat
+      // mode keeps the existing per-tile editor flow untouched (cheat-side
+      // chips are per-color, not per-style).
+      if (state.mode === 'sales') {
+        state.expandedEditor = opening ? code : null;
+      }
       renderCatalog();
+      renderSidebar();
     });
   });
   c.querySelectorAll('.swatch').forEach(el => {
@@ -2134,11 +2226,18 @@ function removeCheatItem(sc, cc) {
   persistCurrentSheet();
 }
 
-// Shared editor used by both Sales and Cheat sidebars.
-// `colorFilter` (optional): if set, only render the row for that single color.
-//   - Sales sheet passes nothing -> shows all selected colors
-//   - Cheat sheet passes the chip's color code -> shows only that one
-function renderStyleEditor(sc, colorFilter) {
+// Shared editor used by both the catalog inline view, the Sales sidebar, and
+// the Cheat sidebar.
+//   `colorFilter` (optional string): if set, only render the row for that
+//     single color.
+//        - Sales sheet (sidebar) passes nothing -> shows all selected colors
+//        - Cheat sheet (sidebar) passes the chip's color code -> single row
+//   `opts` (optional object):
+//        - omitColorsList: skip the per-color list entirely. Used by the
+//          catalog inline editor when no colors are selected yet so we
+//          don't render a confusing empty "Colors · names" header.
+function renderStyleEditor(sc, colorFilter, opts) {
+  opts = opts || {};
   const s = getStyle(sc);
   if (!s) return '';
   const styleNum = getEffectiveStyleNumber(sc);
@@ -2148,12 +2247,18 @@ function renderStyleEditor(sc, colorFilter) {
   const stylePrice = getEffectiveStylePrice(sc);
   const sellingPrice = getEffectiveSellingPrice(sc);
   const fobPrice = getEffectiveFobPrice(sc);
+  const imgScale = getEffectiveImageScale(sc);
   const showInv = getShowInventory(sc);
   const cpp = getEffectiveColorsPerPage(sc);
   const selectedColors = (state.selections[sc] || []).map(cc => getColor(s, cc)).filter(Boolean);
   const cols = colorFilter
     ? selectedColors.filter(c => c.code === colorFilter)
     : selectedColors;
+  // Drag-to-reorder only makes sense when (a) we're showing the whole list
+  // (no colorFilter), and (b) there's more than one row to shuffle.
+  const allowReorder = !colorFilter && cols.length > 1;
+  const scalePct = Math.round(imgScale * 100);
+  const scaleResetHidden = imgScale === 1.00 ? ' hidden' : '';
 
   return '<div class="page-editor">' +
     '<div class="editor-row">' +
@@ -2197,9 +2302,9 @@ function renderStyleEditor(sc, colorFilter) {
         '<input class="editor-input mono editor-price-input" data-field="fobPrice" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(fobPrice) + '" placeholder="optional" inputmode="decimal">' +
       '</div>' +
     '</div>' +
-    // Layout choice: how many color tiles per page in the Sales sheet. Only
-    // shown when editing the style as a whole (not when colorFilter scopes
-    // the editor to a single Cheat-sheet tile, where it doesn't apply).
+    // Layout choices: colors-per-page + image scale. Colors-per-page only
+    // shown when editing the style as a whole; image scale always shown so
+    // users can pre-trim oversized photos before they pick colors.
     (colorFilter ? '' :
       '<div class="editor-row">' +
         '<label class="editor-label">Colors per page</label>' +
@@ -2210,28 +2315,55 @@ function renderStyleEditor(sc, colorFilter) {
         '</div>' +
       '</div>'
     ) +
+    '<div class="editor-row">' +
+      '<label class="editor-label">Image scale <span class="editor-label-note">shrink one outlier to match the others</span></label>' +
+      '<div class="editor-scale-row">' +
+        '<input type="range" class="editor-scale-slider" data-scale-style="' + escapeHtml(sc) + '" ' +
+          'min="' + Math.round(MIN_IMG_SCALE * 100) + '" max="' + Math.round(MAX_IMG_SCALE * 100) + '" step="5" value="' + scalePct + '">' +
+        '<span class="editor-scale-value" data-scale-value="' + escapeHtml(sc) + '">' + scalePct + '%</span>' +
+        '<button type="button" class="editor-scale-reset' + scaleResetHidden + '" data-scale-reset="' + escapeHtml(sc) + '">reset</button>' +
+      '</div>' +
+    '</div>' +
     '<label class="editor-toggle">' +
       '<input type="checkbox" data-toggle="showInventory" data-style="' + escapeHtml(sc) + '"' + (showInv ? ' checked' : '') + '>' +
       '<span>Show inventory quantities on sheet</span>' +
     '</label>' +
-    '<div class="editor-section-h">' + (colorFilter ? 'This color' : 'Colors') + ' \u00B7 ' + (showInv ? 'names & quantity' : 'names') + '</div>' +
-    cols.map(c => {
-      const url = getImageUrl(sc, c.code);
-      const thumb = url
-        ? '<img src="' + url + '" alt="">'
-        : '<div style="width:100%;height:100%;background:' + (c.hex || '#CCC') + '"></div>';
-      const isSynthColor = c.code === sc;
-      const dispCode = c.patternCode || c.code;
-      const qtyCell = showInv
-        ? '<input class="editor-color-qty" type="text" inputmode="numeric" placeholder="Qty" data-color-field="qty" data-style="' + escapeHtml(sc) + '" data-color="' + escapeHtml(c.code) + '" value="' + escapeHtml(getEffectiveQty(sc, c.code)) + '">'
-        : '';
-      return '<div class="editor-color' + (showInv ? ' with-qty' : '') + '">' +
-        '<div class="editor-color-thumb">' + thumb + '</div>' +
-        '<div class="editor-color-code">' + (isSynthColor ? '' : escapeHtml(dispCode)) + '</div>' +
-        '<input class="editor-color-name" placeholder="Color name" data-color-field="name" data-style="' + escapeHtml(sc) + '" data-color="' + escapeHtml(c.code) + '" value="' + escapeHtml(getEffectiveColorName(sc, c.code)) + '">' +
-        qtyCell +
-      '</div>';
-    }).join('') +
+    (opts.omitColorsList || cols.length === 0 ? '' :
+      '<div class="editor-section-h">' + (colorFilter ? 'This color' : 'Colors') +
+        ' \u00B7 ' + (showInv ? 'names & quantity' : 'names') +
+        (allowReorder ? ' \u00B7 drag to reorder' : '') +
+      '</div>' +
+      cols.map(c => {
+        const url = getImageUrl(sc, c.code);
+        const thumb = url
+          ? '<img src="' + url + '" alt="">'
+          : '<div style="width:100%;height:100%;background:' + (c.hex || '#CCC') + '"></div>';
+        const isSynthColor = c.code === sc;
+        const dispCode = c.patternCode || c.code;
+        const qtyCell = showInv
+          ? '<input class="editor-color-qty" type="text" inputmode="numeric" placeholder="Qty" data-color-field="qty" data-style="' + escapeHtml(sc) + '" data-color="' + escapeHtml(c.code) + '" value="' + escapeHtml(getEffectiveQty(sc, c.code)) + '">'
+          : '';
+        // v3.18: ONLY the grip is the drag source; the row is the drop
+        // target. Previously the whole row was draggable, which meant the
+        // text inputs intercepted mousedown and the drag never started
+        // unless the user happened to grab the tiny grip glyph. Now the
+        // grip carries `draggable="true"`, so inputs can be clicked
+        // freely without conflicting with reorder.
+        const grip = allowReorder
+          ? '<div class="editor-color-grip" draggable="true" data-color-grip="' + escapeHtml(c.code) + '" data-color-grip-style="' + escapeHtml(sc) + '" title="Drag to reorder">\u22EE\u22EE</div>'
+          : '<div class="editor-color-grip"></div>';
+        const rowAttrs = allowReorder
+          ? ' data-color-row="' + escapeHtml(c.code) + '" data-color-row-style="' + escapeHtml(sc) + '"'
+          : '';
+        return '<div class="editor-color' + (showInv ? ' with-qty' : '') + '"' + rowAttrs + '>' +
+          grip +
+          '<div class="editor-color-thumb">' + thumb + '</div>' +
+          '<div class="editor-color-code">' + (isSynthColor ? '' : escapeHtml(dispCode)) + '</div>' +
+          '<input class="editor-color-name" placeholder="Color name" data-color-field="name" data-style="' + escapeHtml(sc) + '" data-color="' + escapeHtml(c.code) + '" value="' + escapeHtml(getEffectiveColorName(sc, c.code)) + '">' +
+          qtyCell +
+        '</div>';
+      }).join('')
+    ) +
   '</div>';
 }
 
@@ -2262,6 +2394,134 @@ function wireEditorListeners(scope) {
       const n = parseInt(el.dataset.cpp, 10);
       if (!n || n < 1 || n > MAX_COLORS_PER_PAGE) return;
       setOverride(el.dataset.style, 'colorsPerPage', n);
+      renderSidebar();
+    });
+  });
+  // Image scale slider: live-updates the "92%" value next to the slider as
+  // the user drags, plus persists the override. Doesn't trigger a full
+  // re-render -- the next preview render picks up the new scale.
+  root.querySelectorAll('[data-scale-style]').forEach(el => {
+    el.addEventListener('input', () => {
+      const sc = el.dataset.scaleStyle;
+      const pct = parseInt(el.value, 10);
+      if (!Number.isFinite(pct)) return;
+      const scale = pct / 100;
+      setOverride(sc, 'imageScale', scale);
+      const valueEl = root.querySelector('[data-scale-value="' + cssEscape(sc) + '"]');
+      if (valueEl) valueEl.textContent = pct + '%';
+      const resetEl = root.querySelector('[data-scale-reset="' + cssEscape(sc) + '"]');
+      if (resetEl) resetEl.classList.toggle('hidden', scale === 1.00);
+    });
+  });
+  root.querySelectorAll('[data-scale-reset]').forEach(el => {
+    el.addEventListener('click', () => {
+      const sc = el.dataset.scaleReset;
+      // Removing the override entirely lets the default (1.00) take over,
+      // keeping state.overrides tidy.
+      if (state.overrides[sc]) delete state.overrides[sc].imageScale;
+      persistCurrentSheet();
+      const sliderEl = root.querySelector('[data-scale-style="' + cssEscape(sc) + '"]');
+      if (sliderEl) sliderEl.value = '100';
+      const valueEl = root.querySelector('[data-scale-value="' + cssEscape(sc) + '"]');
+      if (valueEl) valueEl.textContent = '100%';
+      el.classList.add('hidden');
+    });
+  });
+  wireColorDrag(root);
+}
+
+// CSS.escape polyfill -- safe identifier escaping for querySelector lookups
+// that include style codes (which can contain characters like "-" or "/").
+function cssEscape(s) {
+  if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') return CSS.escape(s);
+  return String(s).replace(/[^a-zA-Z0-9_-]/g, ch => '\\' + ch);
+}
+
+// Drag-to-reorder for the per-color rows inside the editor.
+//
+// Architecture (v3.18): the GRIP (\u22EE\u22EE) is the drag source -- it carries
+// draggable="true" and data-color-grip / data-color-grip-style. The ROW is
+// the drop target -- it carries data-color-row / data-color-row-style.
+// Splitting them means the row's text inputs no longer intercept the
+// mousedown that would otherwise initiate the drag, which was the v3.16-v3.17
+// failure mode users reported. Dropping on a row inserts the dragged color
+// at that row's index inside state.selections[sc] and re-renders catalog +
+// sidebar so the new order shows everywhere.
+function wireColorDrag(scope) {
+  const root = scope || document;
+  let dragSrc = null;   // { sc, cc, rowEl } -- the row being dragged
+
+  root.querySelectorAll('[data-color-grip]').forEach(grip => {
+    grip.addEventListener('dragstart', e => {
+      // CRITICAL (v3.19 fix): the page-chip ancestor that wraps this editor
+      // has its own dragstart listener that calls preventDefault() whenever
+      // the chip is in edit mode (draggable="false"). If we let our drag
+      // bubble up, that handler cancels the drag immediately -- the row
+      // gets the .dragging class from our handler below, but no dragover /
+      // drop ever fires because the native drag has been aborted. Stopping
+      // propagation here keeps the chip's reorder logic intact for chip
+      // drags from outside the editor.
+      e.stopPropagation();
+      const rowEl = grip.closest('.editor-color');
+      dragSrc = {
+        sc: grip.dataset.colorGripStyle,
+        cc: grip.dataset.colorGrip,
+        rowEl: rowEl,
+      };
+      if (rowEl) rowEl.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      // Some browsers refuse to start a drag without setData; the payload
+      // itself isn't used -- dragSrc holds the truth.
+      try { e.dataTransfer.setData('text/plain', dragSrc.cc); } catch {}
+    });
+    grip.addEventListener('dragend', e => {
+      e.stopPropagation();
+      if (dragSrc && dragSrc.rowEl) dragSrc.rowEl.classList.remove('dragging');
+      root.querySelectorAll('.editor-color.drag-over').forEach(x => x.classList.remove('drag-over'));
+      dragSrc = null;
+    });
+  });
+
+  root.querySelectorAll('[data-color-row]').forEach(row => {
+    row.addEventListener('dragover', e => {
+      if (!dragSrc) return;
+      // Only allow within the same style
+      if (row.dataset.colorRowStyle !== dragSrc.sc) return;
+      if (row.dataset.colorRow === dragSrc.cc) return;
+      e.preventDefault();
+      // Stop the dragover from also reaching the wrapping page-chip's
+      // dragover handler, which would otherwise paint the whole chip with
+      // its own .drag-over indicator on top of our row indicator.
+      e.stopPropagation();
+      // Without setting dropEffect to match effectAllowed, the cursor
+      // shows the "no-drop" icon in some browsers even though the drop
+      // event would still fire on release.
+      e.dataTransfer.dropEffect = 'move';
+      root.querySelectorAll('.editor-color.drag-over').forEach(x => x.classList.remove('drag-over'));
+      row.classList.add('drag-over');
+    });
+    row.addEventListener('dragleave', e => {
+      // Only clear the indicator when the cursor truly leaves the row, not
+      // when it crosses between the row's own children (which dispatch
+      // dragleave on the row as they take over the dragover stream).
+      if (e.target === row) row.classList.remove('drag-over');
+    });
+    row.addEventListener('drop', e => {
+      // preventDefault is critical: without it, the text inputs in the row
+      // would consume the drop and try to paste the dataTransfer text.
+      e.preventDefault();
+      // stopPropagation prevents the page-chip's drop handler from also
+      // firing (which would no-op for our case, but we're re-rendering
+      // the sidebar inside reorderColor's callers anyway -- cleaner to
+      // not let the bubble run against a stale DOM).
+      e.stopPropagation();
+      if (!dragSrc) return;
+      if (row.dataset.colorRowStyle !== dragSrc.sc) return;
+      const targetCc = row.dataset.colorRow;
+      if (targetCc === dragSrc.cc) return;
+      reorderColor(dragSrc.sc, dragSrc.cc, targetCc);
+      // Re-render both panels so the new order shows everywhere.
+      renderCatalog();
       renderSidebar();
     });
   });
@@ -2464,7 +2724,19 @@ function renderSalesSidebar() {
   const tally = $('tally');
   const codes = getActiveStyleCodes();
 
-  if (codes.length === 0) {
+  // v3.17: a "draft" state -- the user clicked a style on the left to focus
+  // the editor, but hasn't picked any colors yet. We surface a dashed chip
+  // at the top of the sidebar so the user can edit style-level details
+  // (number, name, fabric, prices, image scale) immediately. The chip
+  // disappears as soon as the user picks a color (it promotes itself into
+  // a normal chip via the existing active-codes path) or clicks Done.
+  const draftSc = (state.expandedEditor
+    && !codes.includes(state.expandedEditor)
+    && getStyle(state.expandedEditor))
+    ? state.expandedEditor
+    : null;
+
+  if (codes.length === 0 && !draftSc) {
     list.innerHTML = '<div class="empty-state" style="padding: 24px 8px; font-size: 14px;">Click a style and tap colors to add pages.</div>';
     tally.textContent = '';
     $('goPreview').disabled = true;
@@ -2481,7 +2753,30 @@ function renderSalesSidebar() {
   const totalPages = buildPagePlan().length;
   tally.textContent = totalPages + ' ' + (totalPages === 1 ? 'page' : 'pages') + ' \u00B7 ' + totalColors + ' colors';
 
-  list.innerHTML = codes.map(sc => {
+  // Render the draft chip (if any) above the normal chip list. It uses the
+  // same .page-chip skeleton -- just with a "DRAFT" badge, no color row,
+  // no drag handle (can't reorder a chip that has no page yet), and the
+  // editor expanded by default.
+  let draftHtml = '';
+  if (draftSc) {
+    const styleNum = getEffectiveStyleNumber(draftSc);
+    const chipLabel = getChipLabel(draftSc);
+    const editor = renderStyleEditor(draftSc);
+    draftHtml =
+      '<div class="page-chip draft expanded" data-style="' + escapeHtml(draftSc) + '">' +
+        '<div class="page-chip-summary">' +
+          '<div class="page-chip-h">' +
+            '<span class="page-chip-draft-badge">Draft</span>' +
+            '<span class="page-chip-code' + (!styleNum ? ' page-chip-code-placeholder' : '') + '">' + escapeHtml(chipLabel) + '</span>' +
+            '<button class="page-chip-edit on" data-draft-done="' + escapeHtml(draftSc) + '">Done</button>' +
+          '</div>' +
+          '<div class="page-chip-draft-hint">No colors selected yet \u00B7 tap swatches on the left to add pages</div>' +
+        '</div>' +
+        editor +
+      '</div>';
+  }
+
+  list.innerHTML = (draftHtml || '') + codes.map(sc => {
     const s = getStyle(sc);
     if (!s) return '';
     const cols = state.selections[sc].map(cc => getColor(s, cc)).filter(Boolean);
@@ -2535,10 +2830,22 @@ function renderSalesSidebar() {
       renderSidebar();
     });
   });
+  // Draft-chip "Done" button collapses the draft and removes the focus on
+  // the catalog side too (otherwise the swatch grid stays open while the
+  // editor is gone -- confusing).
+  list.querySelectorAll('[data-draft-done]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      state.expandedEditor = null;
+      state.expandedStyle = null;
+      renderCatalog();
+      renderSidebar();
+    });
+  });
   wireEditorListeners(list);
 
   wireDrag();
-  $('goPreview').disabled = false;
+  $('goPreview').disabled = codes.length === 0;
 }
 
 function wireDrag() {
@@ -2733,7 +3040,11 @@ function renderSalesPreview() {
           const showName = colorName && colorName !== dispCode;
           const showInv = getShowInventory(sc);
           const qty = showInv ? getEffectiveQty(sc, c.code) : '';
-          return '<div class="sheet-tile">' +
+          // Per-style scale (v3.16). The sheet-wide multiplier lives on
+          // .preview-stage's --sheet-img-scale; CSS combines them via calc()
+          // so dragging the preview slider doesn't trigger a re-render.
+          const tileStyle = ' style="--img-scale: ' + getEffectiveImageScale(sc) + '"';
+          return '<div class="sheet-tile"' + tileStyle + '>' +
             '<div class="sheet-shirt">' + garmentVisual(sc, c.code, s, c) + '</div>' +
             (dispCode !== sc ? '<div class="sheet-tile-code">' + escapeHtml(dispCode) + '</div>' : '') +
             (showName ? '<div class="sheet-tile-name">' + escapeHtml(colorName) + '</div>' : '') +
@@ -2816,7 +3127,7 @@ function renderCheatPreview() {
       else if (hasCode)        colorLine = dispCode;
       else if (showName)       colorLine = colorName;
 
-      return '<div class="sheet-tile">' +
+      return '<div class="sheet-tile" style="--img-scale: ' + getEffectiveImageScale(it.sc) + '">' +
         '<div class="sheet-shirt">' + garmentVisual(it.sc, it.cc, s, c) + '</div>' +
         (styleNum   ? '<div class="sheet-tile-style">'   + escapeHtml(styleNum)   + '</div>' : '') +
         (styleName  ? '<div class="sheet-tile-styname">' + escapeHtml(styleName)  + '</div>' : '') +
@@ -3500,6 +3811,9 @@ async function exportPptx() {
             let renderW, renderH;
             if (aspect > containerAspect) { renderW = tileW; renderH = tileW / aspect; }
             else { renderH = imgH; renderW = imgH * aspect; }
+            // Per-style × sheet-wide image scale (v3.16): shrink to match other tiles.
+            const scale = getTileImageScale(it.sc);
+            renderW *= scale; renderH *= scale;
             const offsetX = (tileW - renderW) / 2;
             const offsetY = (imgH - renderH) / 2;
             slide.addImage({ data, x: tileX + offsetX, y: tileY + offsetY, w: renderW, h: renderH });
@@ -3700,6 +4014,9 @@ async function exportPptx() {
             renderH = imgH;
             renderW = imgH * aspect;
           }
+          // Per-style × sheet-wide image scale (v3.16): shrink to match other tiles.
+          const scale = getTileImageScale(sc);
+          renderW *= scale; renderH *= scale;
           const offsetX = (tileW - renderW) / 2;
           const offsetY = (imgH - renderH) / 2;
           slide.addImage({
@@ -3803,8 +4120,30 @@ function showPreview() {
   $('modeTabsWrap').classList.add('hidden');
   $('previewShell').classList.add('on');
   refreshExportButtons();
+  // Sync the sheet-wide image-scale slider with state. The sheet may have a
+  // saved scale that differs from the default 1.00 -- mirror that here so
+  // the slider's thumb doesn't lie about the current rendered scale.
+  refreshPreviewScaleUI();
   renderPreview();
   window.scrollTo(0, 0);
+}
+// Pushes state.sheetImageScale into the preview toolbar's slider, value
+// label, reset-button visibility, AND the --sheet-img-scale CSS variable
+// on .preview-stage (which the tile-level CSS multiplies with each tile's
+// own --img-scale via calc(), so we never have to re-render the preview
+// just to reflect a slider drag).
+function refreshPreviewScaleUI() {
+  const slider = $('previewScaleSlider');
+  const value  = $('previewScaleValue');
+  const reset  = $('previewScaleReset');
+  const stage  = $('previewStage');
+  if (!slider || !value || !reset) return;
+  const scale = getSheetImageScale();
+  const pct = Math.round(scale * 100);
+  slider.value = String(pct);
+  value.textContent = pct + '%';
+  reset.hidden = (pct === 100);
+  if (stage) stage.style.setProperty('--sheet-img-scale', String(scale));
 }
 function showBuild() {
   state.view = 'build';
@@ -3857,12 +4196,31 @@ $('reset').addEventListener('click', () => {
   if (!confirm('Clear all ' + what + who + '?')) return;
   state.selections = {}; state.overrides = {}; state.pageOrder = []; state.cheatOrder = []; state.cheatBreaks = new Set(); state.cheatTilesPerPage = 8;
   state.expandedStyle = null; state.expandedEditor = null;
+  state.sheetImageScale = 1.00;
   renderCatalog(); renderSidebar(); persistCurrentSheet();
 });
 $('printBtn').addEventListener('click', () => window.print());
 $('pptBtn').addEventListener('click', exportPptx);
 $('xlsxBtn').addEventListener('click', exportXlsx);
 $('xlsxGroupBtn').addEventListener('click', exportXlsxGroup);
+
+// Sheet-wide image scale (preview toolbar). Live-updates the rendered tiles
+// as the user drags by pushing the value onto a CSS variable on the
+// preview-stage -- no DOM re-render needed. Mirrors the slider's value
+// label next to it, and persists to the sheet so reload preserves the
+// chosen scale.
+$('previewScaleSlider').addEventListener('input', e => {
+  const pct = parseInt(e.target.value, 10);
+  if (!Number.isFinite(pct)) return;
+  state.sheetImageScale = clampSheetScale(pct / 100);
+  persistCurrentSheet();
+  refreshPreviewScaleUI();
+});
+$('previewScaleReset').addEventListener('click', () => {
+  state.sheetImageScale = 1.00;
+  persistCurrentSheet();
+  refreshPreviewScaleUI();
+});
 
 // Some export buttons are scoped to a single mode. The Group Excel export
 // only makes sense as a flat cheat-tile grid, so hide it in sales mode.
