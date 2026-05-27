@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v3.14</title>
+<title>Sheet Builder · v3.7</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -244,7 +244,6 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .page-editor { background: var(--cream); padding: 14px 16px; border-top: 0.5px solid var(--rule); }
 .editor-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
 .editor-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mute); }
-.editor-label-note { display: inline-block; margin-left: 8px; font-family: var(--sans); font-size: 9px; letter-spacing: 0.04em; text-transform: none; color: var(--quiet); font-style: italic; }
 .editor-input, .editor-textarea { background: white; border: 0.5px solid var(--rule); border-radius: 4px; padding: 7px 10px; font-size: 12px; outline: none; transition: border-color 0.15s; font-family: var(--sans); width: 100%; }
 .editor-input.mono { font-family: var(--mono); }
 .editor-input:focus, .editor-textarea:focus { border-color: var(--ink); }
@@ -253,6 +252,8 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .editor-price-wrap { position: relative; display: flex; align-items: stretch; }
 .editor-price-prefix { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-family: var(--mono); font-size: 12px; color: var(--mute); pointer-events: none; }
 .editor-price-input { padding-left: 22px !important; }
+.editor-price-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.editor-price-row .editor-row { margin-bottom: 0; }
 .editor-color { display: grid; grid-template-columns: 26px 60px 1fr; gap: 6px; align-items: center; margin-bottom: 6px; }
 .editor-color.with-qty { grid-template-columns: 26px 60px 1fr 60px; }
 .editor-segmented { display: inline-flex; background: white; border: 0.5px solid var(--rule); border-radius: 999px; padding: 3px; gap: 2px; align-self: flex-start; }
@@ -309,18 +310,6 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .sheet-grid[data-cols="1"] .sheet-tile { width: 60%; max-width: 640px; }
 .sheet-grid[data-cols="2"] .sheet-tile { width: 38%; max-width: 460px; }
 .sheet-grid[data-cols="3"] .sheet-tile { width: 28%; max-width: 360px; }
-.sheet-grid[data-cols="4"] .sheet-tile { width: 22%; max-width: 280px; }
-.sheet-grid[data-cols="5"] .sheet-tile { width: 17.5%; max-width: 220px; }
-.sheet-grid[data-cols="6"] .sheet-tile { width: 14.5%; max-width: 180px; }
-.sheet-grid[data-cols="5"] .sheet-tile-code,
-.sheet-grid[data-cols="6"] .sheet-tile-code { font-size: 10px; margin-top: 10px; }
-.sheet-grid[data-cols="5"] .sheet-tile-name,
-.sheet-grid[data-cols="6"] .sheet-tile-name { font-size: 10px; }
-.sheet-grid[data-cols="5"] .sheet-tile-price,
-.sheet-grid[data-cols="6"] .sheet-tile-price { font-size: 14px; }
-.sheet-grid[data-cols="6"] .sheet-tile-code,
-.sheet-grid[data-cols="6"] .sheet-tile-name { font-size: 9px; letter-spacing: 0.12em; }
-.sheet-grid[data-cols="6"] .sheet-tile-price { font-size: 13px; }
 .sheet-shirt { width: 100%; aspect-ratio: 4 / 5; display: flex; align-items: center; justify-content: center; }
 .sheet-shirt svg { max-height: 100%; max-width: 100%; }
 .sheet-shirt img { max-height: 100%; max-width: 100%; object-fit: contain; }
@@ -369,8 +358,6 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .library-io { display: flex; gap: 8px; }
 .library-io-btn { flex: 1; font-family: var(--sans); font-size: 12px; font-weight: 500; border: 0.5px solid var(--rule); background: white; color: var(--ink); padding: 10px 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s; text-align: center; }
 .library-io-btn:hover { border-color: var(--ink); }
-.library-io-btn:disabled, .library-item-btn:disabled { opacity: 0.55; cursor: progress; }
-.library-io-btn.bundle-busy, .library-item-btn.bundle-busy { opacity: 0.55; cursor: progress; }
 
 @media (max-width: 900px) {
   .app { grid-template-columns: 1fr; }
@@ -403,7 +390,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v3.14</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v3.7</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -443,10 +430,10 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
         <div class="source-card-title">Brand logos</div>
         <div class="source-status"><span class="source-status-dot" id="brandDot"></span><span id="brandStatus">Seed brands</span></div>
       </div>
-      <div class="source-card-desc">Image files (.svg, .png, .jpg). Filename becomes brand name &mdash; e.g. <code>RDStyle.svg</code>, <code>HEDGE.png</code>.</div>
+      <div class="source-card-desc">Folder of brand logo images (.svg, .png, .jpg). Each filename becomes the brand name &mdash; e.g. <code>RDStyle.svg</code>, <code>HEDGE.png</code>. Subfolders are included.</div>
       <div class="source-input-wrap">
-        <label class="source-pick-btn" for="brandFiles">Choose logo files</label>
-        <input type="file" class="source-input-hidden" id="brandFiles" accept="image/*,.svg" multiple>
+        <label class="source-pick-btn" for="brandFiles">Choose logos folder</label>
+        <input type="file" class="source-input-hidden" id="brandFiles" webkitdirectory directory multiple>
         <div id="brandLoaded"></div>
       </div>
     </div>
@@ -456,7 +443,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
         <div class="source-card-title">Style images</div>
         <div class="source-status"><span class="source-status-dot" id="imgDot"></span><span id="imgStatus">No images</span></div>
       </div>
-      <div class="source-card-desc">Folder of garment images. Filenames using <code>STYLE - Color Name - ColorCode.ext</code> auto-group all colors of a style together &mdash; e.g. <code>58MT400 - BLACK - H34.png</code> and <code>58MT400 - SAGE-B-2182.png</code> both fall under style <code>58MT400</code>. Legacy <code>STYLE_COLOR.ext</code> still works. Anything else uploads as-is; fill in details via Edit.</div>
+      <div class="source-card-desc">Folder of garment images. Use <code>STYLE - Color Name - Color Code - Fabric Content.ext</code> to autofill every field per style &mdash; e.g. <code>78MS301S - BLACK - H34 - 100 COTTON.png</code>. The shorter <code>STYLE - Color Name - Color Code.ext</code> (e.g. <code>58MT400 - BLACK - H34.png</code>) also works, as does the dash-suffix variant <code>58MT400S - SAGE-B-2182.png</code>. Legacy <code>STYLE_COLOR.ext</code> still works. Anything else uploads as-is; fill in details via Edit.</div>
       <div class="source-input-wrap">
         <label class="source-pick-btn" for="imgFiles">Choose folder</label>
         <input type="file" class="source-input-hidden" id="imgFiles" webkitdirectory directory multiple>
@@ -518,7 +505,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
       <div class="sheet-side-title">Pages</div>
       <div class="sheet-side-tally" id="tally"></div>
     </div>
-    <div class="sheet-side-hint">Drag to reorder &middot; click Edit for Fabric Content &amp; price</div>
+    <div class="sheet-side-hint">Drag to reorder &middot; click Edit for Fabric Content &amp; pricing</div>
     <div class="pages-list" id="pagesList"></div>
     <div class="actions">
       <button class="btn btn-primary" id="goPreview">Preview sheet &rarr;</button>
@@ -528,7 +515,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.14</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.7</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -544,9 +531,8 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
     <div class="library-actions">
       <button class="btn btn-primary" id="newSheetBtn">+ New sheet</button>
       <div class="library-io">
-        <button class="library-io-btn" id="exportLibBtn" title="Download all sheets as a small .json (no images; recipient needs the image folder too)">&darr; Save all</button>
-        <button class="library-io-btn" id="exportLibWithImgBtn" title="Download all sheets + every referenced image and logo as one portable .json. Larger file, but works without re-loading any images.">&darr; Save all + images</button>
-        <label class="library-io-btn" for="importLibFile" style="cursor:pointer" title="Restore sheets from a .json file you previously saved (works for both small and bundled exports)">&uarr; Load from file</label>
+        <button class="library-io-btn" id="exportLibBtn" title="Download all sheets as a .json file (for SharePoint, OneDrive, backups)">&darr; Save all to file</button>
+        <label class="library-io-btn" for="importLibFile" style="cursor:pointer" title="Restore sheets from a .json file you previously saved">&uarr; Load from file</label>
         <input type="file" id="importLibFile" accept=".json,application/json" style="display:none">
       </div>
     </div>
@@ -561,8 +547,6 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
     </div>
     <div class="preview-nav" id="previewNav"></div>
     <div class="preview-actions">
-      <button class="btn" id="xlsxBtn">Export as Chart (Excel)</button>
-      <button class="btn cheat-only-action" id="xlsxGroupBtn">Export as Group (Excel)</button>
       <button class="btn" id="pptBtn">Export to PowerPoint</button>
       <button class="btn btn-primary" id="printBtn">Export to PDF</button>
     </div>
@@ -650,7 +634,7 @@ const state = {
 // explicitly clicked "+ New sheet".
 
 const LIBRARY_KEY = 'salesSheetBuilder.library.v1';
-const OLD_DRAFT_KEY = 'salesSheetBuilder.draft.v3';  // pre-v3.14 single-draft store
+const OLD_DRAFT_KEY = 'salesSheetBuilder.draft.v3';  // pre-v3.6 single-draft store
 
 function uuid() {
   return 'sh_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
@@ -664,7 +648,7 @@ function loadLibrary() {
       if (parsed && parsed.sheets) return parsed;
     }
   } catch {}
-  // First run on v3.14+ -- migrate any pre-existing single draft so the user
+  // First run on v3.6+ -- migrate any pre-existing single draft so the user
   // doesn't appear to lose their work.
   try {
     const oldRaw = localStorage.getItem(OLD_DRAFT_KEY);
@@ -879,14 +863,13 @@ function reRenderAllForSheetSwap() {
   if (hint) {
     hint.textContent = state.mode === 'cheat'
       ? 'Drag to reorder \u00B7 max 8 tiles per page'
-      : 'Drag to reorder \u00B7 click Edit for Fabric Content & price';
+      : 'Drag to reorder \u00B7 click Edit for Fabric Content & pricing';
   }
   $('goPreview').textContent = state.mode === 'cheat' ? 'Preview cheat sheet \u2192' : 'Preview sheet \u2192';
   renderHeaderPickers();
   renderCatalog();
   renderSidebar();
   refreshSheetPick();
-  refreshExportButtons();
 }
 
 function refreshDraftStatus() {
@@ -958,8 +941,7 @@ function renderLibrary() {
       (isCurrent ? '<span class="library-item-current-badge">Open</span>' : '') +
       '<div class="library-item-actions">' +
         '<button class="library-item-btn" data-rename="' + escapeHtml(s.id) + '" title="Rename">\u270E</button>' +
-        '<button class="library-item-btn" data-export-sheet="' + escapeHtml(s.id) + '" title="Download as small .json (no images)">\u2193</button>' +
-        '<button class="library-item-btn" data-export-sheet-with-images="' + escapeHtml(s.id) + '" title="Download as portable .json with images bundled in">\u21E9</button>' +
+        '<button class="library-item-btn" data-export-sheet="' + escapeHtml(s.id) + '" title="Download as file">\u2193</button>' +
         '<button class="library-item-btn danger" data-delete="' + escapeHtml(s.id) + '" title="Delete">\u00D7</button>' +
       '</div>' +
     '</div>';
@@ -987,9 +969,6 @@ function renderLibrary() {
   });
   list.querySelectorAll('[data-export-sheet]').forEach(el => {
     el.addEventListener('click', e => { e.stopPropagation(); exportSheetFile(el.dataset.exportSheet); });
-  });
-  list.querySelectorAll('[data-export-sheet-with-images]').forEach(el => {
-    el.addEventListener('click', e => { e.stopPropagation(); exportSheetWithImagesFile(el.dataset.exportSheetWithImages); });
   });
 }
 
@@ -1052,187 +1031,6 @@ function exportSheetFile(id) {
   downloadJson(safe + '.json', { version: 1, exportedAt: Date.now(), sheet: s });
 }
 
-// ---- Image-bundled exports (self-contained .json files) ----
-//
-// "With images" exports wrap the same sheet/library payload as the light
-// export, but also embed: every image referenced by selections (as a base64
-// data URL), every brand logo used, and the style metadata needed to resolve
-// those references. The resulting file is the user's portable archive --
-// drop it on SharePoint, email it, or open on another machine; the recipient
-// only needs the .json to view & edit the sheet without re-loading images.
-//
-// Trade-off: file is much larger (typically 10-80 MB). Bundling can take
-// several seconds; we report progress via a callback so the UI button label
-// updates while it's running.
-
-async function blobToDataUrl(blobOrUrl) {
-  // Accepts either a blob URL (URL.createObjectURL output) or an already-
-  // encoded data: URL. Returns a data: URL in both cases.
-  if (typeof blobOrUrl === 'string' && blobOrUrl.startsWith('data:')) return blobOrUrl;
-  try {
-    const r = await fetch(blobOrUrl);
-    const b = await r.blob();
-    return await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(new Error('Failed to read image'));
-      reader.readAsDataURL(b);
-    });
-  } catch { return null; }
-}
-
-// Gather the union of styles + image keys + brand ids actually needed to
-// render the given sheets. Pulls style/image lookups from BOTH the current
-// in-memory STYLES/imageMap AND from every loaded seasonGroup, so sheets
-// referencing styles in a non-active season still bundle correctly.
-function collectAssetsForSheets(sheets) {
-  const usedPairs = new Set();    // "sc|cc"
-  const usedStyleCodes = new Set();
-  const usedBrandIds = new Set();
-  sheets.forEach(s => {
-    Object.entries(s.selections || {}).forEach(([sc, codes]) => {
-      usedStyleCodes.add(sc);
-      (codes || []).forEach(cc => usedPairs.add(sc + '|' + cc));
-    });
-    if (s.brandId) usedBrandIds.add(s.brandId);
-  });
-
-  // Build a lookup for image URLs from all known sources
-  const allImageMaps = [imageMap];
-  Object.values(seasonGroups).forEach(g => g && g.imageMap && allImageMaps.push(g.imageMap));
-  const findImageUrl = key => {
-    for (const m of allImageMaps) if (m[key]) return m[key];
-    return null;
-  };
-
-  // Build a lookup for style metadata
-  const allStyleArrays = [STYLES];
-  Object.values(seasonGroups).forEach(g => g && Array.isArray(g.styles) && allStyleArrays.push(g.styles));
-  const findStyle = code => {
-    for (const arr of allStyleArrays) {
-      const hit = arr.find(s => s.code === code);
-      if (hit) return hit;
-    }
-    return null;
-  };
-
-  return { usedPairs, usedStyleCodes, usedBrandIds, findImageUrl, findStyle };
-}
-
-async function buildImageBundle(sheets, onProgress) {
-  const { usedPairs, usedStyleCodes, usedBrandIds, findImageUrl, findStyle } = collectAssetsForSheets(sheets);
-
-  // Snapshot referenced styles (deep-cloned)
-  const stylesOut = [];
-  const seenCodes = new Set();
-  usedStyleCodes.forEach(code => {
-    const s = findStyle(code);
-    if (s && !seenCodes.has(s.code)) {
-      stylesOut.push({ ...s, colors: (s.colors || []).map(c => ({ ...c })) });
-      seenCodes.add(s.code);
-    }
-  });
-
-  // Snapshot referenced brands
-  const brandsOut = BRANDS.filter(b => usedBrandIds.has(b.id)).map(b => {
-    const { logoUrl, ...rest } = b; // logoUrl is a blob URL; rebuilt on import
-    return rest;
-  });
-
-  // Convert images, reporting progress
-  const pairs = Array.from(usedPairs);
-  const images = {};
-  let done = 0;
-  for (const pair of pairs) {
-    const [sc, cc] = pair.split('|');
-    const url = findImageUrl(sc + '_' + cc);
-    if (url) {
-      const dataUrl = await blobToDataUrl(url);
-      if (dataUrl) images[sc + '_' + cc] = dataUrl;
-    }
-    done++;
-    if (onProgress) onProgress(done, pairs.length, 'images');
-  }
-
-  // Convert logos
-  const logos = {};
-  let logoDone = 0;
-  for (const bid of usedBrandIds) {
-    const url = logoMap[bid];
-    if (url) {
-      const dataUrl = await blobToDataUrl(url);
-      if (dataUrl) logos[bid] = dataUrl;
-    }
-    logoDone++;
-    if (onProgress) onProgress(logoDone, usedBrandIds.size, 'logos');
-  }
-
-  return { images, logos, styles: stylesOut, brands: brandsOut };
-}
-
-async function exportSheetWithImagesFile(id) {
-  const lib = loadLibrary();
-  const s = lib.sheets[id];
-  if (!s) return;
-  const btn = document.querySelector('[data-export-sheet-with-images="' + cssEscape(id) + '"]');
-  const restoreBtn = setBundleButtonBusy(btn);
-  try {
-    const bundle = await buildImageBundle([s], (done, total) => {
-      if (btn) btn.title = 'Bundling \u2026 ' + done + ' / ' + total;
-    });
-    const safe = getSheetDisplayName(s).replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'sheet';
-    downloadJson(safe + '-bundle.json', {
-      version: 2,
-      exportedAt: Date.now(),
-      bundleType: 'sheet-with-images',
-      sheet: s,
-      ...bundle,
-    });
-  } finally { restoreBtn(); }
-}
-
-async function exportLibraryWithImagesFile() {
-  persistCurrentSheet();
-  const lib = loadLibrary();
-  const sheets = Object.values(lib.sheets);
-  if (sheets.length === 0) { alert('No sheets to export yet.'); return; }
-  const btn = $('exportLibWithImgBtn');
-  const restoreBtn = setBundleButtonBusy(btn);
-  try {
-    const bundle = await buildImageBundle(sheets, (done, total) => {
-      if (btn) btn.textContent = 'Bundling \u2026 ' + done + ' / ' + total;
-    });
-    const fname = 'sheet-library-bundle-' + new Date().toISOString().slice(0, 10) + '.json';
-    downloadJson(fname, {
-      version: 2,
-      exportedAt: Date.now(),
-      bundleType: 'library-with-images',
-      library: lib,
-      ...bundle,
-    });
-  } finally { restoreBtn(); }
-}
-
-function setBundleButtonBusy(btn) {
-  if (!btn) return () => {};
-  const originalText = btn.textContent;
-  const originalTitle = btn.title;
-  btn.disabled = true;
-  btn.classList.add('bundle-busy');
-  btn.textContent = 'Bundling \u2026';
-  return () => {
-    btn.disabled = false;
-    btn.classList.remove('bundle-busy');
-    btn.textContent = originalText;
-    btn.title = originalTitle;
-  };
-}
-
-// Safe CSS attribute selector helper for sheet IDs (which contain dots etc)
-function cssEscape(s) {
-  return String(s).replace(/(["\\])/g, '\\$1');
-}
-
 function importLibraryFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
@@ -1241,8 +1039,8 @@ function importLibraryFile(file) {
     catch (err) { alert('That file isn\'t valid JSON.'); return; }
 
     const lib = loadLibrary();
+    let imported = 0;
     let sheetsToImport = [];
-    const isBundle = !!(data && (data.images || data.styles || data.brands || data.logos));
 
     if (data && data.library && data.library.sheets) {
       sheetsToImport = Object.values(data.library.sheets);
@@ -1253,94 +1051,17 @@ function importLibraryFile(file) {
       return;
     }
 
-    // Merge bundled assets into in-memory stores BEFORE adding sheets, so the
-    // restored sheet's first render finds its images/styles ready.
-    let stylesAdded = 0, imagesAdded = 0, brandsAdded = 0;
-    if (isBundle) {
-      if (Array.isArray(data.styles)) {
-        const existing = new Set(STYLES.map(s => s.code));
-        data.styles.forEach(s => {
-          if (!existing.has(s.code)) {
-            STYLES.push({ ...s, colors: (s.colors || []).map(c => ({ ...c })) });
-            existing.add(s.code);
-            stylesAdded++;
-          }
-        });
-      }
-      if (Array.isArray(data.brands)) {
-        const existingB = new Set(BRANDS.map(b => b.id));
-        data.brands.forEach(b => {
-          if (!existingB.has(b.id)) {
-            BRANDS.push({ ...b });
-            existingB.add(b.id);
-            brandsAdded++;
-          }
-        });
-      }
-      if (data.images && typeof data.images === 'object') {
-        Object.entries(data.images).forEach(([key, dataUrl]) => {
-          if (!imageMap[key]) { imageMap[key] = dataUrl; imagesAdded++; }
-        });
-      }
-      if (data.logos && typeof data.logos === 'object') {
-        Object.entries(data.logos).forEach(([bid, dataUrl]) => {
-          if (!logoMap[bid]) {
-            logoMap[bid] = dataUrl;
-            // Patch the BRANDS entry so logoUrl resolves (the export strips it)
-            const brand = BRANDS.find(b => b.id === bid);
-            if (brand && !brand.logoUrl) brand.logoUrl = dataUrl;
-          }
-        });
-      }
-      // Reflect new assets in the Sources panel so the user sees them as loaded
-      if (imagesAdded > 0)  setStatus('images', Object.keys(imageMap).length + ' loaded (bundle)', true);
-      if (brandsAdded > 0)  setStatus('brands', BRANDS.length + ' loaded (bundle)', true);
-    }
-
-    // Add the sheet entries (always re-id to avoid clobbering existing sheets)
-    let imported = 0;
-    let firstNewId = null;
     sheetsToImport.forEach(s => {
       const newId = uuid();
+      // Re-id on import so importing the same file twice yields two copies
+      // rather than overwriting an existing sheet that happens to share an id.
       lib.sheets[newId] = { ...s, id: newId };
-      if (!firstNewId) firstNewId = newId;
       imported++;
     });
-
-    // If bundle import and no current sheet, switch to the first imported one
-    // so the user lands on real content rather than a blank screen.
-    if (isBundle && firstNewId && !lib.currentId) {
-      lib.currentId = firstNewId;
-    }
     saveLibrary(lib);
-
-    // If we changed catalog state, re-render the catalog and switch into the
-    // newly-imported sheet's context if appropriate.
-    if (isBundle) {
-      if (firstNewId && lib.currentId === firstNewId) {
-        applySheetToState(lib.sheets[firstNewId]);
-        reRenderAllForSheetSwap();
-      } else {
-        renderHeaderPickers();
-        renderCatalog();
-      }
-    }
     renderLibrary();
     refreshSheetPick();
-
-    const parts = [];
-    parts.push('Imported ' + imported + ' ' + (imported === 1 ? 'sheet' : 'sheets'));
-    if (isBundle) {
-      const bits = [];
-      if (stylesAdded)  bits.push(stylesAdded + ' ' + (stylesAdded === 1 ? 'style' : 'styles'));
-      if (imagesAdded)  bits.push(imagesAdded + ' ' + (imagesAdded === 1 ? 'image' : 'images'));
-      if (brandsAdded)  bits.push(brandsAdded + ' ' + (brandsAdded === 1 ? 'brand' : 'brands'));
-      if (bits.length) parts.push(' \u00B7 plus ' + bits.join(', '));
-      parts.push('.\n\nNote: bundled images live in memory only. If you refresh the page, re-import the bundle to restore them.');
-    } else {
-      parts.push('.');
-    }
-    alert(parts.join(''));
+    alert('Imported ' + imported + ' ' + (imported === 1 ? 'sheet' : 'sheets') + '.');
   };
   reader.readAsText(file);
 }
@@ -1405,18 +1126,32 @@ function getEffectiveStylePrice(sc) {
   if (o && o.price != null) return o.price;
   return '';
 }
-// FOB (Free On Board) wholesale price. Optional; hidden from every rendered
-// sales/cheat sheet -- the only place it surfaces is the Excel chart export.
-function getEffectiveFobPrice(sc) {
-  const o = state.overrides[sc];
-  if (o && o.fobPrice != null) return o.fobPrice;
-  return '';
-}
 function getDisplayStylePrice(sc) {
   const raw = (getEffectiveStylePrice(sc) || '').trim();
   if (!raw) return '';
   // If user already included $, leave as is. Otherwise prefix it.
   return raw.startsWith('$') ? raw : '$' + raw;
+}
+// Selling Price -- a second, independent price field. Stored separately on
+// the override so legacy sheets (which only have `price` / MSRP) keep working.
+function getEffectiveSellingPrice(sc) {
+  const o = state.overrides[sc];
+  if (o && o.sellingPrice != null) return o.sellingPrice;
+  return '';
+}
+function getDisplaySellingPrice(sc) {
+  const raw = (getEffectiveSellingPrice(sc) || '').trim();
+  if (!raw) return '';
+  return raw.startsWith('$') ? raw : '$' + raw;
+}
+// Combined header price used on sales-sheet headers, cheat tiles, and PPT
+// exports: shows "Selling / MSRP" when both are filled, or just whichever
+// single one is filled. Returns '' when neither is set so the slot collapses.
+function getDisplayHeaderPrice(sc) {
+  const selling = getDisplaySellingPrice(sc);
+  const msrp = getDisplayStylePrice(sc);
+  if (selling && msrp) return selling + ' / ' + msrp;
+  return selling || msrp;
 }
 function getShowInventory(sc) {
   const o = state.overrides[sc];
@@ -1532,6 +1267,20 @@ function seasonSortKey(s) {
   return -1;
 }
 
+// Heuristic: does this trailing segment look like a Fabric Content string
+// (e.g. "100 COTTON", "100% COTTON", "60% COTTON / 40% POLY") rather than a
+// color code or color-name continuation? Used to distinguish a 4-part filename
+// (Format F: STYLE - Color Name - Color Code - Fabric Content) from a 3-part
+// Format A where the color name itself contains " - ".
+function looksLikeFabricContent(s) {
+  if (!s) return false;
+  // Common fabric/fiber keywords
+  if (/\b(cotton|polyester|poly|wool|spandex|elastane|nylon|linen|modal|rayon|viscose|silk|cashmere|acrylic|lyocell|tencel|bamboo|hemp|leather|denim|jersey|fleece|terry|knit|woven)\b/i.test(s)) return true;
+  // Composition with a percent sign: "100%", "60% / 40%"
+  if (/\d+\s*%/.test(s)) return true;
+  return false;
+}
+
 function loadStyleImages(files) {
   const imageFiles = Array.from(files).filter(f => /\.(png|jpg|jpeg|webp|gif|svg)$/i.test(f.name));
   if (imageFiles.length === 0) {
@@ -1549,61 +1298,64 @@ function loadStyleImages(files) {
 
   // -------- Pass 1: parse each filename into raw fields --------
   // Recognized filename formats, tried in order:
-  //   A+. "STYLE - Color - Code - Content - Description"   e.g.
-  //       "58MT400 - BLACK - H34 - 50 COTTON 50 ACRYLIC - OVERSIZE"
-  //       Anything from the 5th segment onward is joined back with " - "
-  //       and used as the fabric description, so longer descriptions
-  //       like "- GARMENT WASH - JERSEY" still survive.
+  //   F. "STYLE - Color Name - Color Code - Fabric Content"
+  //                                          e.g. "78MS301S - BLACK - H34 - 100 COTTON"
   //   A. "STYLE - Color Name - Code"     e.g. "58MT400 - BLACK - H34"
   //   B. "STYLE - ColorName-Code"        e.g. "58MT400S - SAGE-B-2182"
   //   C. "STYLE - Color Name"            e.g. "58MT400 - SILVER BLUE"  (no code)
   //   D. Legacy "STYLE_COLOR"            e.g. "58MT400_B-2178"
   //   E. Unstructured                    — whole filename kept as identifier
-  // For A and B we capture the color name and the trailing code separately
+  // For A, B, and F we capture the color name and the trailing code separately
   // so Pass 2 can decide whether the trailing code is actually a pattern
   // code shared across colorways (e.g. several stripe colorways all marked
-  // "31N3"). All files sharing a styleCode are grouped under the same style
-  // card -- styleCode is the ONLY field used to group images together.
-  // Color/pattern code shape: H34, A9001, B-2178, XX9 -- letters then digits,
-  // optionally with a dash-separated numeric tail. Same shape used to gate
-  // the extended A+ format so we don't misread a long color name as a code.
-  const CODE_RE = /^([A-Z]-\d+[A-Z]?\d*|H\d+|[A-Z]{1,3}\d+)$/i;
+  // "31N3"). Format F additionally captures fabric content for autofill.
+  // All files sharing a styleCode are grouped under the same style card --
+  // styleCode is the ONLY field used to group images together.
   const parsed = [];
   let unstructured = 0;
   imageFiles.forEach(f => {
     const base = f.name.replace(/\.[^.]+$/, '');
-    let styleCode = '', trailingCode = '', colorName = '', format = '';
-    let contents = '', fabric = '';
+    let styleCode = '', trailingCode = '', colorName = '', fabricContent = '', format = '';
     if (base.includes(' - ')) {
       const parts = base.split(' - ').map(p => p.trim()).filter(Boolean);
-      if (parts.length >= 4 && CODE_RE.test(parts[2])) {
-        // Extended format A+: style, color, code, content [, ...description]
-        styleCode = parts[0];
-        colorName = parts[1];
-        trailingCode = parts[2];
-        contents = parts[3] || '';
-        fabric = parts.slice(4).join(' - ');
-        format = 'A+';
-      } else if (parts.length >= 3) {
-        styleCode = parts[0];
-        trailingCode = parts[parts.length - 1];
-        colorName = parts.slice(1, -1).join(' - ');
-        format = 'A';
-      } else if (parts.length === 2) {
-        styleCode = parts[0];
-        const tail = parts[1];
-        // Try to peel a trailing code (B-2178, H34, A9001, etc.) off the
-        // single tail segment. If we can't, treat the whole thing as the
-        // color name.
-        const m = tail.match(/^(.+?)\s*-\s*([A-Z]-\d+[A-Z]?\d*|H\d+|[A-Z]{1,3}\d+)$/i);
-        if (m) {
-          colorName = m[1].trim();
-          trailingCode = m[2].trim();
-          format = 'B';
-        } else {
-          colorName = tail;
-          trailingCode = tail;
-          format = 'C';
+      // Format F: STYLE - Color Name - Color Code - Fabric Content (4+ parts,
+      // where everything from position 3 onward reads as a fabric/fiber
+      // composition string). Falls through to Format A otherwise so that
+      // legitimate 3-part filenames with hyphens in the color name still work.
+      let matched = false;
+      if (parts.length >= 4) {
+        const possibleFabric = parts.slice(3).join(' - ');
+        if (looksLikeFabricContent(possibleFabric)) {
+          styleCode = parts[0];
+          colorName = parts[1];
+          trailingCode = parts[2];
+          fabricContent = possibleFabric;
+          format = 'F';
+          matched = true;
+        }
+      }
+      if (!matched) {
+        if (parts.length >= 3) {
+          styleCode = parts[0];
+          trailingCode = parts[parts.length - 1];
+          colorName = parts.slice(1, -1).join(' - ');
+          format = 'A';
+        } else if (parts.length === 2) {
+          styleCode = parts[0];
+          const tail = parts[1];
+          // Try to peel a trailing code (B-2178, H34, A9001, etc.) off the
+          // single tail segment. If we can't, treat the whole thing as the
+          // color name.
+          const m = tail.match(/^(.+?)\s*-\s*([A-Z]-\d+[A-Z]?\d*|H\d+|[A-Z]{1,3}\d+)$/i);
+          if (m) {
+            colorName = m[1].trim();
+            trailingCode = m[2].trim();
+            format = 'B';
+          } else {
+            colorName = tail;
+            trailingCode = tail;
+            format = 'C';
+          }
         }
       }
     }
@@ -1632,7 +1384,7 @@ function loadStyleImages(files) {
     const path = '/' + (f.webkitRelativePath || f.name);
     const seasonKey = extractSeasonFromPath(path) || '__flat__';
 
-    parsed.push({ f, styleCode, trailingCode, colorName, synthetic, format, seasonKey, contents, fabric });
+    parsed.push({ f, styleCode, trailingCode, colorName, fabricContent, synthetic, format, seasonKey });
   });
 
   // -------- Pass 2: detect pattern codes --------
@@ -1643,7 +1395,7 @@ function loadStyleImages(files) {
   const trailingCounts = {};
   parsed.forEach(p => {
     if (p.synthetic) return;
-    if (p.format !== 'A' && p.format !== 'A+' && p.format !== 'B') return;
+    if (p.format !== 'A' && p.format !== 'B') return;
     if (!p.colorName) return;
     const k = p.seasonKey + '|' + p.styleCode + '|' + p.trailingCode;
     trailingCounts[k] = (trailingCounts[k] || 0) + 1;
@@ -1657,7 +1409,7 @@ function loadStyleImages(files) {
   const duplicates = [];
   parsed.forEach(p => {
     let colorCode, patternCode = null;
-    if (!p.synthetic && (p.format === 'A' || p.format === 'A+' || p.format === 'B') && p.colorName) {
+    if (!p.synthetic && (p.format === 'A' || p.format === 'B') && p.colorName) {
       const k = p.seasonKey + '|' + p.styleCode + '|' + p.trailingCode;
       if (trailingCounts[k] > 1) {
         // Pattern group: the color name is the unique key, the trailing
@@ -1687,14 +1439,13 @@ function loadStyleImages(files) {
     g.imageMap[key] = URL.createObjectURL(p.f);
     g.sourceNames[key] = p.f.name;
     if (!g.styleMap[p.styleCode]) g.styleMap[p.styleCode] = { code: p.styleCode, name: '', cat: 'Top', spec: '', contents: '', colors: [], synthetic: p.synthetic };
-    const styleRec = g.styleMap[p.styleCode];
-    // First non-empty value wins -- if different colorways list different
-    // content/fabric strings, keep the first encountered. The user can still
-    // override per-style via the editor.
-    if (p.contents && !styleRec.contents) styleRec.contents = p.contents;
-    if (p.fabric && !styleRec.spec) styleRec.spec = p.fabric;
-    if (!styleRec.colors.find(c => c.code === colorCode)) {
-      styleRec.colors.push({
+    // First file to declare a fabric content wins; later files of the same
+    // style don't overwrite (typical case: all colorways share one composition).
+    if (p.fabricContent && !g.styleMap[p.styleCode].contents) {
+      g.styleMap[p.styleCode].contents = p.fabricContent;
+    }
+    if (!g.styleMap[p.styleCode].colors.find(c => c.code === colorCode)) {
+      g.styleMap[p.styleCode].colors.push({
         code: colorCode,
         name: p.colorName || '',
         hex: '#CCCCCC',
@@ -2122,7 +1873,7 @@ function renderStyleEditor(sc, colorFilter) {
   const fabric = getEffectiveFabric(sc);
   const contents = getEffectiveContents(sc);
   const stylePrice = getEffectiveStylePrice(sc);
-  const fobPrice = getEffectiveFobPrice(sc);
+  const sellingPrice = getEffectiveSellingPrice(sc);
   const showInv = getShowInventory(sc);
   const cpp = getEffectiveColorsPerPage(sc);
   const selectedColors = (state.selections[sc] || []).map(cc => getColor(s, cc)).filter(Boolean);
@@ -2147,18 +1898,20 @@ function renderStyleEditor(sc, colorFilter) {
       '<label class="editor-label">Fabric description</label>' +
       '<textarea class="editor-textarea" data-field="fabric" data-style="' + escapeHtml(sc) + '">' + escapeHtml(fabric) + '</textarea>' +
     '</div>' +
-    '<div class="editor-row">' +
-      '<label class="editor-label">Price</label>' +
-      '<div class="editor-price-wrap">' +
-        '<span class="editor-price-prefix">$</span>' +
-        '<input class="editor-input mono editor-price-input" data-field="price" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(stylePrice) + '" placeholder="42.00" inputmode="decimal">' +
+    '<div class="editor-price-row">' +
+      '<div class="editor-row">' +
+        '<label class="editor-label">Selling Price</label>' +
+        '<div class="editor-price-wrap">' +
+          '<span class="editor-price-prefix">$</span>' +
+          '<input class="editor-input mono editor-price-input" data-field="sellingPrice" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(sellingPrice) + '" placeholder="38.00" inputmode="decimal">' +
+        '</div>' +
       '</div>' +
-    '</div>' +
-    '<div class="editor-row">' +
-      '<label class="editor-label">FOB Price <span class="editor-label-note">hidden \u00B7 Excel export only</span></label>' +
-      '<div class="editor-price-wrap">' +
-        '<span class="editor-price-prefix">$</span>' +
-        '<input class="editor-input mono editor-price-input" data-field="fobPrice" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(fobPrice) + '" placeholder="optional" inputmode="decimal">' +
+      '<div class="editor-row">' +
+        '<label class="editor-label">MSRP</label>' +
+        '<div class="editor-price-wrap">' +
+          '<span class="editor-price-prefix">$</span>' +
+          '<input class="editor-input mono editor-price-input" data-field="price" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(stylePrice) + '" placeholder="42.00" inputmode="decimal">' +
+        '</div>' +
       '</div>' +
     '</div>' +
     // Layout choice: how many color tiles per page in the Sales sheet. Only
@@ -2168,7 +1921,7 @@ function renderStyleEditor(sc, colorFilter) {
       '<div class="editor-row">' +
         '<label class="editor-label">Colors per page</label>' +
         '<div class="editor-segmented">' +
-          [1, 2, 3, 4, 5, 6].map(n =>
+          [1, 2, 3, 4].map(n =>
             '<button type="button" data-cpp="' + n + '" data-style="' + escapeHtml(sc) + '" class="' + (n === cpp ? 'on' : '') + '">' + n + '</button>'
           ).join('') +
         '</div>' +
@@ -2205,7 +1958,7 @@ function wireEditorListeners(scope) {
   root.querySelectorAll('[data-field]').forEach(el => {
     el.addEventListener('input', () => {
       let v = el.value;
-      if (el.dataset.field === 'price' || el.dataset.field === 'fobPrice') {
+      if (el.dataset.field === 'price' || el.dataset.field === 'sellingPrice') {
         const stripped = v.replace(/^\s*\$\s*/, '');
         if (stripped !== v) { el.value = stripped; v = stripped; }
       }
@@ -2224,7 +1977,7 @@ function wireEditorListeners(scope) {
   root.querySelectorAll('[data-cpp]').forEach(el => {
     el.addEventListener('click', () => {
       const n = parseInt(el.dataset.cpp, 10);
-      if (!n || n < 1 || n > MAX_COLORS_PER_PAGE) return;
+      if (!n || n < 1 || n > 4) return;
       setOverride(el.dataset.style, 'colorsPerPage', n);
       renderSidebar();
     });
@@ -2547,7 +2300,7 @@ function wireDrag() {
 // PAGE PLAN — chunk colors so each page has at most 4
 // =========================================================
 
-const MAX_COLORS_PER_PAGE = 6;
+const MAX_COLORS_PER_PAGE = 4;
 const CHEAT_TILES_OPTIONS = [2, 4, 6, 8, 9, 12];
 function clampCheatTiles(n) {
   return CHEAT_TILES_OPTIONS.includes(n) ? n : 8;
@@ -2666,7 +2419,7 @@ function renderSalesPreview() {
     const styleName = getEffectiveStyleName(sc);
     const fabric = getEffectiveFabric(sc);
     const contents = getEffectiveContents(sc);
-    const stylePrice = getDisplayStylePrice(sc);
+    const stylePrice = getDisplayHeaderPrice(sc);
     const headerParts = [];
     if (state.season) headerParts.push(escapeHtml(state.season).toUpperCase());
     if (styleNum) headerParts.push(escapeHtml(styleNum));
@@ -2768,7 +2521,7 @@ function renderCheatPreview() {
       const dispCode   = c.patternCode || c.code;
       const colorName  = getEffectiveColorName(it.sc, it.cc);
       const showName   = colorName && colorName !== dispCode;
-      const stylePrice = getDisplayStylePrice(it.sc);
+      const stylePrice = getDisplayHeaderPrice(it.sc);
       const showInv    = getShowInventory(it.sc);
       const qty        = showInv ? getEffectiveQty(it.sc, it.cc) : '';
 
@@ -2855,421 +2608,6 @@ function getImageAspect(src) {
     img.onerror = () => resolve(0.8); // fallback to 4:5
     img.src = src;
   });
-}
-
-// =========================================================
-// EXCEL CHART EXPORT
-// =========================================================
-// One row per (style, color) pair, matching the user-supplied chart template
-// CHART_EXPORT_TEMPLATE.xlsx exactly:
-//   Columns A-I: STYLE IMAGE | STYLE NUMBER | STYLE NAME / DESCRIPTION |
-//                FABRIC CONTENT | FABRIC DESCRIPTION | COLORS NAMES |
-//                COLOR CODE | PRICE | QTY
-//   Header row: bold white text on #1F2937, Aptos Narrow 11pt, centered/wrapped
-//   Data rows: Aptos Narrow 11pt, centered, wrapped, 80pt tall, price in
-//              currency format. Style image embedded in column A.
-//   Header row frozen so it stays visible while scrolling.
-// ExcelJS is lazy-loaded only when this export runs (it's the only place that
-// needs cell images; SheetJS, which is loaded eagerly for other tools, can't
-// reliably embed images).
-
-let exceljsLoading = null;
-function loadExcelJsLib() {
-  if (window.ExcelJS) return Promise.resolve();
-  if (exceljsLoading) return exceljsLoading;
-  exceljsLoading = new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error('Could not load Excel library. Check your internet connection.'));
-    document.head.appendChild(s);
-  });
-  return exceljsLoading;
-}
-
-function parseNumericLoose(v) {
-  // Strip $, spaces, commas, currency symbols; keep digits, dot, minus.
-  if (v == null || v === '') return null;
-  const n = parseFloat(String(v).replace(/[^0-9.\-]/g, ''));
-  return Number.isFinite(n) ? n : null;
-}
-
-async function exportXlsx() {
-  const codes = getActiveStyleCodes();
-  if (codes.length === 0) return;
-
-  const btn = $('xlsxBtn');
-  const originalLabel = btn ? btn.textContent : '';
-  if (btn) { btn.disabled = true; btn.textContent = 'Building\u2026'; }
-
-  try {
-    await loadExcelJsLib();
-    const wb = new ExcelJS.Workbook();
-    wb.creator = 'Sheet Builder';
-    wb.created = new Date();
-    const ws = wb.addWorksheet('Chart');
-
-    // Column widths copied from the template (cell A1 has the IMAGE header).
-    // FOB PRICE was added in v3.14 just before PRICE; mirrors PRICE's width.
-    ws.columns = [
-      { header: 'STYLE IMAGE',              key: 'image',     width: 19.0 },
-      { header: 'STYLE NUMBER',             key: 'styleNum',  width: 17.1 },
-      { header: 'STYLE NAME / DESCRIPTION', key: 'styleName', width: 38.1 },
-      { header: 'FABRIC CONTENT',           key: 'contents',  width: 24.7 },
-      { header: 'FABRIC DESCRIPTION',       key: 'fabric',    width: 38.1 },
-      { header: 'COLORS  NAMES',            key: 'colorName', width: 41.9 },
-      { header: 'COLOR CODE',               key: 'colorCode', width: 12.0 },
-      { header: 'FOB PRICE',                key: 'fobPrice',  width: 15.3 },
-      { header: 'SELLING PRICE',            key: 'price',     width: 15.3 },
-      { header: 'QTY',                      key: 'qty',       width: 28.6 },
-    ];
-
-    // Header row styling -- bold white on #1F2937 (dark slate), Aptos Narrow
-    const headerRow = ws.getRow(1);
-    headerRow.height = 30;
-    headerRow.eachCell({ includeEmpty: false }, cell => {
-      cell.font = { name: 'Aptos Narrow', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F2937' } };
-      cell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
-    });
-
-    // Freeze the header so the chart's column labels stay visible
-    ws.views = [{ state: 'frozen', ySplit: 1 }];
-
-    // Pre-load all image data URLs (parallel) so the row loop is just synchronous formatting
-    const pairs = [];
-    codes.forEach(sc => {
-      const st = getStyle(sc);
-      if (!st) return;
-      (state.selections[sc] || []).forEach(cc => {
-        if (getColor(st, cc)) pairs.push({ sc, cc });
-      });
-    });
-    const imgDataByKey = {};
-    const imgAspectByKey = {};
-    await Promise.all(pairs.map(async ({ sc, cc }) => {
-      const url = getImageUrl(sc, cc);
-      if (!url) return;
-      try {
-        const dataUrl = await urlToDataUrl(url);
-        imgDataByKey[sc + '_' + cc] = dataUrl;
-        imgAspectByKey[sc + '_' + cc] = await getImageAspect(dataUrl);
-      } catch {}
-    }));
-
-    // Build data rows -- one per (style, color) pair
-    let rowIdx = 2;
-    for (const sc of codes) {
-      const style = getStyle(sc);
-      if (!style) continue;
-      const colors = (state.selections[sc] || []).filter(cc => getColor(style, cc));
-      if (colors.length === 0) continue;
-
-      const styleNum    = getEffectiveStyleNumber(sc);
-      const styleName   = getEffectiveStyleName(sc);
-      const contents    = getEffectiveContents(sc);
-      const fabric      = getEffectiveFabric(sc);
-      const showInv     = getShowInventory(sc);
-      const stylePriceN = parseNumericLoose(getEffectiveStylePrice(sc));
-      const fobPriceN   = parseNumericLoose(getEffectiveFobPrice(sc));
-
-      for (const cc of colors) {
-        const color     = getColor(style, cc);
-        const colorName = getEffectiveColorName(sc, cc);
-        const dispCode  = (color && color.patternCode) || (color && color.code) || cc;
-        const colorPriceN = parseNumericLoose(getEffectivePrice(sc, cc));
-        const priceN    = colorPriceN != null ? colorPriceN : stylePriceN;
-        const qtyN      = showInv ? parseNumericLoose(getEffectiveQty(sc, cc)) : null;
-
-        const row = ws.getRow(rowIdx);
-        row.height = 80;
-        row.getCell(1).value = null;                       // image goes here
-        row.getCell(2).value = styleNum || sc;
-        row.getCell(3).value = styleName || '';
-        row.getCell(4).value = contents || '';
-        row.getCell(5).value = fabric || '';
-        row.getCell(6).value = colorName || '';
-        // Hide the synthetic "code = style" placeholder used when a color has
-        // no real per-color code; that string would just be noise in a chart.
-        row.getCell(7).value = (dispCode && dispCode !== sc) ? dispCode : '';
-        // Col 8 = FOB PRICE (style-level only -- no per-color override).
-        if (fobPriceN != null) {
-          row.getCell(8).value = fobPriceN;
-          row.getCell(8).numFmt = '"$"#,##0.00';
-        }
-        if (priceN != null) {
-          row.getCell(9).value = priceN;
-          row.getCell(9).numFmt = '"$"#,##0.00';
-        }
-        if (qtyN != null) row.getCell(10).value = qtyN;
-
-        // Match template: Aptos Narrow 11pt, centered, wrapped on every cell
-        for (let c = 1; c <= 10; c++) {
-          const cell = row.getCell(c);
-          if (!cell.font || !cell.font.name) cell.font = { name: 'Aptos Narrow', size: 11 };
-          cell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
-        }
-
-        // Embed image in column A. ExcelJS uses 0-indexed col/row in `tl`.
-        // tl: { col: 0.1, row: rowIdx - 1 + 0.05 } centers a small offset
-        // inside the cell. Sizing in pixels with the natural aspect preserved.
-        const dataUrl = imgDataByKey[sc + '_' + cc];
-        if (dataUrl) {
-          const m = dataUrl.match(/^data:image\/(\w+);base64,/);
-          if (m) {
-            let ext = m[1].toLowerCase();
-            if (ext === 'jpg') ext = 'jpeg';
-            const imageId = wb.addImage({ base64: dataUrl, extension: ext });
-            const aspect = imgAspectByKey[sc + '_' + cc] || 0.8;
-            // Row height 80pt = ~107px usable. Target ~98px so there's padding.
-            const cellPxH = 100;
-            const cellPxW = 135;  // column A ~19 chars wide
-            let imgH = cellPxH;
-            let imgW = cellPxH * aspect;
-            if (imgW > cellPxW) { imgW = cellPxW; imgH = cellPxW / aspect; }
-            // Center the image within the cell
-            const offsetCol = ((cellPxW - imgW) / 2) / cellPxW;
-            const offsetRow = ((cellPxH - imgH) / 2) / cellPxH;
-            ws.addImage(imageId, {
-              tl: { col: offsetCol, row: (rowIdx - 1) + offsetRow * 0.5 + 0.04 },
-              ext: { width: imgW, height: imgH },
-              editAs: 'oneCell',
-            });
-          }
-        }
-
-        rowIdx++;
-      }
-    }
-
-    // Total qty tally beneath column J. Use an Excel SUM formula rather than
-    // a precomputed value so the total stays live if the user later edits
-    // qty cells in the workbook.
-    if (rowIdx > 2) {
-      const totalRow = rowIdx;
-      const lastDataRow = rowIdx - 1;
-      const totalBorder = { top: { style: 'thin', color: { argb: 'FF000000' } } };
-      const totalLabel = ws.getCell(totalRow, 9);
-      totalLabel.value = 'TOTAL QTY';
-      totalLabel.font  = { name: 'Aptos Narrow', size: 11, bold: true };
-      totalLabel.alignment = { horizontal: 'right', vertical: 'center' };
-      totalLabel.border = totalBorder;
-      const totalSum = ws.getCell(totalRow, 10);
-      totalSum.value  = { formula: 'SUM(J2:J' + lastDataRow + ')' };
-      totalSum.font   = { name: 'Aptos Narrow', size: 11, bold: true };
-      totalSum.alignment = { horizontal: 'center', vertical: 'center' };
-      totalSum.numFmt = '#,##0';
-      totalSum.border = totalBorder;
-      ws.getRow(totalRow).height = 22;
-    }
-
-    const buffer = await wb.xlsx.writeBuffer();
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = buildExportFilename() + ' - chart.xlsx';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
-  } catch (err) {
-    alert('Excel export failed: ' + (err && err.message ? err.message : err));
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = originalLabel; }
-  }
-}
-
-// =========================================================
-// EXCEL GROUP EXPORT (cheat-sheet mode only)
-// =========================================================
-// Companion to the Chart export. Matches the user's
-// Export_to_Group_Excel_Template.xlsx layout: a 5-up grid of style cells
-// flowing down the page. Each cell shows the style image, "STYLE #: <num>",
-// and "PRICE: <price>" -- no fabric/color/qty info. One cell per cheat
-// tile (state.cheatOrder entry); cheat-page breaks and tiles-per-page
-// settings are ignored -- this export is a flat continuous grid.
-//
-// Layout (1-indexed rows/cols):
-//   Row 1, col B:  Title "<CUSTOMER> <SEASON>" (uppercased)
-//   Block stride: 5 columns wide, 15 rows tall
-//   Block (br, bc) occupies:
-//     image area: rows (2 + br*15) ... (2 + br*15 + 10)
-//     style # at row (2 + br*15 + 11), cols B+bc*5 (label) / B+bc*5+1 (value)
-//     price   at row (2 + br*15 + 12)
-//   Columns B..Z (25 cols total) at width 11; col A is a 2-char gutter.
-
-async function exportXlsxGroup() {
-  // Cheat-only export -- flatten state.cheatOrder, ignore page breaks.
-  syncCheatOrder();
-  const tiles = (state.cheatOrder || []).filter(it => {
-    const s = getStyle(it.sc);
-    return s && getColor(s, it.cc);
-  });
-  if (tiles.length === 0) return;
-
-  const btn = $('xlsxGroupBtn');
-  const originalLabel = btn ? btn.textContent : '';
-  if (btn) { btn.disabled = true; btn.textContent = 'Building\u2026'; }
-
-  try {
-    await loadExcelJsLib();
-    const wb = new ExcelJS.Workbook();
-    wb.creator = 'Sheet Builder';
-    wb.created = new Date();
-    const ws = wb.addWorksheet('Group');
-    ws.pageSetup.orientation = 'landscape';
-    ws.pageSetup.fitToHeight = 0;
-
-    const COLS_PER_ROW = 5;
-    const BLOCK_COL_WIDTH = 5;
-    const BLOCK_ROW_STRIDE = 15;
-    const IMAGE_ROW_SPAN = 11;
-
-    // Column widths -- A is a thin gutter, B..Z are uniform 11
-    const totalCols = COLS_PER_ROW * BLOCK_COL_WIDTH;  // 25
-    ws.getColumn(1).width = 2;
-    for (let c = 2; c <= totalCols + 1; c++) ws.getColumn(c).width = 11;
-
-    // Title at B1
-    const customer = (state.customerName || '').trim();
-    const season   = (state.season || '').trim();
-    const title    = [customer, season].filter(Boolean).join(' ').toUpperCase();
-    if (title) {
-      const titleCell = ws.getCell('B1');
-      titleCell.value = title;
-      titleCell.font = { name: 'Calibri', size: 11 };
-    }
-
-    // Pre-fetch images in parallel
-    const imgData = {};
-    const imgAsp  = {};
-    await Promise.all(tiles.map(async (it) => {
-      const url = getImageUrl(it.sc, it.cc);
-      if (!url) return;
-      try {
-        const dataUrl = await urlToDataUrl(url);
-        imgData[it.sc + '_' + it.cc] = dataUrl;
-        imgAsp[it.sc + '_' + it.cc]  = await getImageAspect(dataUrl);
-      } catch {}
-    }));
-
-    // Build each cell
-    tiles.forEach((it, idx) => {
-      const blockRow = Math.floor(idx / COLS_PER_ROW);  // 0,1,2,...
-      const blockCol = idx % COLS_PER_ROW;              // 0..4
-      const rowStart = 2 + blockRow * BLOCK_ROW_STRIDE;
-      const styleRow = rowStart + IMAGE_ROW_SPAN;       // 13, 28, 43, ...
-      const priceRow = styleRow + 1;                    // 14, 29, 44, ...
-      const colStart = 2 + blockCol * BLOCK_COL_WIDTH;  // 2,7,12,17,22 = B,G,L,Q,V
-
-      const sc = it.sc;
-      const cc = it.cc;
-      const styleNum  = getEffectiveStyleNumber(sc) || sc;
-      const stylePN   = parseNumericLoose(getEffectiveStylePrice(sc));
-      const colorPN   = parseNumericLoose(getEffectivePrice(sc, cc));
-      const priceN    = colorPN != null ? colorPN : stylePN;
-
-      // Style # row
-      const sLabel = ws.getCell(styleRow, colStart);
-      sLabel.value = 'STYLE #:';
-      sLabel.font  = { name: 'Calibri', size: 11 };
-      const sValue = ws.getCell(styleRow, colStart + 1);
-      sValue.value = styleNum;
-      sValue.font  = { name: 'Calibri', size: 11 };
-
-      // Price row
-      const pLabel = ws.getCell(priceRow, colStart);
-      pLabel.value = 'PRICE: ';
-      pLabel.font  = { name: 'Calibri', size: 11 };
-      if (priceN != null) {
-        const pValue = ws.getCell(priceRow, colStart + 1);
-        pValue.value  = priceN;
-        pValue.font   = { name: 'Calibri', size: 11 };
-        pValue.numFmt = '"$"#,##0.00;[Red]\\-"$"#,##0.00';
-        pValue.alignment = { horizontal: 'left' };
-      }
-
-      // Image
-      const dataUrl = imgData[sc + '_' + cc];
-      if (dataUrl) {
-        const m = dataUrl.match(/^data:image\/(\w+);base64,/);
-        if (m) {
-          let ext = m[1].toLowerCase();
-          if (ext === 'jpg') ext = 'jpeg';
-          const imageId = wb.addImage({ base64: dataUrl, extension: ext });
-          const aspect = imgAsp[sc + '_' + cc] || 0.8;
-          // Image envelope: ~4 cols × ~11 chars wide ≈ 300px, 11 rows × ~22pt
-          // ≈ 240px tall. Fit-to-envelope keeping aspect ratio.
-          const envW = 300;
-          const envH = 240;
-          let imgW = envH * aspect;
-          let imgH = envH;
-          if (imgW > envW) { imgW = envW; imgH = envW / aspect; }
-          // Center inside the block's image area, tl in 0-indexed col/row
-          const startCol0 = colStart - 1;   // -> 1,6,11,16,21
-          const startRow0 = rowStart - 1;   // -> 1, 16, 31, ...
-          // Block image area is 4 cols × 11 rows visually (last col reserved
-          // for breathing room before the next block).
-          ws.addImage(imageId, {
-            tl: { col: startCol0 + 0.1, row: startRow0 + 0.05 },
-            ext: { width: imgW, height: imgH },
-            editAs: 'oneCell',
-          });
-        }
-      }
-    });
-
-    // Uniform row heights across the populated blocks for predictable layout
-    const totalBlockRows = Math.ceil(tiles.length / COLS_PER_ROW);
-    for (let br = 0; br < totalBlockRows; br++) {
-      const rowStart = 2 + br * BLOCK_ROW_STRIDE;
-      for (let r = rowStart; r < rowStart + IMAGE_ROW_SPAN; r++) {
-        ws.getRow(r).height = 22;
-      }
-      ws.getRow(rowStart + IMAGE_ROW_SPAN).height = 18;
-      ws.getRow(rowStart + IMAGE_ROW_SPAN + 1).height = 18;
-    }
-
-    // Black box outline around each populated style block. Spans the image
-    // area + style# row + price row (13 rows tall, 4 cols wide -- the 5th
-    // column of each block is the gap before the next block).
-    const borderStyle = { style: 'thin', color: { argb: 'FF000000' } };
-    const applyBoxBorder = (rTop, rBot, cLeft, cRight) => {
-      for (let r = rTop; r <= rBot; r++) {
-        for (let c = cLeft; c <= cRight; c++) {
-          const cell = ws.getCell(r, c);
-          const b = cell.border ? { ...cell.border } : {};
-          if (r === rTop)   b.top    = borderStyle;
-          if (r === rBot)   b.bottom = borderStyle;
-          if (c === cLeft)  b.left   = borderStyle;
-          if (c === cRight) b.right  = borderStyle;
-          cell.border = b;
-        }
-      }
-    };
-    tiles.forEach((it, idx) => {
-      const blockRow = Math.floor(idx / COLS_PER_ROW);
-      const blockCol = idx % COLS_PER_ROW;
-      const rowStart = 2 + blockRow * BLOCK_ROW_STRIDE;
-      const priceRow = rowStart + IMAGE_ROW_SPAN + 1;
-      const colStart = 2 + blockCol * BLOCK_COL_WIDTH;
-      applyBoxBorder(rowStart, priceRow, colStart, colStart + 3);
-    });
-
-    const buffer = await wb.xlsx.writeBuffer();
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = buildExportFilename() + ' - group.xlsx';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
-  } catch (err) {
-    alert('Group export failed: ' + (err && err.message ? err.message : err));
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = originalLabel; }
-  }
 }
 
 async function exportPptx() {
@@ -3393,7 +2731,7 @@ async function exportPptx() {
           const dispCode   = c.patternCode || c.code;
           const colorName  = getEffectiveColorName(it.sc, it.cc);
           const showName   = colorName && colorName !== dispCode;
-          const stylePrice = getDisplayStylePrice(it.sc);
+          const stylePrice = getDisplayHeaderPrice(it.sc);
           const showInv    = getShowInventory(it.sc);
           const qty        = showInv ? getEffectiveQty(it.sc, it.cc) : '';
 
@@ -3533,7 +2871,7 @@ async function exportPptx() {
       const styleName = getEffectiveStyleName(sc);
       const fabric = getEffectiveFabric(sc);
       const contents = getEffectiveContents(sc);
-      const stylePrice = getDisplayStylePrice(sc);
+      const stylePrice = getDisplayHeaderPrice(sc);
 
       const slide = pptx.addSlide();
       slide.background = { color: 'FFFFFF' };
@@ -3558,10 +2896,11 @@ async function exportPptx() {
         valign: 'middle', align: 'left', charSpacing: 1,
       });
 
-      // Header right — price (italic serif) then brand logo/name
+      // Header right — price (italic serif) then brand logo/name.
+      // Widened slot accommodates the combined "Selling / MSRP" string.
       if (stylePrice) {
         slide.addText(stylePrice, {
-          x: SLIDE_W - 3.7, y: 0, w: 1.5, h: HEADER_H,
+          x: SLIDE_W - 4.2, y: 0, w: 2.0, h: HEADER_H,
           fontFace: 'Cambria', fontSize: 14, italic: true, color: 'E8E2D2',
           valign: 'middle', align: 'right',
         });
@@ -3597,8 +2936,8 @@ async function exportPptx() {
       // shot, 2-up is paired, etc. imgH is sized to the natural aspect of
       // this style's images so the tile fits the photos cleanly.
       const numCols = cols.length;
-      const tileWByCols = { 1: 5.5, 2: 4.2, 3: 3.2, 4: 2.5, 5: 2.05, 6: 1.7 };
-      const tileW = tileWByCols[numCols] || 1.7;
+      const tileWByCols = { 1: 5.5, 2: 4.2, 3: 3.2, 4: 2.5 };
+      const tileW = tileWByCols[numCols] || 2.5;
       const spacing = (SLIDE_W - numCols * tileW) / (numCols + 1);
       const bodyTop = HEADER_H;
       const bodyH = SLIDE_H - HEADER_H - FOOT_H;
@@ -3717,11 +3056,10 @@ function setMode(newMode) {
   if (hint) {
     hint.textContent = newMode === 'cheat'
       ? 'Drag to reorder \u00B7 max 8 tiles per page'
-      : 'Drag to reorder \u00B7 click Edit for Fabric Content & price';
+      : 'Drag to reorder \u00B7 click Edit for Fabric Content & pricing';
   }
   $('goPreview').textContent = newMode === 'cheat' ? 'Preview cheat sheet \u2192' : 'Preview sheet \u2192';
   renderSidebar();
-  refreshExportButtons();
   persistCurrentSheet();
 }
 
@@ -3736,7 +3074,6 @@ function showPreview() {
   $('appFooter').classList.add('hidden');
   $('modeTabsWrap').classList.add('hidden');
   $('previewShell').classList.add('on');
-  refreshExportButtons();
   renderPreview();
   window.scrollTo(0, 0);
 }
@@ -3795,16 +3132,6 @@ $('reset').addEventListener('click', () => {
 });
 $('printBtn').addEventListener('click', () => window.print());
 $('pptBtn').addEventListener('click', exportPptx);
-$('xlsxBtn').addEventListener('click', exportXlsx);
-$('xlsxGroupBtn').addEventListener('click', exportXlsxGroup);
-
-// Some export buttons are scoped to a single mode. The Group Excel export
-// only makes sense as a flat cheat-tile grid, so hide it in sales mode.
-function refreshExportButtons() {
-  document.querySelectorAll('.cheat-only-action').forEach(el => {
-    el.style.display = (state.mode === 'cheat') ? '' : 'none';
-  });
-}
 
 // Sheet library wiring
 $('sheetPick').addEventListener('click', openLibrary);
@@ -3815,7 +3142,6 @@ $('libraryOverlay').addEventListener('click', e => {
 });
 $('newSheetBtn').addEventListener('click', createNewSheet);
 $('exportLibBtn').addEventListener('click', exportLibraryFile);
-$('exportLibWithImgBtn').addEventListener('click', exportLibraryWithImagesFile);
 $('importLibFile').addEventListener('change', e => {
   if (e.target.files.length) {
     importLibraryFile(e.target.files[0]);
@@ -3879,12 +3205,11 @@ renderSidebar();
 const _hint = document.querySelector('.sheet-side-hint');
 if (_hint) _hint.textContent = state.mode === 'cheat'
   ? 'Drag to reorder \u00B7 max 8 tiles per page'
-  : 'Drag to reorder \u00B7 click Edit for Fabric Content & price';
+  : 'Drag to reorder \u00B7 click Edit for Fabric Content & pricing';
 $('goPreview').textContent = state.mode === 'cheat' ? 'Preview cheat sheet \u2192' : 'Preview sheet \u2192';
 refreshSourcesBtn();
 refreshSheetPick();
 refreshDraftStatus();
-refreshExportButtons();
 
 // On first load, if no sources are loaded, expand the sources panel and show what was loaded last time
 if (!Object.values(sourcesLoaded).some(Boolean)) {
