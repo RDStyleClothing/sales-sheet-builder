@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v3.19</title>
+<title>Sheet Builder · v4.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -259,8 +259,8 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .editor-price-input { padding-left: 22px !important; }
 .editor-price-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
 .editor-price-row .editor-row { margin-bottom: 0; }
-.editor-color { display: grid; grid-template-columns: 20px 26px 60px 1fr; gap: 6px; align-items: center; margin-bottom: 6px; }
-.editor-color.with-qty { grid-template-columns: 20px 26px 60px 1fr 60px; }
+.editor-color { display: grid; grid-template-columns: 20px 26px 72px 1fr; gap: 6px; align-items: center; margin-bottom: 6px; }
+.editor-color.with-qty { grid-template-columns: 20px 26px 72px 1fr 60px; }
 .editor-color.dragging { opacity: 0.4; }
 .editor-color.drag-over { box-shadow: 0 -2px 0 0 var(--ink); }
 .editor-color-grip { font-family: var(--mono); color: var(--quiet); font-size: 14px; line-height: 1; cursor: grab; user-select: none; text-align: center; padding: 4px 0; border-radius: 3px; transition: background 0.12s, color 0.12s; }
@@ -284,6 +284,22 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .editor-color-thumb { width: 26px; height: 26px; border-radius: 3px; box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.12); overflow: hidden; }
 .editor-color-thumb img { width: 100%; height: 100%; object-fit: contain; }
 .editor-color-code { font-family: var(--mono); font-size: 10px; color: var(--mute); }
+.editor-color-code-input { font-family: var(--mono); font-size: 10px; color: var(--ink); background: white; border: 0.5px solid var(--rule); border-radius: 3px; padding: 5px 6px; outline: none; min-width: 0; width: 100%; text-transform: uppercase; }
+.editor-color-code-input:focus { border-color: var(--ink); }
+.editor-color-code-input::placeholder { color: var(--quiet); text-transform: none; }
+/* v3.21: Size ratio block -- 8-slot grid + preset chips. Drives Worksheet export. */
+.editor-size-ratio { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin-bottom: 8px; }
+.editor-size-cell { display: flex; flex-direction: column; align-items: stretch; gap: 2px; min-width: 0; }
+.editor-size-label { font-family: var(--mono); font-size: 9px; color: var(--quiet); text-align: center; letter-spacing: 0.04em; }
+.editor-size-input { background: white; border: 0.5px solid var(--rule); border-radius: 3px; padding: 4px 2px; font-family: var(--mono); font-size: 11px; text-align: center; outline: none; min-width: 0; width: 100%; }
+.editor-size-input:focus { border-color: var(--ink); }
+.editor-size-input:placeholder-shown { color: var(--quiet); }
+.editor-size-presets { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+.editor-size-presets button { font-family: var(--mono); font-size: 10px; padding: 4px 8px; background: white; border: 0.5px solid var(--rule); border-radius: 12px; color: var(--mute); cursor: pointer; transition: all 0.12s; }
+.editor-size-presets button:hover { color: var(--ink); border-color: var(--ink); }
+.editor-size-presets button.clear { color: var(--mute); }
+.editor-size-presets button.clear:hover { color: #b00; border-color: #b00; }
+.editor-size-preview { font-family: var(--mono); font-size: 10px; color: var(--mute); margin-top: 4px; }
 .editor-color-name, .editor-color-price, .editor-color-qty { background: white; border: 0.5px solid var(--rule); border-radius: 3px; padding: 5px 8px; font-size: 11px; outline: none; min-width: 0; width: 100%; }
 .editor-color-name:focus, .editor-color-price:focus, .editor-color-qty:focus { border-color: var(--ink); }
 .editor-color-qty { font-family: var(--mono); text-align: right; }
@@ -431,7 +447,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v3.19</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v4.0</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -556,7 +572,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v3.19</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v4.0</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -597,6 +613,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
     <div class="preview-actions">
       <button class="btn" id="xlsxBtn">Export as Chart (Excel)</button>
       <button class="btn cheat-only-action" id="xlsxGroupBtn">Export as Group (Excel)</button>
+      <button class="btn" id="worksheetBtn">Export Worksheet (Excel)</button>
       <button class="btn" id="pptBtn">Export to PowerPoint</button>
       <button class="btn btn-primary" id="printBtn">Export to PDF</button>
     </div>
@@ -1436,6 +1453,16 @@ function getEffectiveColorName(sc, cc) {
   const s = getStyle(sc); const c = getColor(s, cc);
   return c ? c.name : cc;
 }
+// v3.20: per-color editable display code. Falls back to patternCode -> code
+// when the user hasn't set an override. Callers still check `dispCode !== sc`
+// to suppress the synthetic placeholder used when a color has no real code.
+function getEffectiveColorCode(sc, cc) {
+  const o = state.overrides[sc];
+  if (o && o.colors && o.colors[cc] && o.colors[cc].code != null) return o.colors[cc].code;
+  const s = getStyle(sc); const c = getColor(s, cc);
+  if (!c) return cc;
+  return c.patternCode || c.code;
+}
 function getEffectivePrice(sc, cc) {
   const o = state.overrides[sc];
   if (o && o.colors && o.colors[cc] && o.colors[cc].price != null) return o.colors[cc].price;
@@ -1544,6 +1571,84 @@ function setColorOverride(sc, cc, field, value) {
   if (!state.overrides[sc].colors[cc]) state.overrides[sc].colors[cc] = {};
   state.overrides[sc].colors[cc][field] = value;
   persistCurrentSheet();
+}
+
+// =========================================================
+// SIZE RATIO (v3.21)
+// =========================================================
+// Per-style 8-cell ratio across XXS, XS, S, M, L, XL, XXL, XXXL. Drives the
+// new Worksheet (Excel) export -- each color's QTY is split across sizes
+// using Largest Remainder Method so the parts always sum to the exact total.
+// Stored at state.overrides[sc].sizeRatio = [n,n,n,n,n,n,n,n].
+const SIZE_LABELS = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+const SIZE_PRESETS = {
+  's_xl':     { label: 'S\u2013XL 1-2-2-1',      arr: [0,0,1,2,2,1,0,0] },
+  's_xxl':    { label: 'S\u2013XXL 1-2-2-1-1',   arr: [0,0,1,2,2,1,1,0] },
+  'xs_xl':    { label: 'XS\u2013XL 1-2-3-2-1',   arr: [0,1,2,3,2,1,0,0] },
+  'xs_xxl':   { label: 'XS\u2013XXL 1-2-2-2-2-1',arr: [0,1,2,2,2,2,1,0] },
+  's_xxxl':   { label: 'S\u2013XXXL 1-2-2-2-1-1',arr: [0,0,1,2,2,2,1,1] },
+  'equal_smxl': { label: 'Equal S\u2013XL',      arr: [0,0,1,1,1,1,0,0] },
+  'equal_smxxl': { label: 'Equal S\u2013XXL',    arr: [0,0,1,1,1,1,1,0] },
+};
+function getEffectiveSizeRatio(sc) {
+  const o = state.overrides[sc];
+  if (o && Array.isArray(o.sizeRatio) && o.sizeRatio.length === 8) {
+    return o.sizeRatio.map(n => (Number.isFinite(+n) && +n > 0) ? Math.floor(+n) : 0);
+  }
+  return [0, 0, 0, 0, 0, 0, 0, 0];
+}
+function setSizeRatioCell(sc, idx, value) {
+  if (idx < 0 || idx > 7) return;
+  if (!state.overrides[sc]) state.overrides[sc] = { colors: {} };
+  const cur = getEffectiveSizeRatio(sc).slice();
+  const n = parseInt(value, 10);
+  cur[idx] = (Number.isFinite(n) && n > 0) ? n : 0;
+  state.overrides[sc].sizeRatio = cur;
+  persistCurrentSheet();
+}
+function setSizeRatioArr(sc, arr) {
+  if (!Array.isArray(arr) || arr.length !== 8) return;
+  if (!state.overrides[sc]) state.overrides[sc] = { colors: {} };
+  state.overrides[sc].sizeRatio = arr.map(n => (Number.isFinite(+n) && +n > 0) ? Math.floor(+n) : 0);
+  persistCurrentSheet();
+}
+// Render the ratio as a compact human-readable string, skipping empty slots,
+// like "1-2-2-1-1 (S-M-L-XL-XXL)". Returns '' if every slot is zero.
+function formatSizeRatio(arr) {
+  const parts = [];
+  const labels = [];
+  for (let i = 0; i < 8; i++) {
+    if (arr[i] > 0) { parts.push(String(arr[i])); labels.push(SIZE_LABELS[i]); }
+  }
+  if (!parts.length) return '';
+  return parts.join('-') + ' (' + labels.join('-') + ')';
+}
+// Largest Remainder Method: distribute `total` (integer) across the 8 size
+// slots in proportion to `ratio`. The returned array always sums to `total`
+// exactly when total >= 0 and at least one ratio > 0. Slots with ratio 0
+// always receive 0. Empty ratio -> all zeros.
+function distributeBySizeRatio(total, ratio) {
+  const out = [0, 0, 0, 0, 0, 0, 0, 0];
+  const t = Math.max(0, Math.floor(+total || 0));
+  if (t === 0) return out;
+  const sum = ratio.reduce((a, b) => a + (b > 0 ? b : 0), 0);
+  if (sum === 0) return out;
+  // Floor + remainder for each slot
+  const exact = ratio.map(r => (r > 0 ? (r * t) / sum : 0));
+  const floors = exact.map(Math.floor);
+  let assigned = floors.reduce((a, b) => a + b, 0);
+  let remainder = t - assigned;
+  // Distribute the leftover units to the slots with the largest fractional
+  // remainder (ties broken by larger ratio, then by lower index).
+  const order = exact
+    .map((v, i) => ({ i, frac: v - Math.floor(v), ratio: ratio[i] || 0 }))
+    .filter(x => x.ratio > 0)
+    .sort((a, b) => (b.frac - a.frac) || (b.ratio - a.ratio) || (a.i - b.i));
+  for (let k = 0; k < order.length && remainder > 0; k++) {
+    floors[order[k].i] += 1;
+    remainder -= 1;
+  }
+  return floors;
 }
 // Reorder a single color within state.selections[sc] so it shows in a chosen
 // position on the sales sheet. Both `fromCc` and `toCc` must already be in
@@ -2089,12 +2194,12 @@ function renderCatalog() {
           ? '<div class="swatch-dot" style="background:white;"><img src="' + url + '" alt=""></div>'
           : '<div class="swatch-dot" style="background:' + (col.hex || '#CCC') + '"></div>';
         const isSynthetic = col.code === s.code;
-        const dispCode = col.patternCode || col.code;
+        const dispCode = getEffectiveColorCode(s.code, col.code);
         const colName = getEffectiveColorName(s.code, col.code);
         const showColName = colName && colName !== dispCode;
         return '<div class="swatch ' + (sel.includes(col.code) ? 'on' : '') + '" data-style="' + escapeHtml(s.code) + '" data-color="' + escapeHtml(col.code) + '">' +
           dot +
-          (isSynthetic ? '' : '<div class="swatch-code">' + escapeHtml(dispCode) + '</div>') +
+          (isSynthetic || !dispCode ? '' : '<div class="swatch-code">' + escapeHtml(dispCode) + '</div>') +
           (showColName ? '<div class="swatch-name">' + escapeHtml(colName) + '</div>' : '') +
         '</div>';
       }).join('') + '</div>';
@@ -2328,6 +2433,33 @@ function renderStyleEditor(sc, colorFilter, opts) {
       '<input type="checkbox" data-toggle="showInventory" data-style="' + escapeHtml(sc) + '"' + (showInv ? ' checked' : '') + '>' +
       '<span>Show inventory quantities on sheet</span>' +
     '</label>' +
+    // v3.21: Size ratio block -- only relevant when inventory qty is being
+    // tracked, but always shown so users can set it up ahead of time. Drives
+    // the new Worksheet (Excel) export's per-color size breakdown.
+    (colorFilter ? '' :
+      (() => {
+        const ratio = getEffectiveSizeRatio(sc);
+        const preview = formatSizeRatio(ratio);
+        return '<div class="editor-row">' +
+          '<label class="editor-label">Size ratio <span class="editor-label-note">Worksheet export \u00B7 split each color\'s qty across sizes</span></label>' +
+          '<div class="editor-size-presets">' +
+            Object.keys(SIZE_PRESETS).map(k =>
+              '<button type="button" data-size-ratio-preset="' + escapeHtml(k) + '" data-style="' + escapeHtml(sc) + '">' + escapeHtml(SIZE_PRESETS[k].label) + '</button>'
+            ).join('') +
+            '<button type="button" class="clear" data-size-ratio-preset="__clear__" data-style="' + escapeHtml(sc) + '">Clear</button>' +
+          '</div>' +
+          '<div class="editor-size-ratio">' +
+            SIZE_LABELS.map((lab, i) =>
+              '<div class="editor-size-cell">' +
+                '<div class="editor-size-label">' + lab + '</div>' +
+                '<input class="editor-size-input" inputmode="numeric" placeholder="\u2013" data-size-ratio-idx="' + i + '" data-style="' + escapeHtml(sc) + '" value="' + (ratio[i] > 0 ? ratio[i] : '') + '">' +
+              '</div>'
+            ).join('') +
+          '</div>' +
+          (preview ? '<div class="editor-size-preview">Ratio: ' + escapeHtml(preview) + '</div>' : '') +
+        '</div>';
+      })()
+    ) +
     (opts.omitColorsList || cols.length === 0 ? '' :
       '<div class="editor-section-h">' + (colorFilter ? 'This color' : 'Colors') +
         ' \u00B7 ' + (showInv ? 'names & quantity' : 'names') +
@@ -2339,7 +2471,17 @@ function renderStyleEditor(sc, colorFilter, opts) {
           ? '<img src="' + url + '" alt="">'
           : '<div style="width:100%;height:100%;background:' + (c.hex || '#CCC') + '"></div>';
         const isSynthColor = c.code === sc;
-        const dispCode = c.patternCode || c.code;
+        // v3.20: read any per-color code override directly so we can
+        // distinguish "user set it to empty" from "no override yet".
+        // For synthetic colors with no override we leave the input blank
+        // (rather than seeding it with the style code, which would be
+        // confusing). For real colors we seed with patternCode || code.
+        const codeOverride = (state.overrides[sc] && state.overrides[sc].colors && state.overrides[sc].colors[c.code] && state.overrides[sc].colors[c.code].code != null)
+          ? state.overrides[sc].colors[c.code].code
+          : null;
+        const codeInputValue = codeOverride != null
+          ? codeOverride
+          : (isSynthColor ? '' : (c.patternCode || c.code));
         const qtyCell = showInv
           ? '<input class="editor-color-qty" type="text" inputmode="numeric" placeholder="Qty" data-color-field="qty" data-style="' + escapeHtml(sc) + '" data-color="' + escapeHtml(c.code) + '" value="' + escapeHtml(getEffectiveQty(sc, c.code)) + '">'
           : '';
@@ -2358,7 +2500,7 @@ function renderStyleEditor(sc, colorFilter, opts) {
         return '<div class="editor-color' + (showInv ? ' with-qty' : '') + '"' + rowAttrs + '>' +
           grip +
           '<div class="editor-color-thumb">' + thumb + '</div>' +
-          '<div class="editor-color-code">' + (isSynthColor ? '' : escapeHtml(dispCode)) + '</div>' +
+          '<input class="editor-color-code-input" placeholder="Code" data-color-field="code" data-style="' + escapeHtml(sc) + '" data-color="' + escapeHtml(c.code) + '" value="' + escapeHtml(codeInputValue) + '">' +
           '<input class="editor-color-name" placeholder="Color name" data-color-field="name" data-style="' + escapeHtml(sc) + '" data-color="' + escapeHtml(c.code) + '" value="' + escapeHtml(getEffectiveColorName(sc, c.code)) + '">' +
           qtyCell +
         '</div>';
@@ -2425,6 +2567,43 @@ function wireEditorListeners(scope) {
       const valueEl = root.querySelector('[data-scale-value="' + cssEscape(sc) + '"]');
       if (valueEl) valueEl.textContent = '100%';
       el.classList.add('hidden');
+    });
+  });
+  // v3.21: Size ratio inputs -- 8 cells per style, used by the Worksheet export.
+  // Each cell is an independent integer; preset chips bulk-fill, Clear wipes.
+  root.querySelectorAll('[data-size-ratio-idx]').forEach(el => {
+    el.addEventListener('input', () => {
+      const sc = el.dataset.style;
+      const idx = parseInt(el.dataset.sizeRatioIdx, 10);
+      setSizeRatioCell(sc, idx, el.value);
+      // Update the live ratio preview without a full re-render
+      const previewEl = el.closest('.editor-row') && el.closest('.editor-row').querySelector('.editor-size-preview');
+      const ratio = getEffectiveSizeRatio(sc);
+      const formatted = formatSizeRatio(ratio);
+      if (previewEl) {
+        if (formatted) previewEl.textContent = 'Ratio: ' + formatted;
+        else previewEl.remove();
+      } else if (formatted) {
+        const row = el.closest('.editor-row');
+        if (row) {
+          const div = document.createElement('div');
+          div.className = 'editor-size-preview';
+          div.textContent = 'Ratio: ' + formatted;
+          row.appendChild(div);
+        }
+      }
+    });
+  });
+  root.querySelectorAll('[data-size-ratio-preset]').forEach(el => {
+    el.addEventListener('click', () => {
+      const sc = el.dataset.style;
+      const key = el.dataset.sizeRatioPreset;
+      if (key === '__clear__') {
+        setSizeRatioArr(sc, [0,0,0,0,0,0,0,0]);
+      } else if (SIZE_PRESETS[key]) {
+        setSizeRatioArr(sc, SIZE_PRESETS[key].arr);
+      } else return;
+      renderSidebar();
     });
   });
   wireColorDrag(root);
@@ -2577,7 +2756,7 @@ function renderCheatSidebar() {
     const styleNum = getEffectiveStyleNumber(it.sc);
     const chipLabel = getChipLabel(it.sc);
     const styleName = getEffectiveStyleName(it.sc);
-    const dispCode = c.patternCode || c.code;
+    const dispCode = getEffectiveColorCode(it.sc, it.cc);
     const colorName = getEffectiveColorName(it.sc, it.cc);
     const showName = colorName && colorName !== dispCode;
     const hasBreak = state.cheatBreaks.has(key);
@@ -2594,7 +2773,7 @@ function renderCheatSidebar() {
         '<div class="cheat-chip-info">' +
           '<div class="cheat-chip-codes">' +
             '<span class="cheat-chip-style' + (!styleNum ? ' cheat-chip-style-placeholder' : '') + '">' + escapeHtml(chipLabel) + '</span>' +
-            (dispCode !== it.sc ? '<span class="cheat-chip-color">' + escapeHtml(dispCode) + '</span>' : '') +
+            (dispCode && dispCode !== it.sc ? '<span class="cheat-chip-color">' + escapeHtml(dispCode) + '</span>' : '') +
           '</div>' +
           (() => {
             const meta = [styleName, showName ? colorName : ''].filter(Boolean).join(' \u00B7 ');
@@ -2798,9 +2977,10 @@ function renderSalesSidebar() {
         '<div class="page-chip-colors">' +
           cols.map(c => {
             const url = getImageUrl(sc, c.code);
-            const tip = c.patternCode
-              ? (getEffectiveColorName(sc, c.code) || c.code) + ' \u00B7 ' + c.patternCode
-              : c.code;
+            const effCode = getEffectiveColorCode(sc, c.code);
+            const showCode = effCode && effCode !== sc;
+            const colName = getEffectiveColorName(sc, c.code) || c.code;
+            const tip = showCode ? (colName + ' \u00B7 ' + effCode) : colName;
             return url
               ? '<div class="color-swatch-mini" title="' + escapeHtml(tip) + '"><img src="' + url + '" alt=""></div>'
               : '<div class="color-swatch-mini" style="background:' + (c.hex || '#CCC') + '" title="' + escapeHtml(tip) + '"></div>';
@@ -3035,7 +3215,7 @@ function renderSalesPreview() {
       '</div>' +
       '<div class="sheet-grid" data-cols="' + cols.length + '">' +
         cols.map(c => {
-          const dispCode = c.patternCode || c.code;
+          const dispCode = getEffectiveColorCode(sc, c.code);
           const colorName = getEffectiveColorName(sc, c.code);
           const showName = colorName && colorName !== dispCode;
           const showInv = getShowInventory(sc);
@@ -3046,7 +3226,7 @@ function renderSalesPreview() {
           const tileStyle = ' style="--img-scale: ' + getEffectiveImageScale(sc) + '"';
           return '<div class="sheet-tile"' + tileStyle + '>' +
             '<div class="sheet-shirt">' + garmentVisual(sc, c.code, s, c) + '</div>' +
-            (dispCode !== sc ? '<div class="sheet-tile-code">' + escapeHtml(dispCode) + '</div>' : '') +
+            (dispCode && dispCode !== sc ? '<div class="sheet-tile-code">' + escapeHtml(dispCode) + '</div>' : '') +
             (showName ? '<div class="sheet-tile-name">' + escapeHtml(colorName) + '</div>' : '') +
             (qty !== '' ? '<div class="sheet-tile-qty">Qty <strong>' + escapeHtml(qty) + '</strong></div>' : '') +
           '</div>';
@@ -3112,7 +3292,7 @@ function renderCheatPreview() {
       const styleName  = getEffectiveStyleName(it.sc);
       const contents   = getEffectiveContents(it.sc);
       const fabric     = getEffectiveFabric(it.sc);
-      const dispCode   = c.patternCode || c.code;
+      const dispCode   = getEffectiveColorCode(it.sc, it.cc);
       const colorName  = getEffectiveColorName(it.sc, it.cc);
       const showName   = colorName && colorName !== dispCode;
       const stylePrice = getDisplayHeaderPrice(it.sc);
@@ -3122,7 +3302,7 @@ function renderCheatPreview() {
       // Combine color code and color name onto a single tight line when both
       // are present (e.g. "H34 \u00B7 BLUE"). Falls back to whichever exists.
       let colorLine = '';
-      const hasCode = dispCode !== it.sc;  // suppress synthetic-style placeholder code
+      const hasCode = dispCode && dispCode !== it.sc;  // suppress synthetic-style placeholder code
       if (hasCode && showName) colorLine = dispCode + ' \u00B7 ' + colorName;
       else if (hasCode)        colorLine = dispCode;
       else if (showName)       colorLine = colorName;
@@ -3328,7 +3508,7 @@ async function exportXlsx() {
       for (const cc of colors) {
         const color     = getColor(style, cc);
         const colorName = getEffectiveColorName(sc, cc);
-        const dispCode  = (color && color.patternCode) || (color && color.code) || cc;
+        const dispCode  = getEffectiveColorCode(sc, cc) || cc;
         const colorPriceN = parseNumericLoose(getEffectivePrice(sc, cc));
         const priceN    = colorPriceN != null ? colorPriceN : stylePriceN;
         const qtyN      = showInv ? parseNumericLoose(getEffectiveQty(sc, cc)) : null;
@@ -3648,6 +3828,399 @@ async function exportXlsxGroup() {
   }
 }
 
+// =========================================================
+// WORKSHEET EXPORT (v3.21)
+// =========================================================
+// Replicates R.D. International's "BUY WORKSHEET" template (one sheet per
+// style). Header / form fields / color & size breakdown / approvals /
+// labels / notes -- exact layout from the sample. Fields Sheet Builder
+// owns are filled in; everything else is left blank for the user to fill
+// in by hand once the file is open. Per-color quantities are split across
+// 8 size columns (XXS..XXXL) using the per-style Size Ratio override and
+// the Largest Remainder Method so each row's parts sum to its total.
+
+// Format a Date as "8-Jun-2026" to match the sample's TEXT(...,"d-mmm-yyyy") output.
+function formatWorksheetDate(d) {
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return d.getDate() + '-' + months[d.getMonth()] + '-' + d.getFullYear();
+}
+
+// One sheet per style: pours every available datum into the cells that
+// match the template's coordinates. `today` is a pre-formatted string so
+// every sheet in the workbook reads the same export date.
+function buildWorksheetSheet(ws, sc, today) {
+  const s = getStyle(sc);
+  if (!s) return;
+
+  // Column widths -- v3.22: widened D/E/G/H so labels like "TOP SAMPLE REQ'D:"
+  // and values like customer name / garment desc fit on one line. Original
+  // sample left D/F/H/J at default (~8.43) because its values were
+  // formula-driven and short; ours are real data, so the form cells need
+  // breathing room.
+  const widths = [18.7, 18.0, 10.4, 18.0, 18.0, 10.0, 18.0, 18.0, 14.0, 14.0, 16.3];
+  widths.forEach((w, i) => { ws.getColumn(i + 1).width = w; });
+
+  // Styling constants reused throughout the form
+  const THIN = { style: 'thin', color: { argb: 'FF000000' } };
+  const borderAll = { left: THIN, right: THIN, top: THIN, bottom: THIN };
+  const borderBottom = { bottom: THIN };
+  const fontTitle = { name: 'Calibri', size: 20, bold: true, color: { argb: 'FFFFFFFF' } };
+  const fontSection = { name: 'Calibri', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
+  const fontLabel = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+  const fontValue = { name: 'Calibri', size: 11, bold: false, color: { argb: 'FF000000' } };
+  const fillTitle = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4E2C' } };
+  const fillSection = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2E7D4E' } };
+  const fillYellow = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
+  // v3.22: title and section-header cells legitimately need wrap (they're
+  // merged across the full row and centered). Everything else stays
+  // single-line so long text overflows rightward into empty neighbors
+  // rather than wrapping inside a narrow cell and clipping vertically.
+  const alignTitle = { horizontal: 'center', vertical: 'center', wrapText: true };
+  const alignSection = { horizontal: 'left', vertical: 'center', indent: 1 };
+  const alignLeft = { horizontal: 'left', vertical: 'center' };
+  const alignCenter = { horizontal: 'center', vertical: 'center' };
+  const alignRight = { horizontal: 'right', vertical: 'center' };
+
+  // Helper: write a label cell (bold, left aligned, no wrap)
+  function setLabel(addr, text) {
+    const c = ws.getCell(addr);
+    c.value = text; c.font = fontLabel; c.alignment = alignLeft;
+  }
+  // Helper: write a value cell (plain text, bottom border to look like a fillable line)
+  function setValue(addr, text) {
+    const c = ws.getCell(addr);
+    c.value = text == null ? '' : text;
+    c.font = fontValue; c.alignment = alignLeft; c.border = borderBottom;
+  }
+
+  // -------- Row 1: title banner --------
+  ws.mergeCells('A1:K1');
+  const titleCell = ws.getCell('A1');
+  titleCell.value = 'R.D. INTERNATIONAL ORDER WORKSHEET';
+  titleCell.font = fontTitle;
+  titleCell.fill = fillTitle;
+  titleCell.alignment = alignTitle;
+  ws.getRow(1).height = 39.95;
+
+  // -------- Row 2: SPECIAL / NO OVERAGES --------
+  ws.mergeCells('A2:H2');
+  const specCell = ws.getCell('A2');
+  specCell.value = 'SPECIAL (TAG on to Stock order)';
+  specCell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFF0000' } };
+  specCell.alignment = alignLeft;
+  ws.mergeCells('I2:K2');
+  const noOver = ws.getCell('I2');
+  noOver.value = 'NO OVERAGES';
+  noOver.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
+  noOver.fill = fillYellow;
+  noOver.alignment = alignCenter;
+  ws.getRow(2).height = 21.95;
+
+  // -------- Rows 3..15: form fields (label + value, value gets bottom border) --------
+  // Defaults we can fill in from Sheet Builder state:
+  const styleNum   = getEffectiveStyleNumber(sc) || sc;
+  const styleName  = getEffectiveStyleName(sc);
+  const contents   = getEffectiveContents(sc);
+  const fabricDesc = getEffectiveFabric(sc);
+  const sellingPN  = parseNumericLoose(getEffectiveSellingPrice(sc));
+  const msrpPN     = parseNumericLoose(getEffectiveStylePrice(sc));
+  const fobPN      = parseNumericLoose(getEffectiveFobPrice(sc));
+  const customer   = state.customerName || '';
+  const season     = state.season || '';
+  const commodity  = s.cat || '';
+
+  setLabel('A3', 'DATE:');         setValue('B3', today);
+  setLabel('D3', 'MAKER:');        setValue('E3', '');
+  setLabel('G3', 'COORDINATOR:');  setValue('H3', '');
+  setLabel('I3', 'SEASON:');       setValue('J3', season ? season.toUpperCase() : '');
+
+  setLabel('D4', 'SALES REP:');    setValue('E4', '');
+
+  setLabel('A5', 'STYLE:');        setValue('B5', styleNum);
+  setLabel('D5', 'PO:');           setValue('E5', '');
+  setLabel('G5', 'DELIVERY DATE:'); setValue('H5', '');
+
+  setLabel('A6', 'REF:');          setValue('B6', '');
+  setLabel('D6', 'CUSTOMER:');     setValue('E6', customer);
+  setLabel('G6', 'IN WHS / LOC:'); setValue('H6', '');
+
+  setLabel('A7', 'GARMENT DESC:'); setValue('B7', styleName);
+  setLabel('G7', 'START SHIP:');   setValue('H7', '');
+
+  setLabel('A8', 'COMMODITY:');    setValue('B8', commodity);
+  setLabel('G8', 'CUST USA DC/CXL:'); setValue('H8', '');
+
+  setLabel('A9', 'STYLING CHANGES:'); setValue('B9', '');
+  setLabel('G9', 'TOP/PHOTO CXL:'); setValue('H9', '');
+
+  setLabel('G10', 'FOB PRICE:');   setValue('H10', fobPN != null ? fobPN : '');
+  if (fobPN != null) { ws.getCell('H10').numFmt = '"$"#,##0.00'; }
+
+  setLabel('A11', 'CA SELLING $:'); setValue('B11', sellingPN != null ? sellingPN : '');
+  if (sellingPN != null) { ws.getCell('B11').numFmt = '"$"#,##0.00'; }
+  setLabel('D11', 'US SELLING $:'); setValue('E11', msrpPN != null ? msrpPN : '');
+  if (msrpPN != null) { ws.getCell('E11').numFmt = '"$"#,##0.00'; }
+
+  setLabel('A13', 'FABRIC TYPE:'); setValue('B13', '');
+  setLabel('D13', 'CONTENT:');     setValue('E13', contents);
+  setLabel('G13', 'WEIGHT:');      setValue('H13', '');
+  setLabel('I13', 'GAUGE:');       setValue('J13', '');
+
+  setLabel('A14', 'FABRIC REF:');  setValue('B14', '');
+  setLabel('D14', 'TRIM APPROVAL:'); setValue('E14', '');
+  setLabel('G14', 'ACCESSORY TRIM:'); setValue('H14', '');
+
+  // Size ratio row -- formatted as "1-2-2-1-1 (S-M-L-XL-XXL)" or blank.
+  const ratio = getEffectiveSizeRatio(sc);
+  const ratioText = formatSizeRatio(ratio);
+  setLabel('A15', 'SIZE RATIO:'); setValue('B15', ratioText);
+  setLabel('D15', 'ASSORTMENT:'); setValue('E15', '');
+  setLabel('G15', 'SAMPLE SIZE:'); setValue('H15', '');
+
+  // Set heights for the form rows (rows 3-15)
+  for (let r = 3; r <= 15; r++) { ws.getRow(r).height = 21.95; }
+
+  // Add wrap to all value cells written above for fabric desc which can be long
+  // (fabric desc isn't on this template, but contents can be -- already handled).
+
+  // -------- Row 17: COLOR & SIZE BREAKDOWN section header --------
+  ws.mergeCells('A17:K17');
+  const sec1 = ws.getCell('A17');
+  sec1.value = 'COLOR & SIZE BREAKDOWN';
+  sec1.font = fontSection; sec1.fill = fillSection;
+  sec1.alignment = { horizontal: 'left', vertical: 'center', indent: 1 };
+  ws.getRow(17).height = 22;
+
+  // -------- Row 18: column headers (yellow, bordered) --------
+  const headerRow = 18;
+  const headers = ['CODE / COLOR', 'XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'QTY'];
+  for (let i = 0; i < headers.length; i++) {
+    const c = ws.getCell(headerRow, i + 1);
+    c.value = headers[i];
+    c.font = fontLabel;
+    c.fill = fillYellow;
+    c.alignment = alignCenter;
+    c.border = borderAll;
+  }
+  ws.getRow(headerRow).height = 20.1;
+
+  // -------- Color rows: one per selected color, 8 rows reserved (19..26) --------
+  // The template reserves 8 color rows; we always render 8 to keep totals at
+  // row 27. Empty rows still get borders so the form is grid-complete.
+  const COLOR_ROWS = 8;
+  const colors = (state.selections[sc] || [])
+    .map(cc => getColor(s, cc))
+    .filter(Boolean);
+
+  // Track per-size grand totals (for the TOTAL row)
+  const sizeTotals = [0, 0, 0, 0, 0, 0, 0, 0];
+  let qtyGrand = 0;
+
+  for (let i = 0; i < COLOR_ROWS; i++) {
+    const r = 19 + i;
+    ws.getRow(r).height = 20.1;
+    const c = colors[i];
+    if (c) {
+      const codeStr = getEffectiveColorCode(sc, c.code);
+      const nameStr = getEffectiveColorName(sc, c.code);
+      // "CODE - COLOR NAME" if both, else whichever exists. Skip the synth
+      // placeholder where the "code" is just the style code repeated.
+      const showCode = codeStr && codeStr !== sc;
+      const label = showCode && nameStr
+        ? (codeStr + ' - ' + nameStr.toUpperCase())
+        : (showCode ? codeStr : (nameStr ? nameStr.toUpperCase() : ''));
+      const qtyN = parseNumericLoose(getEffectiveQty(sc, c.code));
+      const total = qtyN != null ? Math.max(0, Math.floor(qtyN)) : 0;
+      const dist = distributeBySizeRatio(total, ratio);
+      // Col A: label, Cols B..I: sizes, Col J: total
+      const labelCell = ws.getCell(r, 1);
+      labelCell.value = label;
+      labelCell.font = fontValue;
+      labelCell.alignment = alignLeft;
+      labelCell.border = borderAll;
+      for (let k = 0; k < 8; k++) {
+        const sizeCell = ws.getCell(r, k + 2);
+        sizeCell.value = dist[k] > 0 ? dist[k] : '';
+        sizeCell.font = fontValue;
+        sizeCell.alignment = alignCenter;
+        sizeCell.border = borderAll;
+        sizeCell.numFmt = '#,##0';
+        sizeTotals[k] += dist[k];
+      }
+      const qtyCell = ws.getCell(r, 10);
+      qtyCell.value = total > 0 ? total : '';
+      qtyCell.font = { name: 'Calibri', size: 11, bold: true };
+      qtyCell.alignment = alignCenter;
+      qtyCell.border = borderAll;
+      qtyCell.numFmt = '#,##0';
+      qtyGrand += total;
+    } else {
+      // Empty row -- still bordered so the grid looks complete
+      for (let col = 1; col <= 10; col++) {
+        const cc = ws.getCell(r, col);
+        cc.border = borderAll;
+        cc.alignment = col === 1 ? alignLeft : alignCenter;
+      }
+    }
+  }
+
+  // -------- Row 27: TOTAL row (yellow QTY + sums) --------
+  const totalRow = 27;
+  ws.getRow(totalRow).height = 20.1;
+  const totalLabel = ws.getCell(totalRow, 1);
+  totalLabel.value = 'TOTAL:';
+  totalLabel.font = fontLabel;
+  totalLabel.alignment = alignRight;
+  totalLabel.border = borderAll;
+  for (let k = 0; k < 8; k++) {
+    const cc = ws.getCell(totalRow, k + 2);
+    cc.value = sizeTotals[k] > 0 ? sizeTotals[k] : '';
+    cc.font = { name: 'Calibri', size: 11, bold: true };
+    cc.alignment = alignCenter;
+    cc.border = borderAll;
+    cc.fill = fillYellow;
+    cc.numFmt = '#,##0';
+  }
+  const totalQtyCell = ws.getCell(totalRow, 10);
+  totalQtyCell.value = qtyGrand > 0 ? qtyGrand : '';
+  totalQtyCell.font = { name: 'Calibri', size: 11, bold: true };
+  totalQtyCell.alignment = alignCenter;
+  totalQtyCell.border = borderAll;
+  totalQtyCell.fill = fillYellow;
+  totalQtyCell.numFmt = '#,##0';
+
+  // -------- Row 29: APPROVALS section header --------
+  ws.mergeCells('A29:K29');
+  const sec2 = ws.getCell('A29');
+  sec2.value = 'APPROVALS';
+  sec2.font = fontSection; sec2.fill = fillSection;
+  sec2.alignment = { horizontal: 'left', vertical: 'center', indent: 1 };
+  ws.getRow(29).height = 22;
+
+  setLabel('A30', 'LAB DIP APPROVAL:'); setValue('B30', '');
+  setLabel('D30', 'STOCK FIT/FGS:');    setValue('E30', '');
+  setLabel('G30', 'CUST. FIT/FGS:');    setValue('H30', '');
+
+  setLabel('A31', 'MUST SUBMIT FIT:');  setValue('B31', '');
+  setLabel('D31', "TOP SAMPLE REQ'D:"); setValue('E31', '');
+  setLabel('G31', "PHOTO REQ'D:");      setValue('H31', '');
+
+  for (let r = 30; r <= 31; r++) { ws.getRow(r).height = 21.95; }
+
+  // -------- Row 33: LABELS section header --------
+  ws.mergeCells('A33:K33');
+  const sec3 = ws.getCell('A33');
+  sec3.value = 'LABELS, TICKETS & HANG TAGS';
+  sec3.font = fontSection; sec3.fill = fillSection;
+  sec3.alignment = { horizontal: 'left', vertical: 'center', indent: 1 };
+  ws.getRow(33).height = 22;
+
+  // Row 34: header strip (ITEM | OWNER | DETAIL/# repeated twice)
+  const labelHdrFont = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+  function setLabelHdr(addr, txt) {
+    const c = ws.getCell(addr);
+    c.value = txt; c.font = labelHdrFont; c.fill = fillSection; c.alignment = alignCenter;
+  }
+  setLabelHdr('A34', 'ITEM');
+  setLabelHdr('B34', 'OWNER');
+  setLabelHdr('D34', 'DETAIL / #');
+  setLabelHdr('F34', 'ITEM');
+  setLabelHdr('G34', 'OWNER');
+  setLabelHdr('I34', 'DETAIL / #');
+  ws.getRow(34).height = 21.95;
+
+  setLabel('A35', 'MAIN LABEL');       setValue('B35', ''); setValue('D35', '');
+  setLabel('F35', 'CA #');             setValue('G35', ''); setValue('I35', '');
+  setLabel('A36', 'HANG TAG');         setValue('B36', ''); setValue('D36', '');
+  setLabel('F36', 'RN #');             setValue('G36', ''); setValue('I36', '');
+  setLabel('A37', 'SPECIAL HANG TAG'); setValue('B37', ''); setValue('D37', '');
+  setLabel('F37', 'TICKETS');          setValue('G37', ''); setValue('I37', '');
+  for (let r = 35; r <= 37; r++) { ws.getRow(r).height = 21.95; }
+
+  // -------- Row 39: NOTES section header --------
+  ws.mergeCells('A39:K39');
+  const sec4 = ws.getCell('A39');
+  sec4.value = 'NOTES / SPECIAL INSTRUCTIONS';
+  sec4.font = fontSection; sec4.fill = fillSection;
+  sec4.alignment = { horizontal: 'left', vertical: 'center', indent: 1 };
+  ws.getRow(39).height = 22;
+
+  // -------- Rows 40-44: merged notes area (blank, bordered) --------
+  ws.mergeCells('A40:K44');
+  const notesCell = ws.getCell('A40');
+  notesCell.value = '';
+  notesCell.font = fontValue;
+  notesCell.alignment = { horizontal: 'left', vertical: 'top', wrapText: true };
+  notesCell.border = borderAll;
+  for (let r = 40; r <= 44; r++) { ws.getRow(r).height = 21.95; }
+
+  // Print setup: portrait, fit to one page wide so the form prints cleanly
+  ws.pageSetup = ws.pageSetup || {};
+  ws.pageSetup.orientation = 'portrait';
+  ws.pageSetup.fitToPage = true;
+  ws.pageSetup.fitToWidth = 1;
+  ws.pageSetup.fitToHeight = 1;
+  ws.pageSetup.margins = { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 };
+}
+
+// Excel-safe sheet-name sanitizer: ExcelJS rejects names containing
+// : \ / ? * [ ] and trims to 31 chars; also disallows blank/duplicate.
+function sanitizeSheetName(name, used) {
+  let n = String(name || 'Sheet').replace(/[:\\\/\?\*\[\]]/g, '-').trim();
+  if (!n) n = 'Sheet';
+  if (n.length > 31) n = n.slice(0, 31);
+  // Disambiguate duplicates with a numeric suffix
+  let base = n; let i = 2;
+  while (used.has(n.toLowerCase())) {
+    const suffix = ' (' + i + ')';
+    n = base.slice(0, 31 - suffix.length) + suffix;
+    i += 1;
+  }
+  used.add(n.toLowerCase());
+  return n;
+}
+
+async function exportWorksheet() {
+  const codes = getActiveStyleCodes();
+  if (codes.length === 0) return;
+
+  const btn = $('worksheetBtn');
+  const originalLabel = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Building\u2026'; }
+
+  try {
+    await loadExcelJsLib();
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'Sheet Builder';
+    wb.created = new Date();
+
+    const today = formatWorksheetDate(new Date());
+    const usedNames = new Set();
+
+    codes.forEach(sc => {
+      const s = getStyle(sc);
+      if (!s) return;
+      const tabName = sanitizeSheetName(getEffectiveStyleNumber(sc) || sc, usedNames);
+      const ws = wb.addWorksheet(tabName);
+      buildWorksheetSheet(ws, sc, today);
+    });
+
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = buildExportFilename() + ' - worksheet.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+  } catch (err) {
+    alert('Worksheet export failed: ' + (err && err.message ? err.message : err));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = originalLabel; }
+  }
+}
+
 async function exportPptx() {
   const codes = getActiveStyleCodes();
   if (codes.length === 0) return;
@@ -3766,14 +4339,14 @@ async function exportPptx() {
           const styleName  = getEffectiveStyleName(it.sc);
           const contents   = getEffectiveContents(it.sc);
           const fabric     = getEffectiveFabric(it.sc);
-          const dispCode   = c.patternCode || c.code;
+          const dispCode   = getEffectiveColorCode(it.sc, it.cc);
           const colorName  = getEffectiveColorName(it.sc, it.cc);
           const showName   = colorName && colorName !== dispCode;
           const stylePrice = getDisplayHeaderPrice(it.sc);
           const showInv    = getShowInventory(it.sc);
           const qty        = showInv ? getEffectiveQty(it.sc, it.cc) : '';
 
-          const hasCode = dispCode !== it.sc;
+          const hasCode = dispCode && dispCode !== it.sc;
           let colorLine = '';
           if (hasCode && showName) colorLine = dispCode + '  \u00B7  ' + (colorName || '').toUpperCase();
           else if (hasCode)        colorLine = dispCode;
@@ -3995,7 +4568,7 @@ async function exportPptx() {
       cols.forEach((c, idx) => {
         const x = spacing + idx * (tileW + spacing);
         const data = imgData[sc + '_' + c.code];
-        const dispCode = c.patternCode || c.code;
+        const dispCode = getEffectiveColorCode(sc, c.code);
         const colorName = getEffectiveColorName(sc, c.code);
         const showName = colorName && colorName !== dispCode;
 
@@ -4033,7 +4606,7 @@ async function exportPptx() {
         }
 
         let labelY = labelStartY;
-        if (dispCode !== sc) {
+        if (dispCode && dispCode !== sc) {
           slide.addText(dispCode, {
             x: x, y: labelY, w: tileW, h: labelH,
             fontFace: 'Consolas', fontSize: 9, color: '555555',
@@ -4203,6 +4776,7 @@ $('printBtn').addEventListener('click', () => window.print());
 $('pptBtn').addEventListener('click', exportPptx);
 $('xlsxBtn').addEventListener('click', exportXlsx);
 $('xlsxGroupBtn').addEventListener('click', exportXlsxGroup);
+$('worksheetBtn').addEventListener('click', exportWorksheet);
 
 // Sheet-wide image scale (preview toolbar). Live-updates the rendered tiles
 // as the user drags by pushing the value onto a CSS variable on the
