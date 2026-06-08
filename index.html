@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v4.0</title>
+<title>Sheet Builder · v4.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -447,7 +447,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v4.0</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v4.1</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -572,7 +572,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v4.0</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v4.1</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -4047,24 +4047,41 @@ function buildWorksheetSheet(ws, sc, today) {
         sizeCell.numFmt = '#,##0';
         sizeTotals[k] += dist[k];
       }
+      // v4.1: per-color QTY is now a live SUM formula across the size cells
+      // (B..I). If the user edits any size value in Excel, this total updates
+      // automatically. IF(SUM=0,"",...) keeps the cell visually blank for
+      // empty rows. Number format ensures the result still renders as 1,204.
       const qtyCell = ws.getCell(r, 10);
-      qtyCell.value = total > 0 ? total : '';
+      qtyCell.value = { formula: 'IF(SUM(B' + r + ':I' + r + ')=0,"",SUM(B' + r + ':I' + r + '))' };
       qtyCell.font = { name: 'Calibri', size: 11, bold: true };
       qtyCell.alignment = alignCenter;
       qtyCell.border = borderAll;
       qtyCell.numFmt = '#,##0';
       qtyGrand += total;
     } else {
-      // Empty row -- still bordered so the grid looks complete
+      // Empty row -- still bordered so the grid looks complete. v4.1: also
+      // seed the QTY formula here so if the user types size values into a
+      // blank row later, the row total comes alive automatically.
       for (let col = 1; col <= 10; col++) {
         const cc = ws.getCell(r, col);
         cc.border = borderAll;
         cc.alignment = col === 1 ? alignLeft : alignCenter;
+        if (col >= 2 && col <= 9) { cc.numFmt = '#,##0'; }
       }
+      const qtyCell = ws.getCell(r, 10);
+      qtyCell.value = { formula: 'IF(SUM(B' + r + ':I' + r + ')=0,"",SUM(B' + r + ':I' + r + '))' };
+      qtyCell.font = { name: 'Calibri', size: 11, bold: true };
+      qtyCell.alignment = alignCenter;
+      qtyCell.border = borderAll;
+      qtyCell.numFmt = '#,##0';
     }
   }
 
   // -------- Row 27: TOTAL row (yellow QTY + sums) --------
+  // v4.1: every cell on this row is now a live SUM formula across the 8 color
+  // rows above (19..26). Editing any size or QTY value in Excel cascades up
+  // through these totals automatically. IF(SUM=0,"",...) hides zero in empty
+  // columns so the form still looks clean before data is filled in.
   const totalRow = 27;
   ws.getRow(totalRow).height = 20.1;
   const totalLabel = ws.getCell(totalRow, 1);
@@ -4072,9 +4089,11 @@ function buildWorksheetSheet(ws, sc, today) {
   totalLabel.font = fontLabel;
   totalLabel.alignment = alignRight;
   totalLabel.border = borderAll;
+  const SIZE_COL_LETTERS = ['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
   for (let k = 0; k < 8; k++) {
     const cc = ws.getCell(totalRow, k + 2);
-    cc.value = sizeTotals[k] > 0 ? sizeTotals[k] : '';
+    const col = SIZE_COL_LETTERS[k];
+    cc.value = { formula: 'IF(SUM(' + col + '19:' + col + '26)=0,"",SUM(' + col + '19:' + col + '26))' };
     cc.font = { name: 'Calibri', size: 11, bold: true };
     cc.alignment = alignCenter;
     cc.border = borderAll;
@@ -4082,7 +4101,7 @@ function buildWorksheetSheet(ws, sc, today) {
     cc.numFmt = '#,##0';
   }
   const totalQtyCell = ws.getCell(totalRow, 10);
-  totalQtyCell.value = qtyGrand > 0 ? qtyGrand : '';
+  totalQtyCell.value = { formula: 'IF(SUM(J19:J26)=0,"",SUM(J19:J26))' };
   totalQtyCell.font = { name: 'Calibri', size: 11, bold: true };
   totalQtyCell.alignment = alignCenter;
   totalQtyCell.border = borderAll;
