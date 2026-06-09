@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v4.8</title>
+<title>Sheet Builder · v4.9</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -134,6 +134,11 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .chip { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; background: transparent; border: 0.5px solid var(--rule); border-radius: 999px; padding: 7px 13px; cursor: pointer; color: var(--mute); transition: all 0.15s; }
 .chip:hover { border-color: var(--rule-strong); color: var(--ink); }
 .chip.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+/* v4.9: inline count badge for the Selected chip. Tighter letter-spacing so
+   the number reads as a unit rather than spaced caps, and a subtle pill
+   background that inverts cleanly when the chip itself goes .on. */
+.chip-count { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 999px; background: var(--rule); color: var(--ink); font-size: 9px; letter-spacing: 0.04em; font-weight: 600; vertical-align: 1px; }
+.chip.on .chip-count { background: var(--paper); color: var(--ink); }
 
 .mode-tabs-wrap { border-bottom: 0.5px solid var(--rule); padding: 14px 24px 16px; display: flex; justify-content: center; }
 .mode-tabs-wrap.hidden { display: none; }
@@ -501,7 +506,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v4.8</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v4.9</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -629,7 +634,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v4.8</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v4.9</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -722,7 +727,7 @@ const SEED_BRANDS = [
   { id: 'rdmen',   name: 'RD Men',   display: 'RD MEN',   cls: '', logoUrl: LOGO_RDMEN,   seed: true },
 ];
 
-const CATEGORIES = ['All', 'Top', 'Bottom', 'Outerwear', 'Accessory'];
+const CATEGORIES = ['All', 'Top', 'Bottom', 'Outerwear', 'Accessory', 'Selected'];
 
 let STYLES = SEED_STYLES.map(s => ({ ...s, colors: s.colors.map(c => ({ ...c })) }));
 let BRANDS = SEED_BRANDS.map(b => ({ ...b }));
@@ -2402,8 +2407,19 @@ function renderHeaderPickers() {
 }
 
 function renderChips() {
-  $('chips').innerHTML = CATEGORIES.map(cat =>
-    '<button class="chip ' + (cat === state.category ? 'on' : '') + '" data-cat="' + cat + '">' + cat + '</button>').join('');
+  // v4.9: the "Selected" pseudo-category gets a live count badge after its
+  // label (e.g. "Selected 6"). When zero styles are picked, the badge is
+  // suppressed so the chip just reads "Selected" -- clicking it still works
+  // and shows the empty state.
+  const selectedCount = getActiveStyleCodes().length;
+  $('chips').innerHTML = CATEGORIES.map(cat => {
+    const isOn = cat === state.category;
+    let label = cat;
+    if (cat === 'Selected' && selectedCount > 0) {
+      label = cat + ' <span class="chip-count">' + selectedCount + '</span>';
+    }
+    return '<button class="chip ' + (isOn ? 'on' : '') + '" data-cat="' + cat + '">' + label + '</button>';
+  }).join('');
   $('chips').querySelectorAll('.chip').forEach(el => {
     el.addEventListener('click', () => { state.category = el.dataset.cat; renderChips(); renderCatalog(); });
   });
@@ -2411,7 +2427,16 @@ function renderChips() {
 
 function filteredStyles() {
   let s = STYLES.slice();
-  if (state.category !== 'All') s = s.filter(x => x.cat === state.category);
+  // v4.9: "Selected" is a pseudo-category that filters by current selections
+  // rather than by s.cat. Uses getActiveStyleCodes so stale entries in
+  // state.selections (deleted styles) are excluded the same way they are
+  // everywhere else in the app.
+  if (state.category === 'Selected') {
+    const active = new Set(getActiveStyleCodes());
+    s = s.filter(x => active.has(x.code));
+  } else if (state.category !== 'All') {
+    s = s.filter(x => x.cat === state.category);
+  }
   if (state.search.trim()) {
     const q = state.search.trim().toLowerCase();
     s = s.filter(x =>
@@ -2423,6 +2448,11 @@ function filteredStyles() {
 }
 
 function renderCatalog() {
+  // v4.9: re-sync the chip strip so the "Selected" count stays current as
+  // the user picks/unpicks colors. The chip strip is tiny so the rebind is
+  // negligible, and centralising it here means every existing callsite that
+  // already triggers renderCatalog() now refreshes the count for free.
+  renderChips();
   const styles = filteredStyles();
   const c = $('catalog');
   if (styles.length === 0) {
