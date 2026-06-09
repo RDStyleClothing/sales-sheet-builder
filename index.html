@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v4.4</title>
+<title>Sheet Builder · v4.8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -285,6 +285,12 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .editor-price-input { padding-left: 22px !important; }
 .editor-price-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
 .editor-price-row .editor-row { margin-bottom: 0; }
+/* v4.5: checkbox inline with a label, used by CA Selling / USA Selling rows to
+   let users toggle whether each price appears on the sheet. The checkbox is
+   small (12px), uppercased letter-spacing kept consistent with .editor-label. */
+.editor-label-toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.editor-label-toggle input[type="checkbox"] { width: 12px; height: 12px; accent-color: var(--ink); cursor: pointer; margin: 0; }
+.editor-label-toggle:hover { color: var(--accent); }
 .editor-color { display: grid; grid-template-columns: 20px 26px 72px 1fr; gap: 6px; align-items: center; margin-bottom: 6px; }
 .editor-color.with-qty { grid-template-columns: 20px 26px 72px 1fr 60px; }
 .editor-color.dragging { opacity: 0.4; }
@@ -323,13 +329,35 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .editor-size-presets { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
 .editor-size-presets button { font-family: var(--mono); font-size: 10px; padding: 4px 8px; background: white; border: 0.5px solid var(--rule); border-radius: 12px; color: var(--mute); cursor: pointer; transition: all 0.12s; }
 .editor-size-presets button:hover { color: var(--ink); border-color: var(--ink); }
+/* v4.7: active state for the currently-applied preset chip -- inverted fill so
+   it reads as the source of the visible ratio numbers below. */
+.editor-size-presets button.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.editor-size-presets button.on:hover { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+/* v4.7: Open Sizing chip -- italic + slightly muted so it visually opts out
+   of the "numbered prepack" group while still being clickable. The .on state
+   inherits the inverted fill above. */
+.editor-size-presets button.open { font-style: italic; color: var(--ink); border-style: dashed; }
+.editor-size-presets button.open:hover { border-color: var(--ink); }
 .editor-size-presets button.clear { color: var(--mute); }
 .editor-size-presets button.clear:hover { color: #b00; border-color: #b00; }
+/* v4.7: when the style is in Open Sizing mode, the 8-cell ratio grid is
+   visually dimmed + non-interactive so it's clear the cells aren't driving
+   anything. */
+.editor-size-ratio.disabled { opacity: 0.45; pointer-events: none; }
 .editor-size-preview { font-family: var(--mono); font-size: 10px; color: var(--mute); margin-top: 4px; }
 .editor-color-name, .editor-color-price, .editor-color-qty { background: white; border: 0.5px solid var(--rule); border-radius: 3px; padding: 5px 8px; font-size: 11px; outline: none; min-width: 0; width: 100%; }
 .editor-color-name:focus, .editor-color-price:focus, .editor-color-qty:focus { border-color: var(--ink); }
 .editor-color-qty { font-family: var(--mono); text-align: right; }
 .editor-color-price { font-family: var(--mono); }
+/* v4.6: qty wrapper holds the input + a tiny hint that appears underneath when
+   the entered qty doesn't divide evenly into the prepack ratio (e.g. 1200 in a
+   1-2-2-1-1 prepack -- needs 1204 to land clean). Stacked column so the hint
+   sits directly below its input. */
+.editor-color-qty-wrap { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.editor-color-qty.qty-invalid { border-color: #c4322a; background: #fdf2f0; color: #c4322a; }
+.editor-color-qty.qty-invalid:focus { border-color: #c4322a; }
+.editor-color-qty-hint { font-family: var(--mono); font-size: 9px; color: #c4322a; line-height: 1.25; text-align: right; letter-spacing: 0; }
+.editor-color-qty-hint strong { font-weight: 600; }
 
 .actions { display: flex; flex-direction: column; gap: 10px; }
 .btn { font-family: var(--sans); font-size: 13px; font-weight: 500; border: 0.5px solid var(--rule); background: white; color: var(--ink); padding: 12px 16px; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
@@ -473,7 +501,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 <header class="masthead" id="masthead">
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v4.4</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v4.8</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -601,7 +629,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v4.4</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v4.8</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -1534,13 +1562,36 @@ function getEffectiveFobPrice(sc) {
   if (o && o.fobPrice != null) return o.fobPrice;
   return '';
 }
-// Selling Price -- a second, independent price field added in v3.15.
-// Stored separately on the override so legacy sheets (which only have
-// `price` / MSRP) keep working. Output to sheet headers as "Selling / MSRP".
-function getEffectiveSellingPrice(sc) {
+// v4.5: Selling price split into CA Selling + USA Selling, replacing the
+// single "sellingPrice" field added in v3.15. Legacy sheets that still hold a
+// "sellingPrice" value are transparently surfaced as the CA price (since the
+// SOP worksheet export was already mapping the old sellingPrice to "CA
+// SELLING $") -- this keeps existing drafts working without an explicit
+// migration step. The legacy key is preserved on the override; only the new
+// keys are written going forward.
+function getEffectiveCASellingPrice(sc) {
   const o = state.overrides[sc];
-  if (o && o.sellingPrice != null) return o.sellingPrice;
+  if (o && o.caSellingPrice != null) return o.caSellingPrice;
+  if (o && o.sellingPrice != null) return o.sellingPrice; // legacy fallback
   return '';
+}
+function getEffectiveUSASellingPrice(sc) {
+  const o = state.overrides[sc];
+  if (o && o.usaSellingPrice != null) return o.usaSellingPrice;
+  return '';
+}
+// Per-style toggles controlling whether each selling price is rendered on the
+// sheet header / cheat tile. Default true so legacy data keeps showing up;
+// only explicit false hides a populated price.
+function getShowCASelling(sc) {
+  const o = state.overrides[sc];
+  if (o && o.showCASelling === false) return false;
+  return true;
+}
+function getShowUSASelling(sc) {
+  const o = state.overrides[sc];
+  if (o && o.showUSASelling === false) return false;
+  return true;
 }
 function getDisplayStylePrice(sc) {
   const raw = (getEffectiveStylePrice(sc) || '').trim();
@@ -1548,19 +1599,39 @@ function getDisplayStylePrice(sc) {
   // If user already included $, leave as is. Otherwise prefix it.
   return raw.startsWith('$') ? raw : '$' + raw;
 }
-function getDisplaySellingPrice(sc) {
-  const raw = (getEffectiveSellingPrice(sc) || '').trim();
+function getDisplayCASellingPrice(sc) {
+  const raw = (getEffectiveCASellingPrice(sc) || '').trim();
+  if (!raw) return '';
+  return raw.startsWith('$') ? raw : '$' + raw;
+}
+function getDisplayUSASellingPrice(sc) {
+  const raw = (getEffectiveUSASellingPrice(sc) || '').trim();
   if (!raw) return '';
   return raw.startsWith('$') ? raw : '$' + raw;
 }
 // Combined header price used on sales-sheet headers, cheat tiles, and PPT
-// exports: shows "Selling / MSRP" when both are filled, or just whichever
-// single one is filled. Returns '' when neither is set so the slot collapses.
+// exports. v4.5: prefixes the selling prices with "CA" / "USA" when both are
+// shown so the slash-delimited list stays unambiguous; when only one selling
+// price is visible (because the other is hidden or empty), the prefix is
+// dropped so single-price sheets read like the pre-v4.5 layout. MSRP stays
+// unlabeled at the end -- its presence is independent of the show toggles.
 function getDisplayHeaderPrice(sc) {
-  const selling = getDisplaySellingPrice(sc);
+  const caRaw  = getDisplayCASellingPrice(sc);
+  const usaRaw = getDisplayUSASellingPrice(sc);
+  const showCA  = getShowCASelling(sc)  && !!caRaw;
+  const showUSA = getShowUSASelling(sc) && !!usaRaw;
   const msrp = getDisplayStylePrice(sc);
-  if (selling && msrp) return selling + ' / ' + msrp;
-  return selling || msrp;
+  const parts = [];
+  if (showCA && showUSA) {
+    parts.push('CA ' + caRaw);
+    parts.push('USA ' + usaRaw);
+  } else if (showCA) {
+    parts.push(caRaw);
+  } else if (showUSA) {
+    parts.push(usaRaw);
+  }
+  if (msrp) parts.push(msrp);
+  return parts.join(' / ');
 }
 function getShowInventory(sc) {
   const o = state.overrides[sc];
@@ -1638,6 +1709,7 @@ const SIZE_LABELS = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 const SIZE_PRESETS = {
   's_xl':     { label: 'S\u2013XL 1-2-2-1',      arr: [0,0,1,2,2,1,0,0] },
   's_xxl':    { label: 'S\u2013XXL 1-2-2-1-1',   arr: [0,0,1,2,2,1,1,0] },
+  'xs_l':     { label: 'XS\u2013L 1-2-2-1',      arr: [0,1,2,2,1,0,0,0] },
   'xs_xl':    { label: 'XS\u2013XL 1-2-3-2-1',   arr: [0,1,2,3,2,1,0,0] },
   'xs_xxl':   { label: 'XS\u2013XXL 1-2-2-2-2-1',arr: [0,1,2,2,2,2,1,0] },
   's_xxxl':   { label: 'S\u2013XXXL 1-2-2-2-1-1',arr: [0,0,1,2,2,2,1,1] },
@@ -1665,6 +1737,41 @@ function setSizeRatioArr(sc, arr) {
   if (!state.overrides[sc]) state.overrides[sc] = { colors: {} };
   state.overrides[sc].sizeRatio = arr.map(n => (Number.isFinite(+n) && +n > 0) ? Math.floor(+n) : 0);
   persistCurrentSheet();
+}
+// v4.7: Open Sizing -- a per-style mode that explicitly opts out of any
+// prepack ratio. When set, the worksheet export writes each color's qty as a
+// direct value in the QTY column (rather than summing across blank size
+// cells), and the qty validation never flags because there's no ratio to
+// enforce. Distinct from "no ratio yet" because that older state silently
+// dropped the qty from the worksheet -- now there's a deliberate switch.
+function getEffectiveOpenSizing(sc) {
+  const o = state.overrides[sc];
+  return !!(o && o.openSizing);
+}
+function setOpenSizing(sc, on) {
+  if (!state.overrides[sc]) state.overrides[sc] = { colors: {} };
+  if (on) {
+    state.overrides[sc].openSizing = true;
+    // Clear any ratio at the same time -- the two modes are mutually
+    // exclusive, and leaving stale ratio numbers around would be confusing.
+    state.overrides[sc].sizeRatio = [0, 0, 0, 0, 0, 0, 0, 0];
+  } else {
+    delete state.overrides[sc].openSizing;
+  }
+  persistCurrentSheet();
+}
+// v4.7: Returns the SIZE_PRESETS key whose arr matches the current ratio
+// (used to highlight the active chip), '__open__' when in open-sizing mode,
+// or null when the ratio is custom / empty.
+function activeSizePresetKey(sc) {
+  if (getEffectiveOpenSizing(sc)) return '__open__';
+  const ratio = getEffectiveSizeRatio(sc);
+  if (ratio.every(n => n === 0)) return null;
+  for (const k of Object.keys(SIZE_PRESETS)) {
+    const arr = SIZE_PRESETS[k].arr;
+    if (arr.every((n, i) => n === ratio[i])) return k;
+  }
+  return null;
 }
 // Render the ratio as a compact human-readable string, skipping empty slots,
 // like "1-2-2-1-1 (S-M-L-XL-XXL)". Returns '' if every slot is zero.
@@ -1703,6 +1810,37 @@ function distributeBySizeRatio(total, ratio) {
     remainder -= 1;
   }
   return floors;
+}
+// v4.6: Validate a per-color qty against the style's prepack ratio.
+// A qty divides cleanly into a prepack only when it's an exact multiple of
+// the ratio sum (e.g. ratio 1-2-2-1-1 sums to 7, so 1204 is clean / 1200 is
+// off by 4). Returns the off-by amount plus the nearest valid totals so the
+// UI can flag the input red and tell the user what to change it to.
+// `valid: true` is also returned when the ratio is empty (no prepack to
+// satisfy) or when the qty itself is blank/zero (nothing to check yet).
+function getQtyValidation(sc, cc) {
+  // v4.7: Open Sizing explicitly opts out of prepack validation -- any qty is
+  // valid because the worksheet writes it through verbatim.
+  if (getEffectiveOpenSizing(sc)) {
+    const raw = (getEffectiveQty(sc, cc) || '').toString().trim();
+    const qtyN = raw ? parseNumericLoose(raw) : 0;
+    return { valid: true, ratioSum: 0, qty: qtyN || 0, openSizing: true };
+  }
+  const ratio = getEffectiveSizeRatio(sc);
+  const ratioSum = ratio.reduce((a, b) => a + (b > 0 ? b : 0), 0);
+  const raw = (getEffectiveQty(sc, cc) || '').toString().trim();
+  if (!raw) return { valid: true, ratioSum, qty: 0, empty: true };
+  const qtyN = parseNumericLoose(raw);
+  if (qtyN == null || qtyN === 0) return { valid: true, ratioSum, qty: 0, empty: true };
+  if (ratioSum === 0) return { valid: true, ratioSum, qty: qtyN, noRatio: true };
+  const qty = Math.floor(qtyN);
+  const remainder = qty % ratioSum;
+  if (remainder === 0) return { valid: true, ratioSum, qty };
+  const down = qty - remainder;          // largest clean total <= qty
+  const up   = down + ratioSum;          // smallest clean total > qty
+  // off-by from whichever clean total is closer (used as the "off by N" hint)
+  const offBy = Math.min(remainder, ratioSum - remainder);
+  return { valid: false, ratioSum, qty, remainder, down, up, offBy };
 }
 // Reorder a single color within state.selections[sc] so it shows in a chosen
 // position on the sales sheet. Both `fromCc` and `toCc` must already be in
@@ -2461,7 +2599,10 @@ function renderStyleEditor(sc, colorFilter, opts) {
   const fabric = getEffectiveFabric(sc);
   const contents = getEffectiveContents(sc);
   const stylePrice = getEffectiveStylePrice(sc);
-  const sellingPrice = getEffectiveSellingPrice(sc);
+  const caSellingPrice  = getEffectiveCASellingPrice(sc);
+  const usaSellingPrice = getEffectiveUSASellingPrice(sc);
+  const showCASelling   = getShowCASelling(sc);
+  const showUSASelling  = getShowUSASelling(sc);
   const fobPrice = getEffectiveFobPrice(sc);
   const imgScale = getEffectiveImageScale(sc);
   const showInv = getShowInventory(sc);
@@ -2497,22 +2638,43 @@ function renderStyleEditor(sc, colorFilter, opts) {
       '<label class="editor-label">Fabric description</label>' +
       '<textarea class="editor-textarea" data-field="fabric" data-style="' + escapeHtml(sc) + '">' + escapeHtml(fabric) + '</textarea>' +
     '</div>' +
-    // Selling Price + MSRP rendered side by side so users can see both at
-    // once -- they're shown together as "Selling / MSRP" on the sheet header.
+    // v4.5: CA Selling + USA Selling rendered side by side, each with a
+    // checkbox in its label that toggles whether that price appears on the
+    // sales-sheet header. MSRP gets its own row below since it has different
+    // rules (always shown when filled, no toggle). Underlying override keys:
+    // `caSellingPrice`, `usaSellingPrice`, `showCASelling`, `showUSASelling`,
+    // `price` (MSRP, unchanged).
     '<div class="editor-price-row">' +
       '<div class="editor-row">' +
-        '<label class="editor-label">Selling Price</label>' +
+        '<label class="editor-label">' +
+          '<span class="editor-label-toggle">' +
+            '<input type="checkbox" data-show-toggle="showCASelling" data-style="' + escapeHtml(sc) + '"' + (showCASelling ? ' checked' : '') + '>' +
+            '<span>CA Selling</span>' +
+          '</span>' +
+        '</label>' +
         '<div class="editor-price-wrap">' +
           '<span class="editor-price-prefix">$</span>' +
-          '<input class="editor-input mono editor-price-input" data-field="sellingPrice" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(sellingPrice) + '" placeholder="38.00" inputmode="decimal">' +
+          '<input class="editor-input mono editor-price-input" data-field="caSellingPrice" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(caSellingPrice) + '" placeholder="38.00" inputmode="decimal">' +
         '</div>' +
       '</div>' +
       '<div class="editor-row">' +
-        '<label class="editor-label">MSRP</label>' +
+        '<label class="editor-label">' +
+          '<span class="editor-label-toggle">' +
+            '<input type="checkbox" data-show-toggle="showUSASelling" data-style="' + escapeHtml(sc) + '"' + (showUSASelling ? ' checked' : '') + '>' +
+            '<span>USA Selling</span>' +
+          '</span>' +
+        '</label>' +
         '<div class="editor-price-wrap">' +
           '<span class="editor-price-prefix">$</span>' +
-          '<input class="editor-input mono editor-price-input" data-field="price" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(stylePrice) + '" placeholder="42.00" inputmode="decimal">' +
+          '<input class="editor-input mono editor-price-input" data-field="usaSellingPrice" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(usaSellingPrice) + '" placeholder="42.00" inputmode="decimal">' +
         '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="editor-row">' +
+      '<label class="editor-label">MSRP</label>' +
+      '<div class="editor-price-wrap">' +
+        '<span class="editor-price-prefix">$</span>' +
+        '<input class="editor-input mono editor-price-input" data-field="price" data-style="' + escapeHtml(sc) + '" value="' + escapeHtml(stylePrice) + '" placeholder="48.00" inputmode="decimal">' +
       '</div>' +
     '</div>' +
     '<div class="editor-row">' +
@@ -2555,23 +2717,32 @@ function renderStyleEditor(sc, colorFilter, opts) {
       (() => {
         const ratio = getEffectiveSizeRatio(sc);
         const preview = formatSizeRatio(ratio);
+        const openOn = getEffectiveOpenSizing(sc);
+        const activeKey = activeSizePresetKey(sc);
         return '<div class="editor-row">' +
           '<label class="editor-label">Size ratio <span class="editor-label-note">Worksheet export \u00B7 split each color\'s qty across sizes</span></label>' +
           '<div class="editor-size-presets">' +
+            // v4.7: Open Sizing chip first -- it's the "no prepack" mode.
+            // Styled with the .open class so it reads as distinct from the
+            // numbered prepack presets. Active state mirrors the others.
+            '<button type="button" class="open' + (activeKey === '__open__' ? ' on' : '') + '" data-size-ratio-preset="__open__" data-style="' + escapeHtml(sc) + '">Open Sizing</button>' +
             Object.keys(SIZE_PRESETS).map(k =>
-              '<button type="button" data-size-ratio-preset="' + escapeHtml(k) + '" data-style="' + escapeHtml(sc) + '">' + escapeHtml(SIZE_PRESETS[k].label) + '</button>'
+              '<button type="button" class="' + (activeKey === k ? 'on' : '') + '" data-size-ratio-preset="' + escapeHtml(k) + '" data-style="' + escapeHtml(sc) + '">' + escapeHtml(SIZE_PRESETS[k].label) + '</button>'
             ).join('') +
             '<button type="button" class="clear" data-size-ratio-preset="__clear__" data-style="' + escapeHtml(sc) + '">Clear</button>' +
           '</div>' +
-          '<div class="editor-size-ratio">' +
+          '<div class="editor-size-ratio' + (openOn ? ' disabled' : '') + '">' +
             SIZE_LABELS.map((lab, i) =>
               '<div class="editor-size-cell">' +
                 '<div class="editor-size-label">' + lab + '</div>' +
-                '<input class="editor-size-input" inputmode="numeric" placeholder="\u2013" data-size-ratio-idx="' + i + '" data-style="' + escapeHtml(sc) + '" value="' + (ratio[i] > 0 ? ratio[i] : '') + '">' +
+                '<input class="editor-size-input" inputmode="numeric" placeholder="\u2013" data-size-ratio-idx="' + i + '" data-style="' + escapeHtml(sc) + '" value="' + (ratio[i] > 0 ? ratio[i] : '') + '"' + (openOn ? ' disabled' : '') + '>' +
               '</div>'
             ).join('') +
           '</div>' +
-          (preview ? '<div class="editor-size-preview">Ratio: ' + escapeHtml(preview) + '</div>' : '') +
+          (openOn
+            ? '<div class="editor-size-preview">Open Sizing &middot; qty rolls straight into the total (no per-size split, no flags)</div>'
+            : (preview ? '<div class="editor-size-preview">Ratio: ' + escapeHtml(preview) + '</div>' : '')
+          ) +
         '</div>';
       })()
     ) +
@@ -2597,9 +2768,25 @@ function renderStyleEditor(sc, colorFilter, opts) {
         const codeInputValue = codeOverride != null
           ? codeOverride
           : (isSynthColor ? '' : (c.patternCode || c.code));
-        const qtyCell = showInv
-          ? '<input class="editor-color-qty" type="text" inputmode="numeric" placeholder="Qty" data-color-field="qty" data-style="' + escapeHtml(sc) + '" data-color="' + escapeHtml(c.code) + '" value="' + escapeHtml(getEffectiveQty(sc, c.code)) + '">'
-          : '';
+        // v4.6: Qty cell is wrapped so a validation hint can sit below the
+        // input when the entered total doesn't divide cleanly into the
+        // current prepack ratio. The hint is only emitted on the initial
+        // render when invalid; the input listener adds/removes it live as
+        // the user edits.
+        let qtyCell = '';
+        if (showInv) {
+          const v = getQtyValidation(sc, c.code);
+          const invalidCls = v.valid ? '' : ' qty-invalid';
+          const tip = v.valid ? '' : ('Off by ' + v.offBy + ' \u00B7 try ' + v.down + ' or ' + v.up + ' (prepack sum ' + v.ratioSum + ')');
+          const tipAttr = tip ? ' title="' + escapeHtml(tip) + '"' : '';
+          const hintHtml = v.valid ? '' :
+            '<div class="editor-color-qty-hint">Off by <strong>' + v.offBy + '</strong> &middot; try ' + v.down + ' or ' + v.up + '</div>';
+          qtyCell =
+            '<div class="editor-color-qty-wrap">' +
+              '<input class="editor-color-qty' + invalidCls + '" type="text" inputmode="numeric" placeholder="Qty" data-color-field="qty" data-style="' + escapeHtml(sc) + '" data-color="' + escapeHtml(c.code) + '" value="' + escapeHtml(getEffectiveQty(sc, c.code)) + '"' + tipAttr + '>' +
+              hintHtml +
+            '</div>';
+        }
         // v3.18: ONLY the grip is the drag source; the row is the drop
         // target. Previously the whole row was draggable, which meant the
         // text inputs intercepted mousedown and the drag never started
@@ -2630,15 +2817,34 @@ function wireEditorListeners(scope) {
   root.querySelectorAll('[data-field]').forEach(el => {
     el.addEventListener('input', () => {
       let v = el.value;
-      if (el.dataset.field === 'price' || el.dataset.field === 'fobPrice' || el.dataset.field === 'sellingPrice') {
+      // Strip a leading "$" the user might paste -- the visible $ prefix lives
+      // outside the input. Covers MSRP, FOB, CA Selling, USA Selling.
+      if (el.dataset.field === 'price' || el.dataset.field === 'fobPrice' ||
+          el.dataset.field === 'caSellingPrice' || el.dataset.field === 'usaSellingPrice') {
         const stripped = v.replace(/^\s*\$\s*/, '');
         if (stripped !== v) { el.value = stripped; v = stripped; }
       }
       setOverride(el.dataset.style, el.dataset.field, v);
     });
   });
+  // v4.5: show-toggle checkboxes for CA Selling / USA Selling. Persist the
+  // override then re-render the sidebar so the header price preview updates.
+  root.querySelectorAll('[data-show-toggle]').forEach(el => {
+    el.addEventListener('change', () => {
+      setOverride(el.dataset.style, el.dataset.showToggle, el.checked);
+      renderSidebar();
+    });
+  });
   root.querySelectorAll('[data-color-field]').forEach(el => {
-    el.addEventListener('input', () => setColorOverride(el.dataset.style, el.dataset.color, el.dataset.colorField, el.value));
+    el.addEventListener('input', () => {
+      setColorOverride(el.dataset.style, el.dataset.color, el.dataset.colorField, el.value);
+      // v4.6: when a qty input is edited, re-validate it live against the
+      // current prepack ratio and toggle the red flag + hint without a full
+      // re-render (which would lose input focus mid-keystroke).
+      if (el.dataset.colorField === 'qty') {
+        refreshQtyValidity(el);
+      }
+    });
   });
   root.querySelectorAll('[data-toggle="showInventory"]').forEach(el => {
     el.addEventListener('change', () => {
@@ -2707,21 +2913,76 @@ function wireEditorListeners(scope) {
           row.appendChild(div);
         }
       }
+      // v4.6: changing the ratio sum changes which qty values are valid, so
+      // re-flag every qty input on this style without a full re-render.
+      refreshAllQtyValidityForStyle(root, sc);
     });
   });
   root.querySelectorAll('[data-size-ratio-preset]').forEach(el => {
     el.addEventListener('click', () => {
       const sc = el.dataset.style;
       const key = el.dataset.sizeRatioPreset;
-      if (key === '__clear__') {
+      if (key === '__open__') {
+        // v4.7: Open Sizing -- explicit "no prepack" mode. setOpenSizing
+        // clears the ratio so the two modes don't coexist.
+        setOpenSizing(sc, true);
+      } else if (key === '__clear__') {
+        // Clear wipes both ratio and open-sizing -- "back to undecided".
+        setOpenSizing(sc, false);
         setSizeRatioArr(sc, [0,0,0,0,0,0,0,0]);
       } else if (SIZE_PRESETS[key]) {
+        // Selecting any numbered prepack disables open-sizing so the two
+        // modes stay mutually exclusive.
+        setOpenSizing(sc, false);
         setSizeRatioArr(sc, SIZE_PRESETS[key].arr);
       } else return;
       renderSidebar();
     });
   });
   wireColorDrag(root);
+}
+
+// v4.6: Update the red-flag styling + tooltip + below-input hint on a single
+// qty input based on the current prepack-ratio validation. Called on every
+// keystroke in a qty input (so it stays live without a full re-render that
+// would steal focus) and also from refreshAllQtyValidityForStyle when the
+// ratio itself changes.
+function refreshQtyValidity(el) {
+  if (!el || !el.dataset) return;
+  const sc = el.dataset.style;
+  const cc = el.dataset.color;
+  if (!sc || !cc) return;
+  const v = getQtyValidation(sc, cc);
+  el.classList.toggle('qty-invalid', !v.valid);
+  if (v.valid) {
+    el.removeAttribute('title');
+  } else {
+    el.setAttribute('title', 'Off by ' + v.offBy + ' \u00B7 try ' + v.down + ' or ' + v.up + ' (prepack sum ' + v.ratioSum + ')');
+  }
+  // Sync the hint div under the input. .editor-color-qty-wrap is the
+  // immediate parent; tolerate older HTML where the input isn't wrapped.
+  const wrap = el.parentElement && el.parentElement.classList.contains('editor-color-qty-wrap') ? el.parentElement : null;
+  if (!wrap) return;
+  let hint = wrap.querySelector('.editor-color-qty-hint');
+  if (v.valid) {
+    if (hint) hint.remove();
+    return;
+  }
+  if (!hint) {
+    hint = document.createElement('div');
+    hint.className = 'editor-color-qty-hint';
+    wrap.appendChild(hint);
+  }
+  hint.innerHTML = 'Off by <strong>' + v.offBy + '</strong> &middot; try ' + v.down + ' or ' + v.up;
+}
+// v4.6: Re-validate every qty input belonging to a style. Used when the ratio
+// changes (preset click triggers a full renderSidebar() so this isn't needed
+// there, but per-cell ratio edits don't re-render -- this keeps them in sync).
+function refreshAllQtyValidityForStyle(root, sc) {
+  const scope = root || document;
+  scope.querySelectorAll('[data-color-field="qty"]').forEach(el => {
+    if (el.dataset.style === sc) refreshQtyValidity(el);
+  });
 }
 
 // CSS.escape polyfill -- safe identifier escaping for querySelector lookups
@@ -3553,21 +3814,23 @@ async function exportXlsx() {
 
     // Column widths copied from the template (cell A1 has the IMAGE header).
     // v3.14 added FOB PRICE before PRICE. v3.15 split pricing into a dedicated
-    // SELLING PRICE column (new) and MSRP (the existing `price` override,
-    // formerly labeled "SELLING PRICE" here -- the underlying override key
-    // stays `price` so legacy sheets keep their MSRP value intact).
+    // SELLING PRICE column + MSRP. v4.5 further split SELLING PRICE into
+    // CA SELLING + USA SELLING. The underlying override key for MSRP is still
+    // `price` so legacy data keeps its MSRP value intact; QTY moved from col K
+    // (11) to col L (12) when the extra column was inserted.
     ws.columns = [
-      { header: 'STYLE IMAGE',              key: 'image',        width: 19.0 },
-      { header: 'STYLE NUMBER',             key: 'styleNum',     width: 17.1 },
-      { header: 'STYLE NAME / DESCRIPTION', key: 'styleName',    width: 38.1 },
-      { header: 'FABRIC CONTENT',           key: 'contents',     width: 24.7 },
-      { header: 'FABRIC DESCRIPTION',       key: 'fabric',       width: 38.1 },
-      { header: 'COLORS  NAMES',            key: 'colorName',    width: 41.9 },
-      { header: 'COLOR CODE',               key: 'colorCode',    width: 12.0 },
-      { header: 'FOB PRICE',                key: 'fobPrice',     width: 15.3 },
-      { header: 'SELLING PRICE',            key: 'sellingPrice', width: 15.3 },
-      { header: 'MSRP',                     key: 'price',        width: 15.3 },
-      { header: 'QTY',                      key: 'qty',          width: 28.6 },
+      { header: 'STYLE IMAGE',              key: 'image',           width: 19.0 },
+      { header: 'STYLE NUMBER',             key: 'styleNum',        width: 17.1 },
+      { header: 'STYLE NAME / DESCRIPTION', key: 'styleName',       width: 38.1 },
+      { header: 'FABRIC CONTENT',           key: 'contents',        width: 24.7 },
+      { header: 'FABRIC DESCRIPTION',       key: 'fabric',          width: 38.1 },
+      { header: 'COLORS  NAMES',            key: 'colorName',       width: 41.9 },
+      { header: 'COLOR CODE',               key: 'colorCode',       width: 12.0 },
+      { header: 'FOB PRICE',                key: 'fobPrice',        width: 15.3 },
+      { header: 'CA SELLING',               key: 'caSellingPrice',  width: 15.3 },
+      { header: 'USA SELLING',              key: 'usaSellingPrice', width: 15.3 },
+      { header: 'MSRP',                     key: 'price',           width: 15.3 },
+      { header: 'QTY',                      key: 'qty',             width: 28.6 },
     ];
 
     // Header row styling -- bold white on #1F2937 (dark slate), Aptos Narrow
@@ -3617,7 +3880,8 @@ async function exportXlsx() {
       const fabric      = getEffectiveFabric(sc);
       const showInv     = getShowInventory(sc);
       const stylePriceN = parseNumericLoose(getEffectiveStylePrice(sc));
-      const sellingPN   = parseNumericLoose(getEffectiveSellingPrice(sc));
+      const caSellingN  = parseNumericLoose(getEffectiveCASellingPrice(sc));
+      const usaSellingN = parseNumericLoose(getEffectiveUSASellingPrice(sc));
       const fobPriceN   = parseNumericLoose(getEffectiveFobPrice(sc));
 
       for (const cc of colors) {
@@ -3644,21 +3908,29 @@ async function exportXlsx() {
           row.getCell(8).value = fobPriceN;
           row.getCell(8).numFmt = '"$"#,##0.00';
         }
-        // Col 9 = SELLING PRICE (style-level only in v3.15).
-        if (sellingPN != null) {
-          row.getCell(9).value = sellingPN;
+        // Col 9 = CA SELLING (v4.5, style-level only). Always exported even if
+        // the user has the show-toggle off -- the toggle only governs the
+        // visible sales sheet, not the data dump.
+        if (caSellingN != null) {
+          row.getCell(9).value = caSellingN;
           row.getCell(9).numFmt = '"$"#,##0.00';
         }
-        // Col 10 = MSRP (was previously labeled "SELLING PRICE" pre-v3.15;
-        // underlying override key is still `price`).
-        if (priceN != null) {
-          row.getCell(10).value = priceN;
+        // Col 10 = USA SELLING (v4.5, style-level only).
+        if (usaSellingN != null) {
+          row.getCell(10).value = usaSellingN;
           row.getCell(10).numFmt = '"$"#,##0.00';
         }
-        if (qtyN != null) row.getCell(11).value = qtyN;
+        // Col 11 = MSRP (was previously labeled "SELLING PRICE" pre-v3.15;
+        // underlying override key is still `price`). Moved from col 10 to 11
+        // in v4.5 when USA SELLING was inserted.
+        if (priceN != null) {
+          row.getCell(11).value = priceN;
+          row.getCell(11).numFmt = '"$"#,##0.00';
+        }
+        if (qtyN != null) row.getCell(12).value = qtyN;
 
         // Match template: Aptos Narrow 11pt, centered, wrapped on every cell
-        for (let c = 1; c <= 11; c++) {
+        for (let c = 1; c <= 12; c++) {
           const cell = row.getCell(c);
           if (!cell.font || !cell.font.name) cell.font = { name: 'Aptos Narrow', size: 11 };
           cell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
@@ -3696,21 +3968,21 @@ async function exportXlsx() {
       }
     }
 
-    // Total qty tally beneath column K. Use an Excel SUM formula rather than
+    // Total qty tally beneath column L. Use an Excel SUM formula rather than
     // a precomputed value so the total stays live if the user later edits
-    // qty cells in the workbook. (QTY moved from col J to col K in v3.15
-    // when the SELLING PRICE column was inserted between FOB PRICE and MSRP.)
+    // qty cells in the workbook. (QTY moved from col K to col L in v4.5 when
+    // the SELLING PRICE column was split into CA SELLING + USA SELLING.)
     if (rowIdx > 2) {
       const totalRow = rowIdx;
       const lastDataRow = rowIdx - 1;
       const totalBorder = { top: { style: 'thin', color: { argb: 'FF000000' } } };
-      const totalLabel = ws.getCell(totalRow, 10);
+      const totalLabel = ws.getCell(totalRow, 11);
       totalLabel.value = 'TOTAL QTY';
       totalLabel.font  = { name: 'Aptos Narrow', size: 11, bold: true };
       totalLabel.alignment = { horizontal: 'right', vertical: 'center' };
       totalLabel.border = totalBorder;
-      const totalSum = ws.getCell(totalRow, 11);
-      totalSum.value  = { formula: 'SUM(K2:K' + lastDataRow + ')' };
+      const totalSum = ws.getCell(totalRow, 12);
+      totalSum.value  = { formula: 'SUM(L2:L' + lastDataRow + ')' };
       totalSum.font   = { name: 'Aptos Narrow', size: 11, bold: true };
       totalSum.alignment = { horizontal: 'center', vertical: 'center' };
       totalSum.numFmt = '#,##0';
@@ -3823,7 +4095,10 @@ async function exportXlsxGroup() {
       const stylePN   = parseNumericLoose(getEffectiveStylePrice(sc));
       const colorPN   = parseNumericLoose(getEffectivePrice(sc, cc));
       const msrpN     = colorPN != null ? colorPN : stylePN;
-      const sellingN  = parseNumericLoose(getEffectiveSellingPrice(sc));
+      // v4.5: pull the CA/USA selling prices (respecting their show toggles
+      // so a hidden price doesn't leak into the PPT export footer).
+      const caN  = getShowCASelling(sc)  ? parseNumericLoose(getEffectiveCASellingPrice(sc))  : null;
+      const usaN = getShowUSASelling(sc) ? parseNumericLoose(getEffectiveUSASellingPrice(sc)) : null;
 
       // Style # row
       const sLabel = ws.getCell(styleRow, colStart);
@@ -3833,31 +4108,36 @@ async function exportXlsxGroup() {
       sValue.value = styleNum;
       sValue.font  = { name: 'Calibri', size: 11 };
 
-      // Price row -- shows "Selling / MSRP" when both are filled, otherwise
-      // the single populated value as a numeric cell (so the user can keep
-      // computing on it). Label adapts to whichever side(s) are populated.
+      // Price row -- v4.5 builds a slash-joined string from whichever of CA /
+      // USA / MSRP are populated. When only one value is populated we keep
+      // it as a numeric cell (preserves currency formatting + lets the user
+      // keep computing on it); when more than one is populated, the cell
+      // becomes a text string so the "/" delimiters survive.
       const pLabel = ws.getCell(priceRow, colStart);
       pLabel.font  = { name: 'Calibri', size: 11 };
       const pValue = ws.getCell(priceRow, colStart + 1);
       pValue.font  = { name: 'Calibri', size: 11 };
       pValue.alignment = { horizontal: 'left' };
-      if (sellingN != null && msrpN != null) {
-        pLabel.value  = 'SELLING / MSRP:';
-        // Use a text string so the "/" delimiter survives in the cell.
-        const fmt = n => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        pValue.value  = fmt(sellingN) + ' / ' + fmt(msrpN);
-      } else if (sellingN != null) {
-        pLabel.value  = 'SELLING:';
-        pValue.value  = sellingN;
-        pValue.numFmt = '"$"#,##0.00;[Red]\\-"$"#,##0.00';
-      } else if (msrpN != null) {
-        pLabel.value  = 'MSRP:';
-        pValue.value  = msrpN;
+      const fmt = n => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const priceParts = [];
+      const labelParts = [];
+      if (caN  != null) { priceParts.push(fmt(caN));  labelParts.push('CA'); }
+      if (usaN != null) { priceParts.push(fmt(usaN)); labelParts.push('USA'); }
+      if (msrpN != null) { priceParts.push(fmt(msrpN)); labelParts.push('MSRP'); }
+      if (priceParts.length === 0) {
+        // Neither price filled -- keep the label visible for layout consistency.
+        pLabel.value  = 'PRICE:';
+        pValue.value  = '';
+      } else if (priceParts.length === 1) {
+        // Single value -- keep numeric so currency format applies.
+        pLabel.value  = labelParts[0] + ':';
+        const onlyN = caN != null ? caN : (usaN != null ? usaN : msrpN);
+        pValue.value  = onlyN;
         pValue.numFmt = '"$"#,##0.00;[Red]\\-"$"#,##0.00';
       } else {
-        // Neither price filled — keep the label visible for layout
-        // consistency, leave the value cell blank.
-        pLabel.value  = 'PRICE:';
+        // Multi-value -- string with slashes.
+        pLabel.value  = labelParts.join(' / ') + ':';
+        pValue.value  = priceParts.join(' / ');
       }
 
       // Image
@@ -4009,7 +4289,10 @@ function buildWorksheetSheet(ws, sc, today) {
   }
 
   // -------- Row 1: title banner --------
-  ws.mergeCells('A1:K1');
+  // v4.8: every section merge stops at column J (10) instead of K (11) so
+  // the form ends cleanly at the QTY column. Pre-v4.8 the styled bars
+  // extended one column past the data, which read as an unused dangling column.
+  ws.mergeCells('A1:J1');
   const titleCell = ws.getCell('A1');
   titleCell.value = 'R.D. INTERNATIONAL ORDER WORKSHEET';
   titleCell.font = fontTitle;
@@ -4023,7 +4306,7 @@ function buildWorksheetSheet(ws, sc, today) {
   specCell.value = 'SPECIAL (TAG on to Stock order)';
   specCell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFF0000' } };
   specCell.alignment = alignLeft;
-  ws.mergeCells('I2:K2');
+  ws.mergeCells('I2:J2');
   const noOver = ws.getCell('I2');
   noOver.value = 'NO OVERAGES';
   noOver.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF000000' } };
@@ -4037,9 +4320,14 @@ function buildWorksheetSheet(ws, sc, today) {
   const styleName  = getEffectiveStyleName(sc);
   const contents   = getEffectiveContents(sc);
   const fabricDesc = getEffectiveFabric(sc);
-  const sellingPN  = parseNumericLoose(getEffectiveSellingPrice(sc));
-  const msrpPN     = parseNumericLoose(getEffectiveStylePrice(sc));
-  const fobPN      = parseNumericLoose(getEffectiveFobPrice(sc));
+  // v4.5: the SOP worksheet now has dedicated CA + USA + MSRP source fields,
+  // so each cell pulls from its own override (previously CA mapped to the
+  // generic sellingPrice and US mapped to MSRP, which was a confusing legacy
+  // mapping). MSRP is dropped from this layout since the worksheet has no
+  // dedicated MSRP cell -- if needed it can be added later.
+  const caSellingPN  = parseNumericLoose(getEffectiveCASellingPrice(sc));
+  const usaSellingPN = parseNumericLoose(getEffectiveUSASellingPrice(sc));
+  const fobPN        = parseNumericLoose(getEffectiveFobPrice(sc));
   const customer   = state.customerName || '';
   const season     = state.season || '';
   const commodity  = s.cat || '';
@@ -4071,10 +4359,10 @@ function buildWorksheetSheet(ws, sc, today) {
   setLabel('G10', 'FOB PRICE:');   setValue('H10', fobPN != null ? fobPN : '');
   if (fobPN != null) { ws.getCell('H10').numFmt = '"$"#,##0.00'; }
 
-  setLabel('A11', 'CA SELLING $:'); setValue('B11', sellingPN != null ? sellingPN : '');
-  if (sellingPN != null) { ws.getCell('B11').numFmt = '"$"#,##0.00'; }
-  setLabel('D11', 'US SELLING $:'); setValue('E11', msrpPN != null ? msrpPN : '');
-  if (msrpPN != null) { ws.getCell('E11').numFmt = '"$"#,##0.00'; }
+  setLabel('A11', 'CA SELLING $:'); setValue('B11', caSellingPN != null ? caSellingPN : '');
+  if (caSellingPN != null) { ws.getCell('B11').numFmt = '"$"#,##0.00'; }
+  setLabel('D11', 'US SELLING $:'); setValue('E11', usaSellingPN != null ? usaSellingPN : '');
+  if (usaSellingPN != null) { ws.getCell('E11').numFmt = '"$"#,##0.00'; }
 
   setLabel('A13', 'FABRIC TYPE:'); setValue('B13', '');
   setLabel('D13', 'CONTENT:');     setValue('E13', contents);
@@ -4085,9 +4373,11 @@ function buildWorksheetSheet(ws, sc, today) {
   setLabel('D14', 'TRIM APPROVAL:'); setValue('E14', '');
   setLabel('G14', 'ACCESSORY TRIM:'); setValue('H14', '');
 
-  // Size ratio row -- formatted as "1-2-2-1-1 (S-M-L-XL-XXL)" or blank.
+  // Size ratio row -- formatted as "1-2-2-1-1 (S-M-L-XL-XXL)", or "OPEN
+  // SIZING" when v4.7 open mode is on, or blank.
   const ratio = getEffectiveSizeRatio(sc);
-  const ratioText = formatSizeRatio(ratio);
+  const openSizing = getEffectiveOpenSizing(sc);
+  const ratioText = openSizing ? 'OPEN SIZING' : formatSizeRatio(ratio);
   setLabel('A15', 'SIZE RATIO:'); setValue('B15', ratioText);
   setLabel('D15', 'ASSORTMENT:'); setValue('E15', '');
   setLabel('G15', 'SAMPLE SIZE:'); setValue('H15', '');
@@ -4099,7 +4389,7 @@ function buildWorksheetSheet(ws, sc, today) {
   // (fabric desc isn't on this template, but contents can be -- already handled).
 
   // -------- Row 17: COLOR & SIZE BREAKDOWN section header --------
-  ws.mergeCells('A17:K17');
+  ws.mergeCells('A17:J17');
   const sec1 = ws.getCell('A17');
   sec1.value = 'COLOR & SIZE BREAKDOWN';
   sec1.font = fontSection; sec1.fill = fillSection;
@@ -4146,7 +4436,9 @@ function buildWorksheetSheet(ws, sc, today) {
         : (showCode ? codeStr : (nameStr ? nameStr.toUpperCase() : ''));
       const qtyN = parseNumericLoose(getEffectiveQty(sc, c.code));
       const total = qtyN != null ? Math.max(0, Math.floor(qtyN)) : 0;
-      const dist = distributeBySizeRatio(total, ratio);
+      // v4.7: in Open Sizing mode, skip the per-size distribution -- the
+      // size cells stay blank and the qty rolls straight into col J.
+      const dist = openSizing ? [0,0,0,0,0,0,0,0] : distributeBySizeRatio(total, ratio);
       // Col A: label, Cols B..I: sizes, Col J: total
       const labelCell = ws.getCell(r, 1);
       labelCell.value = label;
@@ -4162,12 +4454,25 @@ function buildWorksheetSheet(ws, sc, today) {
         sizeCell.numFmt = '#,##0';
         sizeTotals[k] += dist[k];
       }
-      // v4.1: per-color QTY is now a live SUM formula across the size cells
-      // (B..I). If the user edits any size value in Excel, this total updates
-      // automatically. IF(SUM=0,"",...) keeps the cell visually blank for
-      // empty rows. Number format ensures the result still renders as 1,204.
+      // v4.1: per-color QTY is normally a live SUM formula across the size
+      // cells (B..I) so editing a size in Excel auto-updates the total.
+      // v4.7: in Open Sizing mode we write the qty as a direct value instead
+      // -- there are no size cells to sum, and the user's entered total is
+      // the source of truth. The qtyGrand still accumulates the same way so
+      // the TOTAL row's J cell reads correctly.
+      // v4.8: every formula cell now also writes a cached `result` -- without
+      // it ExcelJS files open with blank cells until Excel does a full
+      // recalc, which some viewers/versions never trigger.
       const qtyCell = ws.getCell(r, 10);
-      qtyCell.value = { formula: 'IF(SUM(B' + r + ':I' + r + ')=0,"",SUM(B' + r + ':I' + r + '))' };
+      if (openSizing) {
+        qtyCell.value = total > 0 ? total : '';
+      } else {
+        const rowSum = dist.reduce((a, b) => a + b, 0);
+        qtyCell.value = {
+          formula: 'IF(SUM(B' + r + ':I' + r + ')=0,"",SUM(B' + r + ':I' + r + '))',
+          result: rowSum > 0 ? rowSum : '',
+        };
+      }
       qtyCell.font = { name: 'Calibri', size: 11, bold: true };
       qtyCell.alignment = alignCenter;
       qtyCell.border = borderAll;
@@ -4176,7 +4481,9 @@ function buildWorksheetSheet(ws, sc, today) {
     } else {
       // Empty row -- still bordered so the grid looks complete. v4.1: also
       // seed the QTY formula here so if the user types size values into a
-      // blank row later, the row total comes alive automatically.
+      // blank row later, the row total comes alive automatically. v4.8: also
+      // include a blank `result` so the cell renders blank on open instead of
+      // waiting for an Excel recalc to populate it.
       for (let col = 1; col <= 10; col++) {
         const cc = ws.getCell(r, col);
         cc.border = borderAll;
@@ -4184,7 +4491,10 @@ function buildWorksheetSheet(ws, sc, today) {
         if (col >= 2 && col <= 9) { cc.numFmt = '#,##0'; }
       }
       const qtyCell = ws.getCell(r, 10);
-      qtyCell.value = { formula: 'IF(SUM(B' + r + ':I' + r + ')=0,"",SUM(B' + r + ':I' + r + '))' };
+      qtyCell.value = {
+        formula: 'IF(SUM(B' + r + ':I' + r + ')=0,"",SUM(B' + r + ':I' + r + '))',
+        result: '',
+      };
       qtyCell.font = { name: 'Calibri', size: 11, bold: true };
       qtyCell.alignment = alignCenter;
       qtyCell.border = borderAll;
@@ -4197,6 +4507,8 @@ function buildWorksheetSheet(ws, sc, today) {
   // rows above (19..26). Editing any size or QTY value in Excel cascades up
   // through these totals automatically. IF(SUM=0,"",...) hides zero in empty
   // columns so the form still looks clean before data is filled in.
+  // v4.8: every formula here also carries a cached `result` so the totals
+  // render on file open without relying on Excel's recalc cycle.
   const totalRow = 27;
   ws.getRow(totalRow).height = 20.1;
   const totalLabel = ws.getCell(totalRow, 1);
@@ -4208,7 +4520,10 @@ function buildWorksheetSheet(ws, sc, today) {
   for (let k = 0; k < 8; k++) {
     const cc = ws.getCell(totalRow, k + 2);
     const col = SIZE_COL_LETTERS[k];
-    cc.value = { formula: 'IF(SUM(' + col + '19:' + col + '26)=0,"",SUM(' + col + '19:' + col + '26))' };
+    cc.value = {
+      formula: 'IF(SUM(' + col + '19:' + col + '26)=0,"",SUM(' + col + '19:' + col + '26))',
+      result: sizeTotals[k] > 0 ? sizeTotals[k] : '',
+    };
     cc.font = { name: 'Calibri', size: 11, bold: true };
     cc.alignment = alignCenter;
     cc.border = borderAll;
@@ -4216,7 +4531,10 @@ function buildWorksheetSheet(ws, sc, today) {
     cc.numFmt = '#,##0';
   }
   const totalQtyCell = ws.getCell(totalRow, 10);
-  totalQtyCell.value = { formula: 'IF(SUM(J19:J26)=0,"",SUM(J19:J26))' };
+  totalQtyCell.value = {
+    formula: 'IF(SUM(J19:J26)=0,"",SUM(J19:J26))',
+    result: qtyGrand > 0 ? qtyGrand : '',
+  };
   totalQtyCell.font = { name: 'Calibri', size: 11, bold: true };
   totalQtyCell.alignment = alignCenter;
   totalQtyCell.border = borderAll;
@@ -4224,7 +4542,7 @@ function buildWorksheetSheet(ws, sc, today) {
   totalQtyCell.numFmt = '#,##0';
 
   // -------- Row 29: APPROVALS section header --------
-  ws.mergeCells('A29:K29');
+  ws.mergeCells('A29:J29');
   const sec2 = ws.getCell('A29');
   sec2.value = 'APPROVALS';
   sec2.font = fontSection; sec2.fill = fillSection;
@@ -4242,7 +4560,7 @@ function buildWorksheetSheet(ws, sc, today) {
   for (let r = 30; r <= 31; r++) { ws.getRow(r).height = 21.95; }
 
   // -------- Row 33: LABELS section header --------
-  ws.mergeCells('A33:K33');
+  ws.mergeCells('A33:J33');
   const sec3 = ws.getCell('A33');
   sec3.value = 'LABELS, TICKETS & HANG TAGS';
   sec3.font = fontSection; sec3.fill = fillSection;
@@ -4272,7 +4590,7 @@ function buildWorksheetSheet(ws, sc, today) {
   for (let r = 35; r <= 37; r++) { ws.getRow(r).height = 21.95; }
 
   // -------- Row 39: NOTES section header --------
-  ws.mergeCells('A39:K39');
+  ws.mergeCells('A39:J39');
   const sec4 = ws.getCell('A39');
   sec4.value = 'NOTES / SPECIAL INSTRUCTIONS';
   sec4.font = fontSection; sec4.fill = fillSection;
@@ -4280,7 +4598,7 @@ function buildWorksheetSheet(ws, sc, today) {
   ws.getRow(39).height = 22;
 
   // -------- Rows 40-44: merged notes area (blank, bordered) --------
-  ws.mergeCells('A40:K44');
+  ws.mergeCells('A40:J44');
   const notesCell = ws.getCell('A40');
   notesCell.value = '';
   notesCell.font = fontValue;
@@ -4327,6 +4645,10 @@ async function exportWorksheet() {
     const wb = new ExcelJS.Workbook();
     wb.creator = 'Sheet Builder';
     wb.created = new Date();
+    // v4.8: ask Excel to do a full recalc when the file is opened. Combined
+    // with the cached `result` on every formula cell, this ensures totals
+    // appear correctly without the user having to press F9.
+    wb.calcProperties = { fullCalcOnLoad: true };
 
     const today = formatWorksheetDate(new Date());
     const usedNames = new Set();
