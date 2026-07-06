@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v5.2.13</title>
+<title>Sheet Builder · v5.2.17</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -165,6 +165,22 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .col-title { font-family: var(--mono); font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--mute); }
 .col-note { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; color: var(--quiet); text-align: right; }
 .app.hidden { display: none; }
+
+/* v5.2.16: resizable columns. When JS injects the drag gutters it adds
+   .resizable to .app, switching to a 5-track grid (Finder | gutter | Sheet |
+   gutter | Live). Defaults reproduce the classic 3-column layout exactly;
+   --col-sheet / --col-live are set inline by the drag handlers and restored
+   from localStorage. If JS never runs, the base .app rule above still applies. */
+.app.resizable { grid-template-columns: minmax(380px, 1fr) 8px var(--col-sheet, 340px) 8px var(--col-live, 470px); }
+.app.resizable > .col + .col { border-left: none; }  /* rule line moves onto the gutters */
+.col-gutter { align-self: stretch; cursor: col-resize; position: relative; background: transparent; touch-action: none; }
+.col-gutter::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 0.5px; margin-left: -0.25px; background: var(--rule); }
+/* v5.2.17: Claude-style pill grabber -- a small rounded capsule centered on
+   the rule line (replaces the v5.2.16 thickening-line hover affordance). */
+.col-gutter::after { content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 7px; height: 38px; border-radius: 999px; background: var(--cream); border: 0.5px solid var(--quiet); box-shadow: 0 1px 3px rgba(26, 24, 20, 0.10); transition: background 0.12s ease, border-color 0.12s ease; }
+.col-gutter:hover::after, .col-gutter.dragging::after { background: var(--mute); border-color: var(--mute); }
+body.col-resizing { cursor: col-resize; }
+body.col-resizing, body.col-resizing * { user-select: none; }
 
 .catalog-tools { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
 .search { flex: 1; min-width: 200px; background: var(--cream); border: 0.5px solid var(--rule); border-radius: 6px; padding: 11px 14px; font-size: 14px; outline: none; transition: border-color 0.15s; }
@@ -684,6 +700,14 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
   .live-col { position: static; }
 }
 
+/* v5.2.16: the resizable class (0,2,0) outguns the plain .app collapse rule
+   (0,1,0), so re-assert the single-column stack and hide the drag gutters. */
+@media (max-width: 1180px) {
+  .app.resizable { grid-template-columns: 1fr; }
+  .app.resizable > .col + .col { border-top: 0.5px solid var(--rule); }
+  .col-gutter { display: none; }
+}
+
 </style>
 </head>
 <body>
@@ -695,7 +719,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
     <span class="division-pill-label" id="divisionPillLabel">R.D. International</span>
   </button>
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v5.2.13</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v5.2.17</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -823,7 +847,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v5.2.13</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v5.2.17</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -1106,7 +1130,7 @@ function divLegalName() {
 
 // App-level version (same across all divisions). Single source for the masthead
 // sub, version pill, and document title -- previously hardcoded in three spots.
-const APP_VERSION = 'v5.2.13';
+const APP_VERSION = 'v5.2.17';
 
 // v4.9.4 (Phase 2d): register RD's render/plan implementations as the division
 // adapter's renderers. The bodies stay defined in place (unchanged); these
@@ -2332,18 +2356,18 @@ function getEffectiveImageScale(sc) {
   }
   return defaultImageScale(sc);
 }
-// v5.2.7: a lone garment fills the large single tile, so it reads better when
-// slightly shrunk. A single-color style therefore defaults to 70%; multi-color
-// stays 100%. This is only the DEFAULT -- an explicit slider value
-// (state.overrides[sc].imageScale) always wins, and the editor's "reset" returns
-// to this default rather than a flat 100%.
+// v5.2.15: REVERTED the v5.2.7 single-color auto-70% default. Every style now
+// defaults to a flat 100% regardless of color count. Explicit slider values
+// (state.overrides[sc].imageScale) still win, and the editor's "reset" returns
+// to this flat 100% default. activeColorCount() is retained below (no removals)
+// but is no longer consulted by defaultImageScale.
 function activeColorCount(sc) {
   const s = getStyle(sc);
   if (!s) return 0;
   return (state.selections[sc] || []).filter(cc => getColor(s, cc)).length;
 }
 function defaultImageScale(sc) {
-  return activeColorCount(sc) === 1 ? 0.70 : 1.00;
+  return 1.00;   // v5.2.15: was `activeColorCount(sc) === 1 ? 0.70 : 1.00` (v5.2.7)
 }
 // Sheet-wide image scale -- one slider, applies to every tile on the sheet.
 // Lives in state.sheetImageScale (default 1.00). Independent of per-style
@@ -2473,6 +2497,59 @@ function activeDivSizeRangeId(sc) {
     if (r.arr.every((n, i) => n === ratio[i])) return r.id;
   }
   return null;
+}
+// v5.2.14 (Phase 4f-2): ISC prepack assortments -- user-built named color
+// groups (the M-code assortments on the ISC sheet). Stored per style on the
+// override as { code, colorCodes: [...] }; color count varies (2, 3, or more).
+// RD never creates these, so getEffectiveAssortments returns [] for RD styles
+// and RD data/behavior is unaffected. The display combo line (e.g.
+// "Black / Wistful Mauve / White") is derived from the colors, not stored.
+function getEffectiveAssortments(sc) {
+  const o = state.overrides[sc];
+  return (o && Array.isArray(o.assortments)) ? o.assortments : [];
+}
+function setAssortments(sc, arr) {
+  if (!Array.isArray(arr)) return;
+  if (!state.overrides[sc]) state.overrides[sc] = { colors: {} };
+  state.overrides[sc].assortments = arr;
+  persistCurrentSheet();
+}
+function addAssortment(sc, code) {
+  const arr = getEffectiveAssortments(sc).slice();
+  arr.push({ code: (code || '').trim(), colorCodes: [] });
+  setAssortments(sc, arr);
+  return arr.length - 1;
+}
+function removeAssortment(sc, idx) {
+  const arr = getEffectiveAssortments(sc).slice();
+  if (idx < 0 || idx >= arr.length) return;
+  arr.splice(idx, 1);
+  setAssortments(sc, arr);
+}
+function setAssortmentCode(sc, idx, code) {
+  const arr = getEffectiveAssortments(sc).slice();
+  if (idx < 0 || idx >= arr.length) return;
+  arr[idx] = { ...arr[idx], code: (code || '').trim() };
+  setAssortments(sc, arr);
+}
+// Add/remove a color from an assortment. Order is preserved (appends on add)
+// so the prepack reads in the sequence the user picked.
+function toggleAssortmentColor(sc, idx, colorCode) {
+  const arr = getEffectiveAssortments(sc).slice();
+  if (idx < 0 || idx >= arr.length) return;
+  const ccs = (arr[idx].colorCodes || []).slice();
+  const at = ccs.indexOf(colorCode);
+  if (at >= 0) ccs.splice(at, 1); else ccs.push(colorCode);
+  arr[idx] = { ...arr[idx], colorCodes: ccs };
+  setAssortments(sc, arr);
+}
+// Derived display name: the assortment's color names joined with " / ".
+function assortmentComboName(sc, assortment) {
+  if (!assortment || !Array.isArray(assortment.colorCodes)) return '';
+  return assortment.colorCodes
+    .map(cc => getEffectiveColorName(sc, cc))
+    .filter(Boolean)
+    .join(' / ');
 }
 // Render the ratio as a compact human-readable string, skipping empty slots,
 // like "1-2-2-1-1 (S-M-L-XL-XXL)". Returns '' if every slot is zero.
@@ -3372,7 +3449,7 @@ function renderStyleEditor(sc, colorFilter, opts) {
   // (no colorFilter), and (b) there's more than one row to shuffle.
   const allowReorder = !colorFilter && cols.length > 1;
   const scalePct = Math.round(imgScale * 100);
-  const scaleDefault = defaultImageScale(sc);   // v5.2.7: 0.70 for single-color
+  const scaleDefault = defaultImageScale(sc);   // v5.2.15: flat 100% (auto-70% reverted)
   const scaleResetHidden = imgScale === scaleDefault ? ' hidden' : '';
 
   return '<div class="page-editor">' +
@@ -3661,8 +3738,9 @@ function wireEditorListeners(scope) {
   root.querySelectorAll('[data-scale-reset]').forEach(el => {
     el.addEventListener('click', () => {
       const sc = el.dataset.scaleReset;
-      // Removing the override lets the default take over -- 70% for a single-
-      // color style, 100% otherwise (v5.2.7) -- keeping state.overrides tidy.
+      // Removing the override lets the default take over -- a flat 100% for
+      // every style (v5.2.15; the v5.2.7 auto-70% single-color default was
+      // reverted) -- keeping state.overrides tidy.
       if (state.overrides[sc]) delete state.overrides[sc].imageScale;
       persistCurrentSheet();
       const defPct = Math.round(defaultImageScale(sc) * 100);
@@ -6626,6 +6704,120 @@ applyDivisionBranding();
 // v5.1: build the 3-column always-live shell (relocates existing DOM, adds
 // the drawer / toast / command palette) before the first render.
 buildShell();
+
+// v5.2.16: resizable columns. Two drag gutters let the user redistribute
+// width between Finder <-> Sheet (gutter A) and Sheet <-> Live preview
+// (gutter B). Widths are a UI preference (division-agnostic), persisted to
+// localStorage and restored on load; double-click either gutter resets both
+// columns to the classic defaults. Purely additive chrome: no per-sheet
+// state, no export path, and no division logic is touched.
+const COL_WIDTHS_KEY = 'sheetbuilder:ui:colWidths';
+const COL_DEFAULTS = { sheet: 340, live: 470 };
+const COL_LIMITS = { sheet: [260, 600], live: [360, 700] };
+function clampColWidth(which, v) {
+  const [min, max] = COL_LIMITS[which];
+  if (!Number.isFinite(v)) return COL_DEFAULTS[which];
+  return Math.max(min, Math.min(max, Math.round(v)));
+}
+function loadColWidths() {
+  try {
+    const raw = localStorage.getItem(COL_WIDTHS_KEY);
+    if (!raw) return { ...COL_DEFAULTS };
+    const p = JSON.parse(raw);
+    return { sheet: clampColWidth('sheet', p.sheet), live: clampColWidth('live', p.live) };
+  } catch { return { ...COL_DEFAULTS }; }
+}
+function saveColWidths(w) {
+  try { localStorage.setItem(COL_WIDTHS_KEY, JSON.stringify(w)); } catch {}
+}
+function applyColWidths(w) {
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.style.setProperty('--col-sheet', w.sheet + 'px');
+  app.style.setProperty('--col-live', w.live + 'px');
+}
+function injectColumnGutters() {
+  const app = document.getElementById('app');
+  const live = document.getElementById('liveCol');
+  if (!app || !live || document.getElementById('colGutterA')) return;
+  // Post-buildShell child order: Finder col, mid (Sheet) col, live col.
+  const midCol = live.previousElementSibling;
+  if (!midCol) return;
+
+  const widths = loadColWidths();
+  applyColWidths(widths);
+
+  const makeGutter = (id, title) => {
+    const g = document.createElement('div');
+    g.className = 'col-gutter';
+    g.id = id;
+    g.title = title;
+    return g;
+  };
+  const gutterA = makeGutter('colGutterA', 'Drag to resize Finder / Sheet \u00B7 double-click to reset');
+  const gutterB = makeGutter('colGutterB', 'Drag to resize Sheet / Live preview \u00B7 double-click to reset');
+  app.insertBefore(gutterA, midCol);
+  app.insertBefore(gutterB, live);
+  app.classList.add('resizable');
+
+  let _gutterFitT = null;
+  const scheduleFit = () => {
+    clearTimeout(_gutterFitT);
+    _gutterFitT = setTimeout(fitLivePreview, 60);
+  };
+
+  const wire = (gutter, which) => {
+    let startX = 0, start = null;
+    gutter.addEventListener('pointerdown', (e) => {
+      startX = e.clientX;
+      start = { ...widths };
+      gutter.setPointerCapture(e.pointerId);
+      gutter.classList.add('dragging');
+      document.body.classList.add('col-resizing');
+      e.preventDefault();
+    });
+    gutter.addEventListener('pointermove', (e) => {
+      if (!start) return;
+      const dx = e.clientX - startX;
+      if (which === 'A') {
+        // Boundary between Finder and Sheet: drag right grows Finder (1fr
+        // absorbs it), so the Sheet track shrinks by the same amount.
+        widths.sheet = clampColWidth('sheet', start.sheet - dx);
+      } else {
+        // Boundary between Sheet and Live: drag right grows Sheet and
+        // shrinks Live in lockstep. Limit the delta so BOTH clamps hold,
+        // keeping the two tracks' total width constant through the drag.
+        const dMin = Math.max(COL_LIMITS.sheet[0] - start.sheet, start.live - COL_LIMITS.live[1]);
+        const dMax = Math.min(COL_LIMITS.sheet[1] - start.sheet, start.live - COL_LIMITS.live[0]);
+        const d = Math.max(dMin, Math.min(dMax, dx));
+        widths.sheet = start.sheet + d;
+        widths.live = start.live - d;
+      }
+      applyColWidths(widths);
+      if (which === 'B') scheduleFit();  // live column width changed -> re-fit thumbnail
+    });
+    const finish = () => {
+      if (!start) return;
+      start = null;
+      gutter.classList.remove('dragging');
+      document.body.classList.remove('col-resizing');
+      saveColWidths(widths);
+      scheduleFit();
+    };
+    gutter.addEventListener('pointerup', finish);
+    gutter.addEventListener('pointercancel', finish);
+    gutter.addEventListener('dblclick', () => {
+      widths.sheet = COL_DEFAULTS.sheet;
+      widths.live = COL_DEFAULTS.live;
+      applyColWidths(widths);
+      saveColWidths(widths);
+      scheduleFit();
+    });
+  };
+  wire(gutterA, 'A');
+  wire(gutterB, 'B');
+}
+injectColumnGutters();
 
 loadCurrentSheet();
 syncCheatOrder();
