@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v5.2.17</title>
+<title>Sheet Builder · v5.2.18</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -171,13 +171,17 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
    gutter | Live). Defaults reproduce the classic 3-column layout exactly;
    --col-sheet / --col-live are set inline by the drag handlers and restored
    from localStorage. If JS never runs, the base .app rule above still applies. */
-.app.resizable { grid-template-columns: minmax(380px, 1fr) 8px var(--col-sheet, 340px) 8px var(--col-live, 470px); }
+.app.resizable { grid-template-columns: minmax(320px, 1fr) 8px var(--col-sheet, 340px) 8px var(--col-live, 470px); }  /* v5.2.18: Finder floor 380->320 so it can genuinely shrink */
 .app.resizable > .col + .col { border-left: none; }  /* rule line moves onto the gutters */
 .col-gutter { align-self: stretch; cursor: col-resize; position: relative; background: transparent; touch-action: none; }
 .col-gutter::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 0.5px; margin-left: -0.25px; background: var(--rule); }
 /* v5.2.17: Claude-style pill grabber -- a small rounded capsule centered on
-   the rule line (replaces the v5.2.16 thickening-line hover affordance). */
-.col-gutter::after { content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 7px; height: 38px; border-radius: 999px; background: var(--cream); border: 0.5px solid var(--quiet); box-shadow: 0 1px 3px rgba(26, 24, 20, 0.10); transition: background 0.12s ease, border-color 0.12s ease; }
+   the rule line (replaces the v5.2.16 thickening-line hover affordance).
+   v5.2.18: the pill is now STICKY near the top instead of centered at 50% of
+   the gutter's (column-tall) height -- it starts just under the column heads
+   and pins ~120px from the viewport top while scrolling, so it's always
+   findable at the same spot no matter how long the sheet list grows. */
+.col-gutter::after { content: ''; display: block; position: sticky; top: 120px; margin: 64px auto 0; width: 7px; height: 38px; border-radius: 999px; background: var(--cream); border: 0.5px solid var(--quiet); box-shadow: 0 1px 3px rgba(26, 24, 20, 0.10); transition: background 0.12s ease, border-color 0.12s ease; }
 .col-gutter:hover::after, .col-gutter.dragging::after { background: var(--mute); border-color: var(--mute); }
 body.col-resizing { cursor: col-resize; }
 body.col-resizing, body.col-resizing * { user-select: none; }
@@ -719,7 +723,7 @@ body.col-resizing, body.col-resizing * { user-select: none; }
     <span class="division-pill-label" id="divisionPillLabel">R.D. International</span>
   </button>
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v5.2.17</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v5.2.18</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -847,7 +851,7 @@ body.col-resizing, body.col-resizing * { user-select: none; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v5.2.17</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v5.2.18</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -1130,7 +1134,7 @@ function divLegalName() {
 
 // App-level version (same across all divisions). Single source for the masthead
 // sub, version pill, and document title -- previously hardcoded in three spots.
-const APP_VERSION = 'v5.2.17';
+const APP_VERSION = 'v5.2.18';
 
 // v4.9.4 (Phase 2d): register RD's render/plan implementations as the division
 // adapter's renderers. The bodies stay defined in place (unchanged); these
@@ -6713,7 +6717,25 @@ buildShell();
 // state, no export path, and no division logic is touched.
 const COL_WIDTHS_KEY = 'sheetbuilder:ui:colWidths';
 const COL_DEFAULTS = { sheet: 340, live: 470 };
-const COL_LIMITS = { sheet: [260, 600], live: [360, 700] };
+// v5.2.18: ceilings raised (sheet 600->1200, live 700->900) so wide monitors
+// can actually shrink the Finder; the real limiter is now the container-aware
+// clamp below, which stops a drag exactly when the Finder hits its floor.
+const COL_LIMITS = { sheet: [260, 1200], live: [360, 900] };
+const COL_FINDER_MIN = 320;   // must match the minmax() floor in .app.resizable
+const COL_GUTTERS_PX = 16;    // two 8px gutter tracks
+// v5.2.18: cap widths so Finder never gets squeezed below its floor at the
+// current container width. Mutates and returns w. Skipped below the 1180px
+// collapse (the grid is single-column there and ignores the vars anyway).
+function reclampColWidths(w) {
+  const app = document.getElementById('app');
+  if (!app || window.innerWidth <= 1180) return w;
+  const avail = app.clientWidth - COL_FINDER_MIN - COL_GUTTERS_PX;
+  if (avail > COL_LIMITS.sheet[0] + COL_LIMITS.live[0]) {
+    if (w.live > avail - COL_LIMITS.sheet[0]) w.live = clampColWidth('live', avail - COL_LIMITS.sheet[0]);
+    if (w.sheet > avail - w.live) w.sheet = clampColWidth('sheet', avail - w.live);
+  }
+  return w;
+}
 function clampColWidth(which, v) {
   const [min, max] = COL_LIMITS[which];
   if (!Number.isFinite(v)) return COL_DEFAULTS[which];
@@ -6745,7 +6767,24 @@ function injectColumnGutters() {
   if (!midCol) return;
 
   const widths = loadColWidths();
+  reclampColWidths(widths);   // v5.2.18: cap restored widths to the current container
   applyColWidths(widths);
+
+  // v5.2.18: if the window shrinks, re-cap stored widths so the Finder never
+  // drops below its floor (also closes the v5.2.16 horizontal-scrollbar edge
+  // just above the 1180px collapse). Debounced; persisted so it's deterministic.
+  let _colReclampT = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(_colReclampT);
+    _colReclampT = setTimeout(() => {
+      const before = widths.sheet + '/' + widths.live;
+      reclampColWidths(widths);
+      if (widths.sheet + '/' + widths.live !== before) {
+        applyColWidths(widths);
+        saveColWidths(widths);
+      }
+    }, 150);
+  });
 
   const makeGutter = (id, title) => {
     const g = document.createElement('div');
@@ -6782,7 +6821,12 @@ function injectColumnGutters() {
       if (which === 'A') {
         // Boundary between Finder and Sheet: drag right grows Finder (1fr
         // absorbs it), so the Sheet track shrinks by the same amount.
-        widths.sheet = clampColWidth('sheet', start.sheet - dx);
+        // v5.2.18: dragging LEFT (shrinking the Finder) is additionally
+        // capped by the container, so the boundary tracks the cursor until
+        // the Finder hits its 320px floor -- no dead travel on wide monitors.
+        const app = document.getElementById('app');
+        const availSheet = app.clientWidth - COL_FINDER_MIN - COL_GUTTERS_PX - widths.live;
+        widths.sheet = clampColWidth('sheet', Math.min(start.sheet - dx, availSheet));
       } else {
         // Boundary between Sheet and Live: drag right grows Sheet and
         // shrinks Live in lockstep. Limit the delta so BOTH clamps hold,
