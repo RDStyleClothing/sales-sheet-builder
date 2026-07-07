@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v5.2.18</title>
+<title>Sheet Builder · v5.2.19</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -723,7 +723,7 @@ body.col-resizing, body.col-resizing * { user-select: none; }
     <span class="division-pill-label" id="divisionPillLabel">R.D. International</span>
   </button>
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v5.2.18</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v5.2.19</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -851,7 +851,7 @@ body.col-resizing, body.col-resizing * { user-select: none; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v5.2.18</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v5.2.19</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -1134,7 +1134,7 @@ function divLegalName() {
 
 // App-level version (same across all divisions). Single source for the masthead
 // sub, version pill, and document title -- previously hardcoded in three spots.
-const APP_VERSION = 'v5.2.18';
+const APP_VERSION = 'v5.2.19';
 
 // v4.9.4 (Phase 2d): register RD's render/plan implementations as the division
 // adapter's renderers. The bodies stay defined in place (unchanged); these
@@ -4274,6 +4274,27 @@ function renderSalesSidebar() {
     });
   });
   wireEditorListeners(list);
+
+  // v5.2.19: clicking a chip's summary jumps the Live Preview to that style's
+  // first page. Dispatches through the active division's pagePlan (same pattern
+  // as the exporters / arrow-key nav), so ISC inherits this automatically once
+  // its renderer slots are assigned in Phase 4g/4h. Buttons (Edit / x / Done)
+  // are excluded -- they already stopPropagation, the closest('button') guard
+  // is belt-and-suspenders. The Draft chip has no pages, so findIndex returns
+  // -1 and the click is a no-op.
+  list.querySelectorAll('.page-chip-summary').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('button')) return;
+      const chip = el.closest('.page-chip');
+      const sc = chip && chip.dataset.style;
+      if (!sc) return;
+      const pages = getActiveDivision().renderers.pagePlan();
+      const idx = pages.findIndex(p => p.styleCode === sc);
+      if (idx === -1) return;
+      state.curPage = idx;
+      renderPreview();
+    });
+  });
 
   wireDrag();
   $('goPreview').disabled = codes.length === 0;
