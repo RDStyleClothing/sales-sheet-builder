@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v6.0</title>
+<title>Sheet Builder · v6.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -831,7 +831,7 @@ body.col-resizing, body.col-resizing * { user-select: none; }
     <span class="division-pill-label" id="divisionPillLabel">R.D. International</span>
   </button>
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v6.0</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v6.1</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -959,7 +959,7 @@ body.col-resizing, body.col-resizing * { user-select: none; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v6.0</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v6.1</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -1373,6 +1373,23 @@ const DIVISIONS = {
       { id: 'kids4_6x', label: '4/5/6/6X', sizeLabels: ['4', '5', '6', '6X'], ratio: '1-1-2-2', arr: [1, 1, 2, 2, 0, 0, 0, 0],
         spans: '',
         breakdown: 'KIDS \u2013 LITTLE GIRLS: 4/5/6/6X (1-1-2-2)' },
+      // v6.1 (L2): four added ISC prepack ranges. Labels are category-qualified
+      // so the JUNIORS S-M-L-XL chip is distinguishable from the GIRLS smlxl chip
+      // above (identical shape/ratio; different category + no numeric spans). All
+      // borrow the shared 8-slot arr; PLUS/BOYS use the first 3 slots with their
+      // own labels (same pattern as kids4_6x).
+      { id: 'juniors_xs_xl', label: 'JUNIORS XS-S-M-L-XL', sizeLabels: ['XS', 'S', 'M', 'L', 'XL'], ratio: '1-2-2-2-1', arr: [0, 1, 2, 2, 2, 1, 0, 0],
+        spans: '',
+        breakdown: 'JUNIORS: XS-S-M-L-XL (1-2-2-2-1)' },
+      { id: 'juniors_s_xl', label: 'JUNIORS S-M-L-XL', sizeLabels: ['S', 'M', 'L', 'XL'], ratio: '1-2-2-1', arr: [0, 0, 1, 2, 2, 1, 0, 0],
+        spans: '',
+        breakdown: 'JUNIORS: S-M-L-XL (1-2-2-1)' },
+      { id: 'plus_1x_3x', label: 'PLUS 1X-2X-3X', sizeLabels: ['1X', '2X', '3X'], ratio: '2-2-2', arr: [2, 2, 2, 0, 0, 0, 0, 0],
+        spans: '',
+        breakdown: 'PLUS SIZE: 1X-2X-3X (2-2-2)' },
+      { id: 'boys_4t_6t', label: 'BOYS 4T-5T-6T', sizeLabels: ['4T', '5T', '6T'], ratio: '1-2-1', arr: [1, 2, 1, 0, 0, 0, 0, 0],
+        spans: '',
+        breakdown: 'KIDS \u2013 LITTLE BOYS: 4T-5T-6T (1-2-1)' },
     ],
     get brands() { return BRANDS.filter(b => (b.divisionId || 'rd') === 'isc'); },
     // v5.2.23 (4g-2a): pack-capable division -- enables the Stack UI in the
@@ -1414,7 +1431,7 @@ function divLegalName() {
 
 // App-level version (same across all divisions). Single source for the masthead
 // sub, version pill, and document title -- previously hardcoded in three spots.
-const APP_VERSION = 'v6.0';
+const APP_VERSION = 'v6.1';
 
 // v4.9.4 (Phase 2d): register RD's render/plan implementations as the division
 // adapter's renderers. The bodies stay defined in place (unchanged); these
