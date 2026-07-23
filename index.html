@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v6.2</title>
+<title>Sheet Builder · v6.2.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -36,7 +36,13 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .masthead { text-align: center; padding: 44px 24px 28px; border-bottom: 0.5px solid var(--rule); position: relative; }
 .masthead-title { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 44px; letter-spacing: -0.01em; line-height: 1; }
 .masthead-sub { margin-top: 10px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--mute); }
-.sources-btn { position: absolute; top: 44px; right: 32px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; background: var(--cream); border: 0.5px solid var(--rule); padding: 9px 16px; border-radius: 999px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 8px; }
+/* v6.2.2: the two right-side pills share one right-anchored flex row so a fixed
+   gap is preserved as the sources button's label grows (was: both pinned with
+   independent `right` offsets, so the widening button slid under the jump hint).
+   row-reverse keeps the sources button hard against the right edge (its old
+   spot) with the jump hint to its left. */
+.masthead-right { position: absolute; top: 44px; right: 32px; display: flex; flex-direction: row-reverse; align-items: center; gap: 16px; }
+.sources-btn { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; background: var(--cream); border: 0.5px solid var(--rule); padding: 9px 16px; border-radius: 999px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 8px; }
 .sources-btn:hover { border-color: var(--ink); }
 .sources-btn-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--quiet); }
 .sources-btn-dot.connected { background: var(--good); }
@@ -115,6 +121,17 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .brand-row-tag.saved { color: var(--good); border-color: var(--good); }
 .brand-row-del { background: none; border: none; color: var(--mute); cursor: pointer; padding: 4px 6px; font-size: 14px; line-height: 1; border-radius: 3px; transition: all 0.15s; flex-shrink: 0; }
 .brand-row-del:hover { background: var(--accent-soft); color: var(--accent); }
+/* v6.2.1: collapse the whole brand roster (built-in + saved) behind one
+   accordion so the panel stays compact. Caret language matches .pf-group. */
+.brand-group { margin: 0; }
+.brand-group-head { width: 100%; text-align: left; background: var(--cream); border: 0.5px solid var(--rule); border-radius: 5px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-family: var(--mono); font-size: 11px; color: var(--ink); transition: border-color 0.15s; }
+.brand-group-head:hover { border-color: var(--rule-strong); }
+.brand-caret { color: var(--mute); font-size: 10px; flex-shrink: 0; display: inline-block; transition: transform 0.15s ease; }
+.brand-group.open .brand-caret { transform: rotate(90deg); }
+.brand-group-title { flex: 1; min-width: 0; }
+.brand-group-count { color: var(--mute); font-size: 8px; letter-spacing: 0.16em; text-transform: uppercase; flex-shrink: 0; }
+.brand-group-body { display: none; flex-direction: column; gap: 6px; padding-top: 8px; }
+.brand-group.open .brand-group-body { display: flex; }
 .brand-add-btn { font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; background: white; border: 0.5px dashed var(--rule-strong); padding: 12px; border-radius: 6px; cursor: pointer; text-align: center; transition: all 0.15s; color: var(--mute); width: 100%; }
 .brand-add-btn:hover { border-color: var(--ink); color: var(--ink); border-style: solid; }
 .brand-add-form { background: var(--cream); border: 0.5px solid var(--rule-strong); border-radius: 6px; padding: 14px; margin-top: 8px; display: flex; flex-direction: column; gap: 10px; }
@@ -606,7 +623,7 @@ body.col-resizing, body.col-resizing * { user-select: none; }
   .meta-bar { grid-template-columns: 1fr; gap: 16px; }
   .meta-field.right { text-align: left; }
   .sources-grid { grid-template-columns: 1fr; }
-  .sources-btn { position: static; margin-top: 14px; }
+  .masthead-right { position: static; flex-direction: column; margin: 0 auto 14px; align-items: center; gap: 10px; }
   .division-pill { position: static; margin: 0 auto 14px; display: inline-flex; }
 }
 
@@ -758,7 +775,7 @@ body.col-resizing, body.col-resizing * { user-select: none; }
 .pv-zoom-empty { color: rgba(255,255,255,0.72); font-family: var(--serif); font-style: italic; font-size: 17px; padding: 70px 20px; }
 
 /* command-palette hint chip in the masthead */
-.cmdk-hint { position: absolute; top: 44px; right: 168px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; background: var(--cream); border: 0.5px solid var(--rule); padding: 9px 14px; border-radius: 999px; color: var(--mute); display: flex; gap: 8px; align-items: center; cursor: pointer; transition: all 0.15s; }
+.cmdk-hint { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; background: var(--cream); border: 0.5px solid var(--rule); padding: 9px 14px; border-radius: 999px; color: var(--mute); display: flex; gap: 8px; align-items: center; cursor: pointer; transition: all 0.15s; }
 .cmdk-hint:hover { border-color: var(--ink); color: var(--ink); }
 .cmdk-hint kbd { font-family: var(--mono); font-size: 10px; background: var(--paper); border: 0.5px solid var(--rule-strong); border-radius: 4px; padding: 1px 5px; }
 
@@ -831,11 +848,13 @@ body.col-resizing, body.col-resizing * { user-select: none; }
     <span class="division-pill-label" id="divisionPillLabel">R.D. International</span>
   </button>
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v6.2</div>
-  <button class="sources-btn" id="sourcesBtn">
-    <span class="sources-btn-dot" id="sourcesDot"></span>
-    <span id="sourcesBtnLabel">Sources</span>
-  </button>
+  <div class="masthead-sub" id="mastheadSub">Builder · v6.2.2</div>
+  <div class="masthead-right" id="mastheadRight">
+    <button class="sources-btn" id="sourcesBtn">
+      <span class="sources-btn-dot" id="sourcesDot"></span>
+      <span id="sourcesBtnLabel">Sources</span>
+    </button>
+  </div>
 </header>
 
 <div class="mode-tabs-wrap" id="modeTabsWrap">
@@ -959,7 +978,7 @@ body.col-resizing, body.col-resizing * { user-select: none; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v6.2</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v6.2.2</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -1431,7 +1450,7 @@ function divLegalName() {
 
 // App-level version (same across all divisions). Single source for the masthead
 // sub, version pill, and document title -- previously hardcoded in three spots.
-const APP_VERSION = 'v6.2';
+const APP_VERSION = 'v6.2.2';
 
 // v4.9.4 (Phase 2d): register RD's render/plan implementations as the division
 // adapter's renderers. The bodies stay defined in place (unchanged); these
@@ -3678,13 +3697,18 @@ function applyBrandSet() {
   renderHeaderPickers();
 }
 
+// v6.2.1: open/closed state for the brand-roster accordion. Module-level so it
+// survives re-renders (division switch, brand add/remove); default collapsed.
+let brandListOpen = false;
+
 function renderBrandManager() {
   const list = $('brandList');
   if (!list) return;
   // v5.2.13: scope the manager list to the active division (was full BRANDS,
   // which leaked every division's seeds into both lists). getActiveDivision()
   // .brands already filters by divisionId.
-  list.innerHTML = getActiveDivision().brands.map(b => {
+  const brands = getActiveDivision().brands;
+  const rows = brands.map(b => {
     const isSeed = !!b.seed;
     const tag = isSeed
       ? '<span class="brand-row-tag seed">Built-in</span>'
@@ -3700,6 +3724,18 @@ function renderBrandManager() {
       '</div>'
     );
   }).join('');
+  // v6.2.1: whole roster (built-in + saved) collapses under one accordion head.
+  const n = brands.length;
+  const label = n + ' brand' + (n === 1 ? '' : 's');
+  list.innerHTML =
+    '<div class="brand-group' + (brandListOpen ? ' open' : '') + '">' +
+      '<button type="button" class="brand-group-head" data-brand-accordion>' +
+        '<span class="brand-caret">\u25B8</span>' +
+        '<span class="brand-group-title">' + escapeHtml(label) + '</span>' +
+        '<span class="brand-group-count">' + (brandListOpen ? 'Hide' : 'Show') + '</span>' +
+      '</button>' +
+      '<div class="brand-group-body">' + rows + '</div>' +
+    '</div>';
 }
 
 function openAddBrandForm() {
@@ -7819,6 +7855,17 @@ $('brandAddFile').addEventListener('change', e => {
   if (e.target.files && e.target.files[0]) readBrandFile(e.target.files[0]);
 });
 $('brandList').addEventListener('click', e => {
+  // v6.2.1: toggle the roster accordion. Flip the class in place (no re-render)
+  // and sync the flag so later re-renders keep the chosen state.
+  const acc = e.target.closest('[data-brand-accordion]');
+  if (acc) {
+    brandListOpen = !brandListOpen;
+    const grp = acc.closest('.brand-group');
+    if (grp) grp.classList.toggle('open', brandListOpen);
+    const hint = grp && grp.querySelector('.brand-group-count');
+    if (hint) hint.textContent = brandListOpen ? 'Hide' : 'Show';
+    return;
+  }
   const t = e.target.closest('[data-brand-del]');
   if (t) removeUserBrand(t.dataset.brandDel);
 });
@@ -8426,7 +8473,9 @@ function buildShell() {
     hint.type = 'button';
     hint.innerHTML = 'Jump anywhere <kbd>Ctrl</kbd><kbd>K</kbd>';
     hint.addEventListener('click', openCmdk);
-    mast.appendChild(hint);
+    // v6.2.2: land the hint inside the right-side flex row so it sits left of
+    // the sources button with a fixed gap; fall back to the masthead itself.
+    (document.getElementById('mastheadRight') || mast).appendChild(hint);
   }
 
   // Wire the new chrome.
