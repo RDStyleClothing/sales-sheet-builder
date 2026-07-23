@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v6.1</title>
+<title>Sheet Builder · v6.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -831,7 +831,7 @@ body.col-resizing, body.col-resizing * { user-select: none; }
     <span class="division-pill-label" id="divisionPillLabel">R.D. International</span>
   </button>
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v6.1</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v6.2</div>
   <button class="sources-btn" id="sourcesBtn">
     <span class="sources-btn-dot" id="sourcesDot"></span>
     <span id="sourcesBtnLabel">Sources</span>
@@ -959,7 +959,7 @@ body.col-resizing, body.col-resizing * { user-select: none; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v6.1</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v6.2</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -1431,7 +1431,7 @@ function divLegalName() {
 
 // App-level version (same across all divisions). Single source for the masthead
 // sub, version pill, and document title -- previously hardcoded in three spots.
-const APP_VERSION = 'v6.1';
+const APP_VERSION = 'v6.2';
 
 // v4.9.4 (Phase 2d): register RD's render/plan implementations as the division
 // adapter's renderers. The bodies stay defined in place (unchanged); these
@@ -7829,15 +7829,18 @@ document.addEventListener('click', e => {
 });
 $('custInput').addEventListener('input', e => {
   state.customerName = e.target.value;
+  renderPreview();
   persistCurrentSheet();
 });
 $('seasonInput').addEventListener('input', e => {
   state.season = e.target.value;
+  renderPreview();
   persistCurrentSheet();
 });
 $('brandPick').addEventListener('change', e => {
   state.brandId = e.target.value;
   renderHeaderPickers();
+  renderPreview();
   persistCurrentSheet();
 });
 $('search').addEventListener('input', e => { state.search = e.target.value; renderCatalog(); });
