@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v6.2.2</title>
+<title>Sheet Builder · v6.2.3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -566,10 +566,10 @@ body.col-resizing, body.col-resizing * { user-select: none; }
 .sheet-grid[data-cols="6"] .sheet-tile-code,
 .sheet-grid[data-cols="6"] .sheet-tile-name { font-size: 9px; letter-spacing: 0.12em; }
 .sheet-grid[data-cols="6"] .sheet-tile-price { font-size: 13px; }
-.sheet-shirt { width: 100%; aspect-ratio: 4 / 5; display: flex; align-items: center; justify-content: center; }
+.sheet-shirt { width: 100%; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; } /* v6.2.3: was 4/5 -- shrink empty reserve below wide garments so labels sit closer */
 .sheet-shirt svg { max-height: 100%; max-width: 100%; transform: scale(calc(var(--img-scale, 1) * var(--sheet-img-scale, 1))); transform-origin: center; transition: transform 0.15s ease; }
 .sheet-shirt img { max-height: 100%; max-width: 100%; object-fit: contain; transform: scale(calc(var(--img-scale, 1) * var(--sheet-img-scale, 1))); transform-origin: center; transition: transform 0.15s ease; }
-.sheet-tile-code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #555; margin-top: 14px; word-break: break-word; }
+.sheet-tile-code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #555; margin-top: 8px; word-break: break-word; } /* v6.2.3: was 14px */
 .sheet-tile-name { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #555; margin-top: 4px; word-break: break-word; }
 .sheet-tile-qty { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #888; margin-top: 6px; }
 .sheet-tile-qty strong { font-weight: 500; color: #333; letter-spacing: 0.04em; }
@@ -671,7 +671,8 @@ body.col-resizing, body.col-resizing * { user-select: none; }
   #previewStage, #previewStage * { visibility: visible !important; }
   #previewStage { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; max-width: none !important; margin: 0 !important; transform: none !important; }
   #liveStageWrap { overflow: visible !important; height: auto !important; }
-  .sheet-page { display: flex !important; border: none !important; box-shadow: none !important; aspect-ratio: auto !important; width: 100% !important; height: 100vh !important; page-break-after: always; margin: 0 !important; }
+  .sheet-page { display: flex !important; border: none !important; box-shadow: none !important; aspect-ratio: auto !important; width: 100% !important; height: calc(100vh - 4px) !important; page-break-after: always; margin: 0 !important; } /* v6.2.3: 100vh overshot the page box -> sliver blank pages; -4px slack fixes it, footer still bottom */
+  #liveStageWrap, .live-stage-wrap, #previewStage, .preview-stage { background: #fff !important; } /* v6.2.3: --paper (#F4F0E8) bled through as the half-beige trailing page */
   .sheet-page[hidden] { display: flex !important; }
   .sheet-page:last-child { page-break-after: auto; }
   .sheet-bar { background: #1A1814 !important; color: #BDB6A6 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -848,7 +849,7 @@ body.col-resizing, body.col-resizing * { user-select: none; }
     <span class="division-pill-label" id="divisionPillLabel">R.D. International</span>
   </button>
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v6.2.2</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v6.2.3</div>
   <div class="masthead-right" id="mastheadRight">
     <button class="sources-btn" id="sourcesBtn">
       <span class="sources-btn-dot" id="sourcesDot"></span>
@@ -978,7 +979,7 @@ body.col-resizing, body.col-resizing * { user-select: none; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v6.2.2</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v6.2.3</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -1450,7 +1451,7 @@ function divLegalName() {
 
 // App-level version (same across all divisions). Single source for the masthead
 // sub, version pill, and document title -- previously hardcoded in three spots.
-const APP_VERSION = 'v6.2.2';
+const APP_VERSION = 'v6.2.3';
 
 // v4.9.4 (Phase 2d): register RD's render/plan implementations as the division
 // adapter's renderers. The bodies stay defined in place (unchanged); these
