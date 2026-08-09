@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v6.2.3</title>
+<title>Sheet Builder · v6.2.4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -671,7 +671,7 @@ body.col-resizing, body.col-resizing * { user-select: none; }
   #previewStage, #previewStage * { visibility: visible !important; }
   #previewStage { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; max-width: none !important; margin: 0 !important; transform: none !important; }
   #liveStageWrap { overflow: visible !important; height: auto !important; }
-  .sheet-page { display: flex !important; border: none !important; box-shadow: none !important; aspect-ratio: auto !important; width: 100% !important; height: calc(100vh - 4px) !important; page-break-after: always; margin: 0 !important; } /* v6.2.3: 100vh overshot the page box -> sliver blank pages; -4px slack fixes it, footer still bottom */
+  .sheet-page { display: flex !important; border: none !important; box-shadow: none !important; aspect-ratio: auto !important; width: 100% !important; height: calc(210mm - 4px) !important; page-break-after: always; margin: 0 !important; } /* v6.2.4: vh in print resolves to the WINDOW, not the @page box -> each page's box overshot one A4 sheet and spilled a blank page (4 pages for a 2-page sheet). Anchor to the physical page height (A4 landscape = 210mm tall, @page margin:0); keeps the -4px slack. overflow:hidden (base rule) backstops sub-pixel rounding. */
   #liveStageWrap, .live-stage-wrap, #previewStage, .preview-stage { background: #fff !important; } /* v6.2.3: --paper (#F4F0E8) bled through as the half-beige trailing page */
   .sheet-page[hidden] { display: flex !important; }
   .sheet-page:last-child { page-break-after: auto; }
@@ -849,7 +849,7 @@ body.col-resizing, body.col-resizing * { user-select: none; }
     <span class="division-pill-label" id="divisionPillLabel">R.D. International</span>
   </button>
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v6.2.3</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v6.2.4</div>
   <div class="masthead-right" id="mastheadRight">
     <button class="sources-btn" id="sourcesBtn">
       <span class="sources-btn-dot" id="sourcesDot"></span>
@@ -979,7 +979,7 @@ body.col-resizing, body.col-resizing * { user-select: none; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v6.2.3</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v6.2.4</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -1451,7 +1451,7 @@ function divLegalName() {
 
 // App-level version (same across all divisions). Single source for the masthead
 // sub, version pill, and document title -- previously hardcoded in three spots.
-const APP_VERSION = 'v6.2.3';
+const APP_VERSION = 'v6.2.4';
 
 // v4.9.4 (Phase 2d): register RD's render/plan implementations as the division
 // adapter's renderers. The bodies stay defined in place (unchanged); these
