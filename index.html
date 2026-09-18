@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sheet Builder · v6.2.4</title>
+<title>Sheet Builder · v6.2.8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -689,11 +689,28 @@ body.col-resizing, body.col-resizing * { user-select: none; }
      is 100vh + break-after, so page content is unchanged for RD and ISC). */
   #masthead, #modeTabsWrap, #sourcesPanel, #metaBar,
   #drawer, .drawer-scrim, #toast, .pv-zoom-overlay { display: none !important; }
+  /* v6.2.8: hide every body-level sibling of .app too (app footer, migrate
+     toast, division/library overlays). These stay in normal flow with only
+     visibility:hidden, so the app footer's 32px top margin + height added ~33mm
+     below the last page -> one more blank trailing sheet. */
+  body > *:not(.app) { display: none !important; }
   .app { display: block !important; }
   .app > *:not(.live-col) { display: none !important; }
   .live-col { position: static !important; }
   .live-col > *:not(.live-stage-wrap) { display: none !important; }
   #previewStage { position: static !important; }
+  /* v6.2.8: the live column is a .app > .col, so in print it kept its on-screen
+     padding (22px 26px 80px) and min-height. That padding pushed #previewStage
+     ~5.8mm down the sheet -- every page's bottom then crossed the physical page
+     edge and spilled a footer-only sliver onto a following page -- and the 80px
+     bottom padding + min-height left ~21mm of trailing space after the last
+     page, i.e. a blank trailing sheet. Result: a 2-page sheet printed as 4.
+     Flatten the whole print chain to the page box so page 1 starts at top:0 and
+     nothing trails the last page. */
+  html, body { margin: 0 !important; padding: 0 !important; }
+  .app, .app > .col, .live-col, #liveCol,
+  #liveStageWrap, .live-stage-wrap, #previewStage, .preview-stage {
+    margin: 0 !important; padding: 0 !important; min-height: 0 !important; }
 }
 
 /* ===================================================================
@@ -849,7 +866,7 @@ body.col-resizing, body.col-resizing * { user-select: none; }
     <span class="division-pill-label" id="divisionPillLabel">R.D. International</span>
   </button>
   <div class="masthead-title" id="mastheadTitle">Sales Sheet</div>
-  <div class="masthead-sub" id="mastheadSub">Builder · v6.2.4</div>
+  <div class="masthead-sub" id="mastheadSub">Builder · v6.2.8</div>
   <div class="masthead-right" id="mastheadRight">
     <button class="sources-btn" id="sourcesBtn">
       <span class="sources-btn-dot" id="sourcesDot"></span>
@@ -979,7 +996,7 @@ body.col-resizing, body.col-resizing * { user-select: none; }
 </div>
 
 <footer class="app-footer" id="appFooter">
-  <span class="version-pill" id="versionPill">Sheet Builder &middot; v6.2.4</span>
+  <span class="version-pill" id="versionPill">Sheet Builder &middot; v6.2.8</span>
 </footer>
 
 <div class="library-overlay" id="libraryOverlay" hidden>
@@ -1204,6 +1221,12 @@ const DIVISIONS = {
         { header: 'MSRP',                     key: 'price',           width: 15.3, role: 'money' },
         { header: 'QTY',                      key: 'qty',             width: 28.6, role: 'qty' },
       ],
+      // v6.2.5: RD's Chart export embeds garment images as true "Place in Cell"
+      // rich-value images (they sort/filter with the row) instead of floating
+      // drawing anchors. Read generically by exportChartXlsx via getActiveDivision();
+      // ISC leaves this unset, so ISC charts keep the drawing-anchor path and
+      // stay byte-identical. A spec may override via spec.inCellImages.
+      inCellImages: true,
     },
     // Brands scoped to this division, resolved live from BRANDS so the brand
     // manager remains the single source of truth during Phase 2.
@@ -1451,7 +1474,7 @@ function divLegalName() {
 
 // App-level version (same across all divisions). Single source for the masthead
 // sub, version pill, and document title -- previously hardcoded in three spots.
-const APP_VERSION = 'v6.2.4';
+const APP_VERSION = 'v6.2.8';
 
 // v4.9.4 (Phase 2d): register RD's render/plan implementations as the division
 // adapter's renderers. The bodies stay defined in place (unchanged); these
@@ -2430,6 +2453,53 @@ function renameSheetInLib(id, newName) {
   renderLibrary();
 }
 
+// Deep-copy an existing sheet into a brand-new library entry (in memory only --
+// same local store, no file involved). The copy shares nothing mutable with the
+// source (JSON round-trip), gets its own id, a distinct name, and fresh
+// createdAt/savedAt so it sorts to the top of the list. Image bytes live in a
+// separate store keyed by reference, so both sheets simply point at the same
+// images -- no image duplication needed. The copy is opened immediately so the
+// user lands on it ready to edit.
+function duplicateSheetInLib(id) {
+  persistCurrentSheet();            // commit the open sheet before we read the lib
+  const lib = loadLibrary();
+  const src = lib.sheets[id];
+  if (!src) return;
+
+  let copy;
+  try {
+    copy = JSON.parse(JSON.stringify(src));   // deep clone -- no shared arrays/objects
+  } catch {
+    return;
+  }
+
+  const newId = uuid();
+  copy.id = newId;
+  copy.name = uniqueCopyName(getSheetDisplayName(src), lib);
+  copy.createdAt = Date.now();
+  copy.savedAt = Date.now();
+
+  lib.sheets[newId] = copy;
+  lib.currentId = newId;            // make the copy the open sheet
+  saveLibrary(lib);
+  applySheetToState(copy);
+  reRenderAllForSheetSwap();
+  closeLibrary();                   // land the user on the new copy, ready to edit
+}
+
+// Build a "<name> (copy)" label, bumping to "(copy 2)", "(copy 3)"... when a
+// sheet with that display name already exists, so duplicates stay distinct.
+function uniqueCopyName(baseName, lib) {
+  const existing = new Set(
+    Object.values(lib.sheets).map(s => getSheetDisplayName(s))
+  );
+  let candidate = baseName + ' (copy)';
+  if (!existing.has(candidate)) return candidate;
+  let n = 2;
+  while (existing.has(baseName + ' (copy ' + n + ')')) n++;
+  return baseName + ' (copy ' + n + ')';
+}
+
 function reRenderAllForSheetSwap() {
   state.expandedStyle = null;
   state.expandedEditor = null;
@@ -2523,6 +2593,7 @@ function renderLibrary() {
       (isCurrent ? '<span class="library-item-current-badge">Open</span>' : '') +
       '<div class="library-item-actions">' +
         '<button class="library-item-btn" data-rename="' + escapeHtml(s.id) + '" title="Rename">\u270E</button>' +
+        '<button class="library-item-btn" data-duplicate="' + escapeHtml(s.id) + '" title="Duplicate this sheet">\u29C9</button>' +
         '<button class="library-item-btn" data-export-sheet="' + escapeHtml(s.id) + '" title="Download as small .json (no images)">\u2193</button>' +
         '<button class="library-item-btn" data-export-sheet-with-images="' + escapeHtml(s.id) + '" title="Download as portable .json with images bundled in">\u21E9</button>' +
         '<button class="library-item-btn danger" data-delete="' + escapeHtml(s.id) + '" title="Delete">\u00D7</button>' +
@@ -2539,6 +2610,9 @@ function renderLibrary() {
   });
   list.querySelectorAll('[data-rename]').forEach(el => {
     el.addEventListener('click', e => { e.stopPropagation(); startRename(el.dataset.rename); });
+  });
+  list.querySelectorAll('[data-duplicate]').forEach(el => {
+    el.addEventListener('click', e => { e.stopPropagation(); duplicateSheetInLib(el.dataset.duplicate); });
   });
   list.querySelectorAll('[data-delete]').forEach(el => {
     el.addEventListener('click', e => {
@@ -6130,6 +6204,150 @@ function parseNumericLoose(v) {
 async function exportXlsx() {
   return exportChartXlsx({});
 }
+// v6.2.5: post-process an ExcelJS-written xlsx buffer to convert recorded image
+// cells into true "Place in Cell" rich-value images. The bytes are already in
+// the package (ExcelJS wrote xl/media/imageN.* from wb.addImage); this wires up
+// the rich-value parts (rdrichvalue / structure / richValueRel + metadata),
+// registers them in [Content_Types].xml and workbook.xml.rels, and rewrites each
+// target cell to an error/vm reference so the image lives INSIDE the cell and
+// sorts/filters with the row. `jobs` = [{ sheetName, ref, mediaName }].
+// NOTE: in-cell images require a current Microsoft 365 Excel; apps that don't
+// support the feature render the cell as #VALUE!.
+async function applyInCellImages(buffer, jobs) {
+  const zip = await JSZip.loadAsync(buffer);
+  const XMLHEAD = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n';
+  const n = jobs.length;
+
+  // --- rich-value structure (one shared _localImage shape) ---
+  zip.file('xl/richData/rdrichvaluestructure.xml',
+    XMLHEAD +
+    '<rvStructures xmlns="http://schemas.microsoft.com/office/spreadsheetml/2017/richdata" count="1">' +
+    '<s t="_localImage"><k n="_rvRel:LocalImageIdentifier" t="i"/><k n="CalcOrigin" t="i"/></s>' +
+    '</rvStructures>');
+
+  // --- rich values: one per job, pointing at its richValueRel index ---
+  zip.file('xl/richData/rdrichvalue.xml',
+    XMLHEAD +
+    '<rvData xmlns="http://schemas.microsoft.com/office/spreadsheetml/2017/richdata" count="' + n + '">' +
+    jobs.map((j, i) => '<rv s="0"><v>' + i + '</v><v>5</v></rv>').join('') +
+    '</rvData>');
+
+  // --- richValueRel + its rels -> media files ---
+  zip.file('xl/richData/richValueRel.xml',
+    XMLHEAD +
+    '<richValueRels xmlns="http://schemas.microsoft.com/office/spreadsheetml/2022/richvaluerel" ' +
+    'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+    jobs.map((j, i) => '<rel r:id="rId' + (i + 1) + '"/>').join('') +
+    '</richValueRels>');
+  zip.file('xl/richData/_rels/richValueRel.xml.rels',
+    XMLHEAD +
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+    jobs.map((j, i) => '<Relationship Id="rId' + (i + 1) +
+      '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/' +
+      j.mediaName + '"/>').join('') +
+    '</Relationships>');
+
+  // --- value metadata linking each cell's vm index to a rich value ---
+  zip.file('xl/metadata.xml',
+    XMLHEAD +
+    '<metadata xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ' +
+    'xmlns:xlrd="http://schemas.microsoft.com/office/spreadsheetml/2017/richdata2">' +
+    '<metadataTypes count="1"><metadataType name="XLRICHVALUE" minSupportedVersion="120000" copy="1" ' +
+    'pasteAll="1" pasteValues="1" merge="1" splitFirst="1" rowColShift="1" clearFormats="1" ' +
+    'clearComments="1" assign="1" coerce="1"/></metadataTypes>' +
+    '<futureMetadata name="XLRICHVALUE" count="' + n + '">' +
+    jobs.map((j, i) => '<bk><extLst><ext uri="{3e2802c4-a4d2-4d8b-9148-e3be6c30e623}">' +
+      '<xlrd:rvb i="' + i + '"/></ext></extLst></bk>').join('') +
+    '</futureMetadata>' +
+    '<valueMetadata count="' + n + '">' +
+    jobs.map((j, i) => '<bk><rc t="1" v="' + i + '"/></bk>').join('') +
+    '</valueMetadata></metadata>');
+
+  // --- [Content_Types].xml: media Defaults + the four new part Overrides ---
+  let ct = await zip.file('[Content_Types].xml').async('string');
+  const ensureDefault = (extn, mime) => {
+    if (!new RegExp('Extension="' + extn + '"').test(ct)) {
+      ct = ct.replace('</Types>', '<Default Extension="' + extn + '" ContentType="' + mime + '"/></Types>');
+    }
+  };
+  const mimeByExt = { png: 'image/png', jpeg: 'image/jpeg', jpg: 'image/jpeg', gif: 'image/gif' };
+  new Set(jobs.map(j => (j.mediaName.split('.').pop() || '').toLowerCase())).forEach(e => {
+    if (mimeByExt[e]) ensureDefault(e, mimeByExt[e]);
+  });
+  const overrides =
+    '<Override PartName="/xl/metadata.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml"/>' +
+    '<Override PartName="/xl/richData/rdrichvalue.xml" ContentType="application/vnd.ms-excel.rdrichvalue+xml"/>' +
+    '<Override PartName="/xl/richData/rdrichvaluestructure.xml" ContentType="application/vnd.ms-excel.rdrichvaluestructure+xml"/>' +
+    '<Override PartName="/xl/richData/richValueRel.xml" ContentType="application/vnd.ms-excel.richvaluerel+xml"/>';
+  ct = ct.replace('</Types>', overrides + '</Types>');
+  zip.file('[Content_Types].xml', ct);
+
+  // --- workbook.xml.rels: relate the metadata + richData parts to the book ---
+  let wbRels = await zip.file('xl/_rels/workbook.xml.rels').async('string');
+  let maxId = 0;
+  (wbRels.match(/Id="rId(\d+)"/g) || []).forEach(m => { const v = +m.replace(/\D/g, ''); if (v > maxId) maxId = v; });
+  const addRel = (type, target) => {
+    maxId++;
+    wbRels = wbRels.replace('</Relationships>',
+      '<Relationship Id="rId' + maxId + '" Type="' + type + '" Target="' + target + '"/></Relationships>');
+  };
+  addRel('http://schemas.openxmlformats.org/officeDocument/2006/relationships/sheetMetadata', 'metadata.xml');
+  addRel('http://schemas.microsoft.com/office/2017/06/relationships/rdRichValue', 'richData/rdrichvalue.xml');
+  addRel('http://schemas.microsoft.com/office/2017/06/relationships/rdRichValueStructure', 'richData/rdrichvaluestructure.xml');
+  addRel('http://schemas.microsoft.com/office/2022/10/relationships/richValueRel', 'richData/richValueRel.xml');
+  zip.file('xl/_rels/workbook.xml.rels', wbRels);
+
+  // --- resolve each worksheet name to its part path (name -> rId -> target) ---
+  const wbXml = await zip.file('xl/workbook.xml').async('string');
+  const unesc = s => s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'");
+  const nameToRid = {};
+  (wbXml.match(/<sheet\b[^>]*\/>/g) || []).forEach(tag => {
+    const nm = tag.match(/name="([^"]*)"/);
+    const rid = tag.match(/r:id="([^"]*)"/);
+    if (nm && rid) nameToRid[unesc(nm[1])] = rid[1];
+  });
+  const ridToTarget = {};
+  (wbRels.match(/<Relationship\b[^>]*\/>/g) || []).forEach(tag => {
+    const id = tag.match(/Id="([^"]*)"/);
+    const tgt = tag.match(/Target="([^"]*)"/);
+    if (id && tgt) ridToTarget[id[1]] = tgt[1];
+  });
+  const partForSheet = name => {
+    const rid = nameToRid[name];
+    let tgt = rid && ridToTarget[rid];
+    if (!tgt) return null;
+    if (tgt.charAt(0) === '/') return tgt.slice(1);
+    return 'xl/' + tgt.replace(/^\.\//, '');
+  };
+
+  // --- rewrite each target cell to an in-cell image reference (t="e" vm="N") ---
+  const bySheet = {};
+  jobs.forEach((j, i) => { (bySheet[j.sheetName] = bySheet[j.sheetName] || []).push({ ref: j.ref, vm: i + 1 }); });
+  for (const sheetName of Object.keys(bySheet)) {
+    const part = partForSheet(sheetName);
+    if (!part || !zip.file(part)) continue;
+    let xml = await zip.file(part).async('string');
+    for (const { ref, vm } of bySheet[sheetName]) {
+      const cellRe = new RegExp('<c r="' + ref + '"([^>]*?)(?:/>|>[\\s\\S]*?</c>)');
+      const replacement = attrs => {
+        const kept = String(attrs || '').replace(/\s+t="[^"]*"/g, '').replace(/\s+vm="[^"]*"/g, '');
+        return '<c r="' + ref + '"' + kept + ' t="e" vm="' + vm + '"><v>#VALUE!</v></c>';
+      };
+      if (cellRe.test(xml)) {
+        xml = xml.replace(cellRe, (m, attrs) => replacement(attrs));
+      } else {
+        // Fallback: cell was omitted by ExcelJS -> inject it at the row start.
+        const rowNum = ref.replace(/^[A-Z]+/, '');
+        const rowRe = new RegExp('(<row r="' + rowNum + '"[^>]*>)');
+        if (rowRe.test(xml)) xml = xml.replace(rowRe, '$1' + replacement(''));
+      }
+    }
+    zip.file(part, xml);
+  }
+
+  return await zip.generateAsync({ type: 'arraybuffer' });
+}
+
 async function exportChartXlsx(spec) {
   spec = spec || {};
   const specStyle    = spec.style || {};
@@ -6180,6 +6398,16 @@ async function exportChartXlsx(spec) {
     const borderAllFlag = !!spec.borderAll;
     const THIN_4N = { style: 'thin', color: { argb: 'FF000000' } };
     const borderAll4n = { left: THIN_4N, right: THIN_4N, top: THIN_4N, bottom: THIN_4N };
+    // v6.2.5: in-cell ("Place in Cell") image mode. Driven by the division's
+    // exportParams (RD sets it; ISC does not) or an explicit spec override, so
+    // the shared body stays division-agnostic. When ON, image cells record a
+    // job here instead of anchoring a floating drawing; the jobs are baked into
+    // the xlsx as rich-value images after writeBuffer() via applyInCellImages().
+    const inCellImages = spec.inCellImages != null
+      ? !!spec.inCellImages
+      : !!(getActiveDivision().exportParams || {}).inCellImages;
+    const inCellImageJobs = [];   // { sheetName, ref, dataUrl }
+    const colLetter = n => { let s = ''; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = (n - m - 1) / 26; } return s; };
     const safeSheetName = n => String(n).replace(/[\[\]:*?\/\\]/g, '-').slice(0, 31) || 'Sheet';
     // v5.2.24 (4g-2b): the whole sheet build (header, rows, total) is wrapped
     // so it can run once (RD Chart, single-style TJX -> sheetName) or once per
@@ -6386,11 +6614,18 @@ async function exportChartXlsx(spec) {
               if (imgW > cellPxW) { imgW = cellPxW; imgH = cellPxW / aspect; }
               const offsetCol = ((cellPxW - imgW) / 2) / cellPxW;
               const offsetRow = ((cellPxH - imgH) / 2) / cellPxH;
+              if (inCellImages) {
+                // v6.2.5: record a "Place in Cell" job; media bytes are already
+                // registered via wb.addImage above (ExcelJS writes them), so we
+                // just skip the floating anchor and bake the rich value later.
+                inCellImageJobs.push({ sheetName: wsName, ref: colLetter(imageColIdx0 + 1) + rowIdx, mediaName: 'image' + (imageId + 1) + '.' + ext });
+              } else {
               ws.addImage(imageId, {
                 tl: { col: imageColIdx0 + offsetCol, row: (rowIdx - 1) + offsetRow * 0.5 + 0.04 },
                 ext: { width: imgW, height: imgH },
                 editAs: 'oneCell',
               });
+              }
             }
           }
           rowIdx++;
@@ -6544,11 +6779,18 @@ async function exportChartXlsx(spec) {
             // Center the image within the image column's cell
             const offsetCol = ((cellPxW - imgW) / 2) / cellPxW;
             const offsetRow = ((cellPxH - imgH) / 2) / cellPxH;
+            if (inCellImages) {
+              // v6.2.5: record a "Place in Cell" job; media bytes are already
+              // registered via wb.addImage above (ExcelJS writes them), so we
+              // just skip the floating anchor and bake the rich value later.
+              inCellImageJobs.push({ sheetName: wsName, ref: colLetter(imageColIdx0 + 1) + rowIdx, mediaName: 'image' + (imageId + 1) + '.' + ext });
+            } else {
             ws.addImage(imageId, {
               tl: { col: imageColIdx0 + offsetCol, row: (rowIdx - 1) + offsetRow * 0.5 + 0.04 },
               ext: { width: imgW, height: imgH },
               editAs: 'oneCell',
             });
+            }
           }
         }
 
@@ -6614,7 +6856,14 @@ async function exportChartXlsx(spec) {
       await buildSheet(sheetName, codes);
     }
 
-    const buffer = await wb.xlsx.writeBuffer();
+    let buffer = await wb.xlsx.writeBuffer();
+    // v6.2.5: bake recorded garment images into the package as true
+    // "Place in Cell" rich-value images, so they sort/filter with the row
+    // instead of floating as drawing anchors on top of the grid.
+    if (inCellImages && inCellImageJobs.length) {
+      await loadJsZipLib();
+      buffer = await applyInCellImages(buffer, inCellImageJobs);
+    }
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
